@@ -152,6 +152,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          requires_password_change: boolean
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          requires_password_change?: boolean
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          requires_password_change?: boolean
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       usuarios: {
         Row: {
           created_at: string
@@ -176,15 +206,51 @@ export type Database = {
         }
         Relationships: []
       }
+      visitor_cache: {
+        Row: {
+          apellido: string
+          cedula: string
+          created_at: string
+          id: string
+          last_used: string
+          matricula: string | null
+          nombre: string
+          updated_at: string
+        }
+        Insert: {
+          apellido: string
+          cedula: string
+          created_at?: string
+          id?: string
+          last_used?: string
+          matricula?: string | null
+          nombre: string
+          updated_at?: string
+        }
+        Update: {
+          apellido?: string
+          cedula?: string
+          created_at?: string
+          id?: string
+          last_used?: string
+          matricula?: string | null
+          nombre?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "administrador" | "agente_seguridad"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -311,6 +377,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["administrador", "agente_seguridad"],
+    },
   },
 } as const
