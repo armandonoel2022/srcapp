@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Users, FileText, Plus, LogOut } from 'lucide-react';
+import { Menu, Users, FileText, Plus, LogOut, Settings, UserPlus, Edit, Trash, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfiles } from '@/hooks/useUserProfiles';
 
 interface SidebarProps {
   onNavigate: (section: string) => void;
@@ -12,6 +13,7 @@ interface SidebarProps {
 export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { signOut } = useAuth();
+  const { isAdmin } = useUserProfiles();
 
   const handleNavigation = (section: string) => {
     onNavigate(section);
@@ -23,11 +25,19 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
     setIsOpen(false);
   };
 
-  const menuItems = [
-    { id: 'registros', label: 'Registrar', icon: FileText },
-    { id: 'consulta', label: 'Consultar', icon: FileText },
-    { id: 'empleados', label: 'Agregar Empleado', icon: Plus }
+  const basicItems = [
+    { id: 'registros', label: 'Registro de Acceso', icon: FileText },
+    { id: 'consulta', label: 'Consultar Registros', icon: Search },
+    { id: 'empleados', label: 'Gestión de Empleados', icon: Users }
   ];
+
+  const adminItems = [
+    { id: 'usuarios', label: 'Gestionar Usuarios', icon: UserPlus },
+    { id: 'editar-registros', label: 'Editar Entradas y Salidas', icon: Edit },
+    { id: 'eliminar-empleados', label: 'Eliminar Empleados', icon: Trash }
+  ];
+
+  const menuItems = isAdmin() ? [...basicItems, ...adminItems] : basicItems;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -41,7 +51,8 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
           <SheetTitle>Menú de Administración</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col space-y-2 mt-6">
-          {menuItems.map((item) => (
+          {/* Basic functionality */}
+          {basicItems.map((item) => (
             <Button
               key={item.id}
               variant={currentSection === item.id ? "default" : "ghost"}
@@ -52,6 +63,26 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
               {item.label}
             </Button>
           ))}
+          
+          {/* Admin functionality */}
+          {isAdmin() && (
+            <>
+              <div className="pt-4 border-t">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">Funciones Administrativas</h3>
+                {adminItems.map((item) => (
+                  <Button
+                    key={item.id}
+                    variant={currentSection === item.id ? "default" : "ghost"}
+                    className="justify-start"
+                    onClick={() => handleNavigation(item.id)}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+            </>
+          )}
           
           <div className="pt-4 border-t">
             <Button

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useVisitorCache } from './useVisitorCache';
 
 interface RegistroData {
   seguridad: string;
@@ -18,6 +19,7 @@ interface RegistroData {
 export const useRegistros = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { saveVisitorData } = useVisitorCache();
 
   const guardarRegistro = async (data: RegistroData) => {
     setLoading(true);
@@ -83,6 +85,16 @@ export const useRegistros = () => {
 
       if (registroError) {
         throw new Error(`Error al guardar registro: ${registroError.message}`);
+      }
+
+      // Save visitor data to cache if it's a visitor
+      if (data.tipo_persona === 'visitante' && data.cedula && data.nombre && data.apellido) {
+        await saveVisitorData({
+          cedula: data.cedula,
+          nombre: data.nombre,
+          apellido: data.apellido,
+          matricula: data.matricula
+        });
       }
 
       toast({
