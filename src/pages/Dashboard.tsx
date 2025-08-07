@@ -75,7 +75,7 @@ export const Dashboard = () => {
       case 'registros':
         return <RegistroForm />;
       case 'consulta':
-        return <ConsultaRegistros />;
+        return <ConsultaRegistros onNavigateToForm={() => setCurrentSection('registros')} />;
       case 'empleados':
         return <GestionEmpleados />;
       default:

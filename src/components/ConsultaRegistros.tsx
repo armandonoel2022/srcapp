@@ -7,10 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, ArrowLeft } from 'lucide-react';
 import { PrintLayout } from './PrintLayout';
 import { exportToCSV } from '@/utils/csvExport';
 import srcLogo from '@/assets/src-logo.png';
+
+interface ConsultaRegistrosProps {
+  onNavigateToForm?: () => void;
+}
 
 interface Registro {
   id: string;
@@ -27,7 +31,7 @@ interface Registro {
   tipo: string;
 }
 
-export const ConsultaRegistros = () => {
+export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) => {
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [loading, setLoading] = useState(false);
   const [filtroNombre, setFiltroNombre] = useState('');
@@ -143,19 +147,32 @@ export const ConsultaRegistros = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <img 
-          src={srcLogo} 
-          alt="SRC Logo" 
-          className="w-24 h-24 mx-auto"
-        />
-        <h1 className="text-2xl font-bold">
-          CONTROL DE ACCESO DIARIO EN PUESTO RESIDENCIA DE FRANCIA
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Fecha: {fechaFormateada}
-        </p>
+      {/* Header with Navigation */}
+      <div className="flex justify-between items-start mb-6">
+        <div className="text-center flex-1 space-y-4">
+          <img 
+            src={srcLogo} 
+            alt="SRC Logo" 
+            className="w-24 h-24 mx-auto"
+          />
+          <h1 className="text-2xl font-bold">
+            CONTROL DE ACCESO DIARIO EN PUESTO RESIDENCIA DE FRANCIA
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Fecha: {fechaFormateada}
+          </p>
+        </div>
+        
+        {onNavigateToForm && (
+          <Button 
+            onClick={onNavigateToForm}
+            variant="outline" 
+            className="flex items-center gap-2 self-start"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver al Formulario
+          </Button>
+        )}
       </div>
 
       {/* Filtros */}
