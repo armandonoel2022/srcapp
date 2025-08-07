@@ -225,7 +225,7 @@ export const ConsultaRegistros = () => {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-green-600 text-white">
+              <TableHeader className="bg-blue-600 text-white">
                 <TableRow>
                   <TableHead className="text-white">Agente de Seguridad</TableHead>
                   <TableHead className="text-white">Puesta de Servicio</TableHead>
