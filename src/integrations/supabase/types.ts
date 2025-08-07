@@ -248,6 +248,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      setup_initial_users: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      setup_user_profile: {
+        Args: {
+          p_email: string
+          p_username: string
+          p_role?: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: string
+      }
     }
     Enums: {
       user_role: "administrador" | "agente_seguridad"
