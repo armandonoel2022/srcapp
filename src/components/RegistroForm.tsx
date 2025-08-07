@@ -8,13 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, User, Shield } from 'lucide-react';
+import srcLogo from '@/assets/src-logo.png';
 
 export const RegistroForm = () => {
   const { guardarRegistro, obtenerUltimoAgente, loading } = useRegistros();
   
   // Estados del formulario
   const [seguridad, setSeguridad] = useState('');
-  const [agente, setAgente] = useState('');
   const [servicio, setServicio] = useState('');
   const [finServicio, setFinServicio] = useState('');
   const [tipoPersona, setTipoPersona] = useState<'empleado' | 'visitante'>('empleado');
@@ -45,7 +45,6 @@ export const RegistroForm = () => {
       const ultimoAgente = await obtenerUltimoAgente();
       if (ultimoAgente) {
         setSeguridad(ultimoAgente.seguridad || '');
-        setAgente(ultimoAgente.agente || '');
         setServicio(ultimoAgente.servicio || '');
         setFinServicio(ultimoAgente.fin_servicio || '');
       }
@@ -57,20 +56,17 @@ export const RegistroForm = () => {
   // Persistir datos en localStorage
   useEffect(() => {
     localStorage.setItem('registro_seguridad', seguridad);
-    localStorage.setItem('registro_agente', agente);
     localStorage.setItem('registro_servicio', servicio);
     localStorage.setItem('registro_fin_servicio', finServicio);
-  }, [seguridad, agente, servicio, finServicio]);
+  }, [seguridad, servicio, finServicio]);
 
   // Cargar datos del localStorage al iniciar
   useEffect(() => {
     const savedSeguridad = localStorage.getItem('registro_seguridad');
-    const savedAgente = localStorage.getItem('registro_agente');
     const savedServicio = localStorage.getItem('registro_servicio');
     const savedFinServicio = localStorage.getItem('registro_fin_servicio');
     
     if (savedSeguridad) setSeguridad(savedSeguridad);
-    if (savedAgente) setAgente(savedAgente);
     if (savedServicio) setServicio(savedServicio);
     if (savedFinServicio) setFinServicio(savedFinServicio);
   }, []);
@@ -85,7 +81,7 @@ export const RegistroForm = () => {
     
     const data = {
       seguridad,
-      agente,
+      agente: seguridad, // Using seguridad as agente since we're using only "Agente de Seguridad"
       servicio,
       fin_servicio: finServicio,
       tipo_persona: tipoPersona,
@@ -117,58 +113,59 @@ export const RegistroForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center text-center justify-center">
-          <Clock className="w-6 h-6 mr-2" />
-          Control de Acceso Diario - Puesto Residencia de Francia
-        </CardTitle>
-        <div className="text-center space-y-2">
-          <div className="text-lg font-semibold">
-            {currentTime.toLocaleDateString('es-ES', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </div>
-          <div className="text-xl font-bold">
-            {currentTime.toLocaleTimeString('es-ES')}
-          </div>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader className="text-center">
+        <div className="flex flex-col items-center mb-4">
+          <img 
+            src={srcLogo} 
+            alt="SRC Logo" 
+            className="w-24 h-24 mb-4"
+          />
+          <CardTitle className="text-xl font-bold text-primary mb-2">
+            CONTROL DE ACCESO DIARIO EN PUESTO
+          </CardTitle>
+          <CardTitle className="text-xl font-bold text-primary">
+            RESIDENCIA DE FRANCIA
+          </CardTitle>
+        </div>
+        <div className="text-lg font-semibold text-muted-foreground">
+          Fecha: {currentTime.toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            day: 'numeric',
+            month: 'long', 
+            year: 'numeric' 
+          })}
+        </div>
+        <div className="text-xl font-bold text-primary">
+          {currentTime.toLocaleTimeString('es-ES', { 
+            hour12: true,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          })}
         </div>
       </CardHeader>
       
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Datos del Agente de Seguridad */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
-            <div>
-              <Label htmlFor="agente-seguridad" className="flex items-center">
-                <Shield className="w-4 h-4 mr-1" />
-                Agente de Seguridad:
-              </Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="seguridad">Agente de Seguridad:</Label>
               <Input
-                id="agente-seguridad"
+                id="seguridad"
                 value={seguridad}
                 onChange={(e) => setSeguridad(e.target.value)}
+                placeholder="Nombre del agente de seguridad"
                 required
               />
             </div>
             
-            <div>
-              <Label htmlFor="agente-relevante">Agente Relevante:</Label>
-              <Input
-                id="agente-relevante"
-                value={agente}
-                onChange={(e) => setAgente(e.target.value)}
-                required
-              />
-            </div>
+            <div className="space-y-2"></div>
             
-            <div>
-              <Label htmlFor="puesta-servicio">Puesta de Servicio:</Label>
+            <div className="space-y-2">
+              <Label htmlFor="servicio">Puesta de Servicio:</Label>
               <Input
-                id="puesta-servicio"
+                id="servicio"
                 type="time"
                 value={servicio}
                 onChange={(e) => setServicio(e.target.value)}
@@ -176,10 +173,10 @@ export const RegistroForm = () => {
               />
             </div>
             
-            <div>
-              <Label htmlFor="fin-servicio">Fin de Servicio:</Label>
+            <div className="space-y-2">
+              <Label htmlFor="finServicio">Fin de Servicio:</Label>
               <Input
-                id="fin-servicio"
+                id="finServicio"
                 type="time"
                 value={finServicio}
                 onChange={(e) => setFinServicio(e.target.value)}
@@ -188,62 +185,82 @@ export const RegistroForm = () => {
             </div>
           </div>
 
-          {/* Tipo de Persona */}
-          <div>
-            <Label htmlFor="tipo-persona" className="flex items-center">
-              <User className="w-4 h-4 mr-1" />
-              Tipo de Persona:
-            </Label>
-            <Select value={tipoPersona} onValueChange={(value: 'empleado' | 'visitante') => setTipoPersona(value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="empleado">Empleado</SelectItem>
-                <SelectItem value="visitante">Visitante</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="tipoPersona">Tipo de Persona:</Label>
+              <Select value={tipoPersona} onValueChange={(value: 'empleado' | 'visitante') => setTipoPersona(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="empleado">Empleado</SelectItem>
+                  <SelectItem value="visitante">Visitante</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {tipoPersona === 'empleado' && (
+              <div className="space-y-2">
+                <Label htmlFor="empleado">Nombre del Empleado:</Label>
+                <EmpleadoSelector 
+                  onEmpleadoSelect={handleEmpleadoSelect}
+                  selectedEmpleado={nombreEmpleado}
+                />
+                {funcionEmpleado && (
+                  <div className="space-y-2">
+                    <Label htmlFor="funcion">Función:</Label>
+                    <Input
+                      id="funcion"
+                      value={funcionEmpleado}
+                      readOnly
+                      className="bg-muted"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {tipoPersona === 'visitante' && (
+              <VisitanteForm
+                nombre={nombreVisitante}
+                apellido={apellidoVisitante}
+                cedula={cedulaVisitante}
+                matricula={matriculaVisitante}
+                onNombreChange={setNombreVisitante}
+                onApellidoChange={setApellidoVisitante}
+                onCedulaChange={setCedulaVisitante}
+                onMatriculaChange={setMatriculaVisitante}
+              />
+            )}
           </div>
 
-          {/* Campos según tipo de persona */}
-          {tipoPersona === 'empleado' ? (
-            <div className="space-y-4">
-              <EmpleadoSelector 
-                onEmpleadoSelect={handleEmpleadoSelect}
-                selectedEmpleado={nombreEmpleado}
-              />
-              
-              <div>
-                <Label htmlFor="funcion-empleado">Función:</Label>
-                <Input
-                  id="funcion-empleado"
-                  value={funcionEmpleado}
-                  readOnly
-                  className="bg-muted"
-                />
-              </div>
-            </div>
-          ) : (
-            <VisitanteForm
-              nombre={nombreVisitante}
-              apellido={apellidoVisitante}
-              cedula={cedulaVisitante}
-              matricula={matriculaVisitante}
-              onNombreChange={setNombreVisitante}
-              onApellidoChange={setApellidoVisitante}
-              onCedulaChange={setCedulaVisitante}
-              onMatriculaChange={setMatriculaVisitante}
-            />
-          )}
-
-          {/* Botón de registro */}
-          <Button 
-            type="submit" 
-            className="w-full text-lg py-6"
-            disabled={loading}
-          >
-            {loading ? "Registrando..." : "REGISTRAR"}
-          </Button>
+          <div className="space-y-2">
+            <Button 
+              type="submit" 
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+              disabled={loading}
+            >
+              {loading ? "Registrando..." : "REGISTRAR"}
+            </Button>
+            
+            <Button 
+              type="button" 
+              variant="outline"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white border-blue-500"
+              onClick={() => {/* TODO: Navigate to consulta */}}
+            >
+              CONSULTAR
+            </Button>
+            
+            <Button 
+              type="button" 
+              variant="outline"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white border-blue-500"
+              onClick={() => {/* TODO: Navigate to add employee */}}
+            >
+              AGREGAR EMPLEADO
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>
