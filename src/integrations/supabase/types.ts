@@ -14,7 +14,168 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      administradores: {
+        Row: {
+          created_at: string
+          id: string
+          password: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      agente_seguridad: {
+        Row: {
+          agente: string | null
+          created_at: string
+          fecha: string
+          fin_servicio: string
+          id: string
+          seguridad: string
+          servicio: string
+          updated_at: string
+        }
+        Insert: {
+          agente?: string | null
+          created_at?: string
+          fecha: string
+          fin_servicio: string
+          id?: string
+          seguridad: string
+          servicio: string
+          updated_at?: string
+        }
+        Update: {
+          agente?: string | null
+          created_at?: string
+          fecha?: string
+          fin_servicio?: string
+          id?: string
+          seguridad?: string
+          servicio?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      empleados: {
+        Row: {
+          created_at: string
+          funcion: string
+          id: string
+          nombre: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          funcion: string
+          id?: string
+          nombre: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          funcion?: string
+          id?: string
+          nombre?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      registros: {
+        Row: {
+          agente: string
+          apellido: string | null
+          cedula: string | null
+          created_at: string
+          fecha: string
+          fin_servicio: string
+          funcion: string | null
+          hora: string
+          id: string
+          matricula: string | null
+          nombre: string | null
+          seguridad: string
+          servicio: string
+          tipo: string
+          tipo_persona: string
+          updated_at: string
+        }
+        Insert: {
+          agente: string
+          apellido?: string | null
+          cedula?: string | null
+          created_at?: string
+          fecha: string
+          fin_servicio: string
+          funcion?: string | null
+          hora: string
+          id?: string
+          matricula?: string | null
+          nombre?: string | null
+          seguridad: string
+          servicio: string
+          tipo: string
+          tipo_persona: string
+          updated_at?: string
+        }
+        Update: {
+          agente?: string
+          apellido?: string | null
+          cedula?: string | null
+          created_at?: string
+          fecha?: string
+          fin_servicio?: string
+          funcion?: string | null
+          hora?: string
+          id?: string
+          matricula?: string | null
+          nombre?: string | null
+          seguridad?: string
+          servicio?: string
+          tipo?: string
+          tipo_persona?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      usuarios: {
+        Row: {
+          created_at: string
+          id: string
+          password: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
