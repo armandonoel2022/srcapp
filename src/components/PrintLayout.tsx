@@ -86,67 +86,67 @@ export const PrintLayout = forwardRef<HTMLDivElement, PrintLayoutProps>(
     };
 
     return (
-      <div ref={ref} className="print-layout">
+      <div ref={ref} className="print-document">
         {/* Print Header */}
-        <div className="print-header">
-          <div className="flex flex-col items-center mb-6">
+        <div className="print-document-header">
+          <div className="flex flex-col items-center mb-8">
             <img 
               src={srcLogo} 
               alt="SRC Logo" 
-              className="w-16 h-16 mb-3"
+              className="w-20 h-20 mb-4"
             />
-            <h1 className="text-xl font-bold font-poppins text-center leading-tight" style={{ color: "hsl(var(--title-dark))" }}>
+            <h1 className="text-2xl font-bold font-poppins text-center leading-tight" style={{ color: "hsl(var(--title-dark))" }}>
               CONTROL DE ACCESO DIARIO EN PUESTO<br />
               RESIDENCIA DE FRANCIA
             </h1>
-            <div className="mt-3 text-sm">
-              <p className="font-semibold">Fecha de Impresión: {fechaFormateada}</p>
+            <div className="mt-4 text-base text-center space-y-1">
+              <p><strong>Fecha de Impresión:</strong> {fechaFormateada}</p>
               {formatearRangoFecha() && (
-                <p className="font-semibold">Período: {formatearRangoFecha()}</p>
+                <p><strong>Período:</strong> {formatearRangoFecha()}</p>
               )}
               {filtroNombre && (
-                <p className="font-semibold">Filtro aplicado: {filtroNombre}</p>
+                <p><strong>Filtro aplicado:</strong> {filtroNombre}</p>
               )}
-              <p className="font-semibold">Total de registros: {registros.length}</p>
+              <p><strong>Total de registros:</strong> {registros.length}</p>
             </div>
           </div>
         </div>
 
         {/* Print Table */}
-        <div className="print-table">
-          <Table>
+        <div className="print-data-table">
+          <Table className="w-full border-collapse">
             <TableHeader>
-              <TableRow className="print-table-header">
-                <TableHead className="print-th">Agente</TableHead>
-                <TableHead className="print-th">Inicio</TableHead>
-                <TableHead className="print-th">Fin</TableHead>
-                <TableHead className="print-th">Nombre</TableHead>
-                <TableHead className="print-th">Apellido</TableHead>
-                <TableHead className="print-th">Función</TableHead>
-                <TableHead className="print-th">Cédula</TableHead>
-                <TableHead className="print-th">Matrícula</TableHead>
-                <TableHead className="print-th">Fecha</TableHead>
-                <TableHead className="print-th">Hora</TableHead>
-                <TableHead className="print-th">Tipo</TableHead>
+              <TableRow className="print-blue-header">
+                <TableHead className="print-blue-th">Agente de Seguridad</TableHead>
+                <TableHead className="print-blue-th">Puesta de Servicio</TableHead>
+                <TableHead className="print-blue-th">Fin de Servicio</TableHead>
+                <TableHead className="print-blue-th">Nombre</TableHead>
+                <TableHead className="print-blue-th">Apellido</TableHead>
+                <TableHead className="print-blue-th">Función</TableHead>
+                <TableHead className="print-blue-th">Cédula/Pasaporte</TableHead>
+                <TableHead className="print-blue-th">Matrícula</TableHead>
+                <TableHead className="print-blue-th">Fecha</TableHead>
+                <TableHead className="print-blue-th">Hora</TableHead>
+                <TableHead className="print-blue-th">Tipo</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {registros.map((registro, index) => (
                 <TableRow 
                   key={registro.id} 
-                  className={index % 2 === 0 ? "print-row-even" : "print-row-odd"}
+                  className={index % 2 === 0 ? "print-data-row-even" : "print-data-row-odd"}
                 >
-                  <TableCell className="print-td">{registro.seguridad}</TableCell>
-                  <TableCell className="print-td">{formatearHoraSimple(registro.servicio)}</TableCell>
-                  <TableCell className="print-td">{formatearHoraSimple(registro.fin_servicio)}</TableCell>
-                  <TableCell className="print-td">{registro.nombre}</TableCell>
-                  <TableCell className="print-td">{registro.apellido}</TableCell>
-                  <TableCell className="print-td">{registro.funcion}</TableCell>
-                  <TableCell className="print-td">{registro.cedula}</TableCell>
-                  <TableCell className="print-td">{registro.matricula}</TableCell>
-                  <TableCell className="print-td">{formatearFecha(registro.fecha)}</TableCell>
-                  <TableCell className="print-td">{formatearHora(registro.hora)}</TableCell>
-                  <TableCell className="print-td">{registro.tipo}</TableCell>
+                  <TableCell className="print-data-cell">{registro.seguridad}</TableCell>
+                  <TableCell className="print-data-cell">{formatearHoraSimple(registro.servicio)}</TableCell>
+                  <TableCell className="print-data-cell">{formatearHoraSimple(registro.fin_servicio)}</TableCell>
+                  <TableCell className="print-data-cell">{registro.nombre}</TableCell>
+                  <TableCell className="print-data-cell">{registro.apellido}</TableCell>
+                  <TableCell className="print-data-cell">{registro.funcion}</TableCell>
+                  <TableCell className="print-data-cell">{registro.cedula}</TableCell>
+                  <TableCell className="print-data-cell">{registro.matricula}</TableCell>
+                  <TableCell className="print-data-cell">{formatearFecha(registro.fecha)}</TableCell>
+                  <TableCell className="print-data-cell">{formatearHora(registro.hora)}</TableCell>
+                  <TableCell className="print-data-cell">{registro.tipo}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

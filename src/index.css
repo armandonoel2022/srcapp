@@ -141,87 +141,98 @@ All colors MUST be HSL.
   }
   
   /* Reset print layout positioning */
-  .print-layout {
+  .print-document {
     position: static !important;
-    left: auto !important;
-    top: auto !important;
     width: 100% !important;
     background: white !important;
     color: black !important;
-    padding: 15mm !important;
+    padding: 20mm !important;
     margin: 0 !important;
-    font-size: 12px !important;
-    line-height: 1.3 !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    font-family: 'Poppins', sans-serif !important;
   }
   
   /* Print header styles */
-  .print-header {
-    margin-bottom: 15px;
-    page-break-inside: avoid;
+  .print-document-header {
+    margin-bottom: 20px !important;
+    page-break-inside: avoid !important;
   }
   
-  .print-header img {
-    width: 40px !important;
-    height: 40px !important;
-    margin-bottom: 8px !important;
+  .print-document-header img {
+    width: 60px !important;
+    height: 60px !important;
+    margin-bottom: 15px !important;
   }
   
-  .print-header h1 {
-    font-size: 16px !important;
+  .print-document-header h1 {
+    font-size: 20px !important;
     font-weight: bold !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 15px !important;
     color: black !important;
   }
   
   /* Print table styles */
-  .print-table {
-    width: 100%;
-    border-collapse: collapse;
+  .print-data-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 10px !important;
   }
   
-  .print-table table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 10px;
+  .print-data-table table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 11px !important;
   }
   
-  .print-th {
-    background-color: #e5e7eb !important;
-    color: black !important;
+  .print-blue-header {
+    background-color: hsl(217 91% 60%) !important;
+  }
+  
+  .print-blue-th {
+    background-color: hsl(217 91% 60%) !important;
+    color: white !important;
     font-weight: bold !important;
-    border: 1px solid #000 !important;
-    padding: 4px 2px !important;
+    border: 1px solid #333 !important;
+    padding: 8px 4px !important;
     text-align: left !important;
-    font-size: 9px !important;
+    font-size: 11px !important;
   }
   
-  .print-td {
-    border: 1px solid #000 !important;
-    padding: 3px 2px !important;
-    font-size: 9px !important;
+  .print-data-cell {
+    border: 1px solid #333 !important;
+    padding: 6px 4px !important;
+    font-size: 10px !important;
     color: black !important;
+    vertical-align: top !important;
   }
   
-  .print-row-even {
-    background-color: #f9fafb !important;
+  .print-data-row-even {
+    background-color: #f8fafc !important;
   }
   
-  .print-row-odd {
+  .print-data-row-odd {
     background-color: white !important;
   }
   
-  .print-table-header {
-    background-color: #e5e7eb !important;
-  }
-  
-  /* Page break controls */
-  .print-layout {
-    page-break-inside: avoid;
-  }
-  
-  /* Remove shadows and colors that don't print well */
+  /* Remove all shadows and effects for clean printing */
   * {
     box-shadow: none !important;
     text-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Ensure page breaks work properly */
+  .print-document {
+    page-break-inside: avoid !important;
+  }
+  
+  .print-data-table {
+    page-break-inside: auto !important;
+  }
+  
+  .print-blue-header {
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
   }
 }
