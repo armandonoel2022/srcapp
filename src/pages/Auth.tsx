@@ -70,50 +70,87 @@ export const Auth = () => {
   };
 
   return (
-    <AuthLayout title={isSignUp ? "Registrarse" : "Iniciar Sesión"}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="username">Usuario:</Label>
-          <Input
-            id="username"
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className="w-full"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="password">Contraseña:</Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full"
-          />
-        </div>
+    <div className="min-h-screen flex items-center justify-center p-4" 
+         style={{ background: "var(--gradient-blue-form)" }}>
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-lg shadow-lg p-8 space-y-6"
+             style={{ boxShadow: "var(--shadow-form)" }}>
+          
+          {/* SRC Banner */}
+          <div className="text-center space-y-4">
+            <img 
+              src="/lovable-uploads/d39f0302-dbf2-4a41-8258-65c43ff877fd.png" 
+              alt="SRC Logo" 
+              className="w-24 h-24 mx-auto"
+            />
+            <h1 className="text-2xl font-bold text-[hsl(var(--title-dark))]">
+              {isSignUp ? "Registrarse" : "Iniciar Sesión"}
+            </h1>
+          </div>
 
-        <Button 
-          type="submit" 
-          className="w-full bg-primary hover:bg-secondary"
-          disabled={loading}
-          style={{ transition: "var(--transition-smooth)" }}
-        >
-          {loading ? "Cargando..." : (isSignUp ? "Registrarse" : "Iniciar Sesión")}
-        </Button>
-        
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() => setIsSignUp(!isSignUp)}
-        >
-          {isSignUp ? "¿Ya tienes cuenta? Iniciar Sesión" : "¿No tienes cuenta? Registrarse"}
-        </Button>
-      </form>
-    </AuthLayout>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Usuario:</Label>
+              <Input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Contraseña:</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full"
+              style={{ 
+                background: "var(--gradient-blue-form)",
+                transition: "var(--transition-smooth)"
+              }}
+              disabled={loading}
+            >
+              {loading ? "Cargando..." : (isSignUp ? "Registrarse" : "Iniciar Sesión")}
+            </Button>
+            
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => setIsSignUp(!isSignUp)}
+            >
+              {isSignUp ? "¿Ya tienes cuenta? Iniciar Sesión" : "¿No tienes cuenta? Registrarse"}
+            </Button>
+          </form>
+
+          {/* Credenciales de prueba */}
+          <div className="text-center pt-4 border-t border-gray-200">
+            <p className="text-sm text-gray-600 mb-2">Credenciales de acceso:</p>
+            <div className="text-xs text-gray-500 space-y-1">
+              <div>
+                <strong>Administrador:</strong><br />
+                admin@src.com / Src_Admin@2025
+              </div>
+              <div>
+                <strong>Agente:</strong><br />
+                agente@src.com / Src_Control@2025
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
