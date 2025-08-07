@@ -10,7 +10,7 @@ import { RegistroForm } from '@/components/RegistroForm';
 import { GestionEmpleados } from '@/components/GestionEmpleados';
 
 export const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const { toast } = useToast();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [stats, setStats] = useState({
@@ -75,7 +75,8 @@ export const Dashboard = () => {
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-bold text-foreground">Sistema de Control de Acceso</h1>
             <div className="text-sm text-muted-foreground">
-              Usuario: {user?.email?.split('@')[0]}
+              Usuario: {(user as any)?.username || user?.email?.split('@')[0]}
+              {isAdmin && <span className="ml-2 px-2 py-1 bg-primary text-primary-foreground rounded text-xs">ADMIN</span>}
             </div>
           </div>
           
