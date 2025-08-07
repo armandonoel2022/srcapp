@@ -24,10 +24,9 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
   };
 
   const menuItems = [
-    { id: 'registros', label: 'Control de Acceso', icon: FileText },
-    { id: 'consulta', label: 'Consultar Registros', icon: FileText },
-    { id: 'empleados', label: 'Gestionar Empleados', icon: Users },
-    { id: 'agregar-empleado', label: 'Agregar Empleado', icon: Plus }
+    { id: 'registros', label: 'Registrar', icon: FileText },
+    { id: 'consulta', label: 'Consultar', icon: FileText },
+    { id: 'empleados', label: 'Agregar Empleado', icon: Plus }
   ];
 
   return (

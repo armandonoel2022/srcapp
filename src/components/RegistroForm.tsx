@@ -76,6 +76,14 @@ export const RegistroForm = () => {
     setFuncionEmpleado(funcion);
   };
 
+  // Establecer Anabel como empleado por defecto
+  useEffect(() => {
+    if (!nombreEmpleado && tipoPersona === 'empleado') {
+      setNombreEmpleado('Anabel');
+      setFuncionEmpleado('Intendente');
+    }
+  }, [tipoPersona, nombreEmpleado]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -241,24 +249,6 @@ export const RegistroForm = () => {
               disabled={loading}
             >
               {loading ? "Registrando..." : "REGISTRAR"}
-            </Button>
-            
-            <Button 
-              type="button" 
-              variant="outline"
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white border-blue-500"
-              onClick={() => {/* TODO: Navigate to consulta */}}
-            >
-              CONSULTAR
-            </Button>
-            
-            <Button 
-              type="button" 
-              variant="outline"
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white border-blue-500"
-              onClick={() => {/* TODO: Navigate to add employee */}}
-            >
-              AGREGAR EMPLEADO
             </Button>
           </div>
         </form>

@@ -78,8 +78,6 @@ export const Dashboard = () => {
         return <ConsultaRegistros />;
       case 'empleados':
         return <GestionEmpleados />;
-      case 'agregar-empleado':
-        return <GestionEmpleados />;
       default:
         return <RegistroForm />;
     }
