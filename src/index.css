@@ -149,38 +149,44 @@ All colors MUST be HSL.
     color: black !important;
     padding: 0 !important;
     margin: 0 !important;
-    font-size: 12px !important;
+    font-size: 14px !important;
     font-family: 'Poppins', sans-serif !important;
   }
   
-  /* Print header */
+  /* Print header - keep large and nice */
   .print-document-header {
     text-align: center !important;
-    margin-bottom: 20px !important;
+    margin-bottom: 25px !important;
   }
   
   .print-document-header img {
-    width: 50px !important;
-    height: 50px !important;
-    margin-bottom: 10px !important;
+    width: 60px !important;
+    height: 60px !important;
+    margin-bottom: 12px !important;
   }
   
   .print-document-header h1 {
-    font-size: 16px !important;
+    font-size: 18px !important;
     font-weight: bold !important;
     color: black !important;
-    margin: 0 0 10px 0 !important;
+    margin: 0 0 15px 0 !important;
     line-height: 1.2 !important;
   }
   
-  /* Print table */
+  /* Make table larger and use more space */
+  .print-data-table {
+    width: 100% !important;
+    margin-top: 0 !important;
+  }
+  
   .print-data-table table {
     width: 100% !important;
     border-collapse: collapse !important;
-    border: 1px solid #000 !important;
+    border: 2px solid #000 !important;
+    font-size: 13px !important;
   }
   
-  /* Blue header - force color printing */
+  /* Blue header - larger and more prominent */
   .print-blue-header {
     background: #3b82f6 !important;
     -webkit-print-color-adjust: exact !important;
@@ -193,21 +199,22 @@ All colors MUST be HSL.
     color: white !important;
     font-weight: bold !important;
     border: 1px solid #000 !important;
-    padding: 6px 3px !important;
-    font-size: 10px !important;
+    padding: 10px 6px !important;
+    font-size: 12px !important;
     text-align: center !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
   
-  /* Data cells */
+  /* Data cells - larger and more readable */
   .print-data-cell {
     border: 1px solid #000 !important;
-    padding: 4px 3px !important;
-    font-size: 9px !important;
+    padding: 8px 6px !important;
+    font-size: 11px !important;
     color: black !important;
     text-align: center !important;
+    line-height: 1.3 !important;
   }
   
   /* Row colors */
