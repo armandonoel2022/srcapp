@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Download, FileText } from 'lucide-react';
+import { PrintLayout } from './PrintLayout';
+import { exportToCSV } from '@/utils/csvExport';
 import srcLogo from '@/assets/src-logo.png';
 
 interface Registro {
@@ -31,6 +34,7 @@ export const ConsultaRegistros = () => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [formatoHora, setFormatoHora] = useState('12h');
+  const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const cargarRegistros = async () => {
@@ -118,6 +122,18 @@ export const ConsultaRegistros = () => {
     setFechaFin('');
     setFormatoHora('12h');
     cargarRegistros();
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleExportCSV = () => {
+    exportToCSV(registros, formatoHora, filtroNombre, fechaInicio, fechaFin);
+    toast({
+      title: "Exportación exitosa",
+      description: "El archivo CSV se ha descargado correctamente",
+    });
   };
 
   const fechaActual = new Date();
@@ -255,9 +271,26 @@ export const ConsultaRegistros = () => {
         </CardContent>
       </Card>
 
+      {/* Hidden Print Layout */}
+      <div style={{ position: 'absolute', left: '-9999px' }}>
+        <PrintLayout 
+          ref={printRef}
+          registros={registros}
+          formatoHora={formatoHora}
+          filtroNombre={filtroNombre}
+          fechaInicio={fechaInicio}
+          fechaFin={fechaFin}
+        />
+      </div>
+
       <div className="flex justify-center space-x-4">
-        <Button variant="outline" onClick={() => window.print()}>
+        <Button variant="outline" onClick={handlePrint} className="flex items-center gap-2">
+          <FileText className="w-4 h-4" />
           Imprimir
+        </Button>
+        <Button variant="outline" onClick={handleExportCSV} className="flex items-center gap-2">
+          <Download className="w-4 h-4" />
+          Exportar CSV
         </Button>
       </div>
     </div>

@@ -114,3 +114,101 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Print Styles */
+@media print {
+  /* Hide everything on screen during print */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Show only the print layout */
+  .print-layout, .print-layout * {
+    visibility: visible;
+  }
+  
+  /* Position print layout at top */
+  .print-layout {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+    padding: 10mm;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+  
+  /* Print header styles */
+  .print-header {
+    margin-bottom: 15px;
+    page-break-inside: avoid;
+  }
+  
+  .print-header img {
+    width: 40px !important;
+    height: 40px !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .print-header h1 {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    margin-bottom: 8px !important;
+    color: black !important;
+  }
+  
+  /* Print table styles */
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .print-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+  
+  .print-th {
+    background-color: #e5e7eb !important;
+    color: black !important;
+    font-weight: bold !important;
+    border: 1px solid #000 !important;
+    padding: 4px 2px !important;
+    text-align: left !important;
+    font-size: 9px !important;
+  }
+  
+  .print-td {
+    border: 1px solid #000 !important;
+    padding: 3px 2px !important;
+    font-size: 9px !important;
+    color: black !important;
+  }
+  
+  .print-row-even {
+    background-color: #f9fafb !important;
+  }
+  
+  .print-row-odd {
+    background-color: white !important;
+  }
+  
+  .print-table-header {
+    background-color: #e5e7eb !important;
+  }
+  
+  /* Page break controls */
+  .print-layout {
+    page-break-inside: avoid;
+  }
+  
+  /* Remove shadows and colors that don't print well */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
