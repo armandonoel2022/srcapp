@@ -122,74 +122,70 @@ All colors MUST be HSL.
 
 /* Print Styles */
 @media print {
-  /* Hide all page content except print layout */
-  body > * {
+  /* Hide screen elements */
+  .no-print {
     display: none !important;
   }
   
-  /* Show only print content */
+  /* Show print content */
   .print-only {
     display: block !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    background: white !important;
-    z-index: 9999 !important;
+  }
+  
+  /* Hide page margins and ensure full page usage */
+  @page {
+    margin: 15mm;
+  }
+  
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
   /* Print document layout */
   .print-document {
     width: 100% !important;
-    height: 100% !important;
     background: white !important;
     color: black !important;
-    padding: 20mm !important;
+    padding: 0 !important;
     margin: 0 !important;
-    font-size: 14px !important;
+    font-size: 12px !important;
     font-family: 'Poppins', sans-serif !important;
-    box-sizing: border-box !important;
   }
   
   /* Print header */
   .print-document-header {
     text-align: center !important;
-    margin-bottom: 25px !important;
+    margin-bottom: 20px !important;
   }
   
   .print-document-header img {
-    width: 60px !important;
-    height: 60px !important;
-    margin-bottom: 15px !important;
+    width: 50px !important;
+    height: 50px !important;
+    margin-bottom: 10px !important;
   }
   
   .print-document-header h1 {
-    font-size: 18px !important;
+    font-size: 16px !important;
     font-weight: bold !important;
     color: black !important;
-    margin: 0 0 15px 0 !important;
+    margin: 0 0 10px 0 !important;
     line-height: 1.2 !important;
   }
   
-  /* Print table container */
-  .print-data-table {
-    width: 100% !important;
-    margin-top: 15px !important;
-  }
-  
-  /* Print table itself */
+  /* Print table */
   .print-data-table table {
     width: 100% !important;
     border-collapse: collapse !important;
-    border: 2px solid #000 !important;
+    border: 1px solid #000 !important;
   }
   
-  /* Blue header row */
+  /* Blue header - force color printing */
   .print-blue-header {
     background: #3b82f6 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
   .print-blue-th {
@@ -197,23 +193,24 @@ All colors MUST be HSL.
     color: white !important;
     font-weight: bold !important;
     border: 1px solid #000 !important;
-    padding: 8px 4px !important;
-    font-size: 11px !important;
+    padding: 6px 3px !important;
+    font-size: 10px !important;
     text-align: center !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
   /* Data cells */
   .print-data-cell {
     border: 1px solid #000 !important;
-    padding: 6px 4px !important;
-    font-size: 10px !important;
+    padding: 4px 3px !important;
+    font-size: 9px !important;
     color: black !important;
     text-align: center !important;
   }
   
-  /* Row alternating colors */
+  /* Row colors */
   .print-data-row-even {
     background: #f8fafc !important;
     -webkit-print-color-adjust: exact !important;
