@@ -51,7 +51,6 @@ export const EmpleadoSelector = ({ onEmpleadoSelect, selectedEmpleado }: Emplead
     <div className="space-y-4">
       <div className="flex gap-2">
         <div className="flex-1">
-          <Label htmlFor="empleado-select">Nombre del Empleado:</Label>
           <Select value={selectedEmpleado} onValueChange={handleEmpleadoChange}>
             <SelectTrigger>
               <SelectValue placeholder="Selecciona un empleado" />

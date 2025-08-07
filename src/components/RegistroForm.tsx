@@ -121,18 +121,19 @@ export const RegistroForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader className="text-center">
+    <div className="min-h-screen p-6" style={{ background: "var(--gradient-blue-form)" }}>
+      <Card className="w-full max-w-2xl mx-auto" style={{ boxShadow: "var(--shadow-form)" }}>
+        <CardHeader className="text-center">
         <div className="flex flex-col items-center mb-4">
           <img 
             src={srcLogo} 
             alt="SRC Logo" 
             className="w-24 h-24 mb-4"
           />
-          <CardTitle className="text-xl font-bold text-primary mb-2">
+          <CardTitle className="text-xl font-bold font-poppins mb-2" style={{ color: "hsl(var(--title-dark))" }}>
             CONTROL DE ACCESO DIARIO EN PUESTO
           </CardTitle>
-          <CardTitle className="text-xl font-bold text-primary">
+          <CardTitle className="text-xl font-bold font-poppins" style={{ color: "hsl(var(--title-dark))" }}>
             RESIDENCIA DE FRANCIA
           </CardTitle>
         </div>
@@ -144,7 +145,7 @@ export const RegistroForm = () => {
             year: 'numeric' 
           })}
         </div>
-        <div className="text-xl font-bold text-primary">
+        <div className="text-xl font-bold font-poppins" style={{ color: "hsl(var(--title-dark))" }}>
           {currentTime.toLocaleTimeString('es-ES', { 
             hour12: true,
             hour: '2-digit',
@@ -254,5 +255,6 @@ export const RegistroForm = () => {
         </form>
       </CardContent>
     </Card>
+    </div>
   );
 };
