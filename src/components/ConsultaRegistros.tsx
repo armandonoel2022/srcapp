@@ -159,7 +159,7 @@ export const ConsultaRegistros = () => {
       </div>
 
       {/* Filtros */}
-      <Card>
+      <Card className="no-print">
         <CardHeader>
           <CardTitle>Filtros de Búsqueda</CardTitle>
         </CardHeader>
@@ -221,7 +221,7 @@ export const ConsultaRegistros = () => {
       </Card>
 
       {/* Tabla de Registros */}
-      <Card>
+      <Card className="no-print">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
@@ -271,8 +271,8 @@ export const ConsultaRegistros = () => {
         </CardContent>
       </Card>
 
-      {/* Hidden Print Layout */}
-      <div style={{ position: 'absolute', left: '-9999px' }}>
+      {/* Print Layout - Hidden on screen but visible when printing */}
+      <div className="print-only">
         <PrintLayout 
           ref={printRef}
           registros={registros}
@@ -283,7 +283,7 @@ export const ConsultaRegistros = () => {
         />
       </div>
 
-      <div className="flex justify-center space-x-4">
+      <div className="flex justify-center space-x-4 no-print">
         <Button variant="outline" onClick={handlePrint} className="flex items-center gap-2">
           <FileText className="w-4 h-4" />
           Imprimir

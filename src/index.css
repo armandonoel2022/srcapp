@@ -115,30 +115,43 @@ All colors MUST be HSL.
   }
 }
 
+/* Screen-only elements (hidden during print) */
+.print-only {
+  display: none;
+}
+
 /* Print Styles */
 @media print {
-  /* Hide everything on screen during print */
-  body * {
-    visibility: hidden;
+  /* Hide everything except print content */
+  body > div > div > div > *:not(.print-only),
+  .no-print,
+  nav,
+  header,
+  aside,
+  .sidebar,
+  button,
+  .filter,
+  .search {
+    display: none !important;
   }
   
-  /* Show only the print layout */
-  .print-layout, .print-layout * {
-    visibility: visible;
+  /* Show print layout */
+  .print-only {
+    display: block !important;
   }
   
-  /* Position print layout at top */
+  /* Reset print layout positioning */
   .print-layout {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
     background: white !important;
     color: black !important;
-    padding: 10mm;
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.2;
+    padding: 15mm !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
   }
   
   /* Print header styles */
