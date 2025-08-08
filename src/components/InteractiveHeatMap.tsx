@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MapPin, Search, Navigation, AlertTriangle, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { MapPin, Search, Navigation, AlertTriangle, CheckCircle, AlertCircle, Info, Maximize2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/contexts/SettingsContext';
+import { FullScreenMap } from '@/components/FullScreenMap';
 
 // Datos completos del mapa de calor del Distrito Nacional - Coordenadas precisas por geocoding
 const heatMapZones = [
@@ -94,6 +95,7 @@ export const InteractiveHeatMap = () => {
   const [selectedZone, setSelectedZone] = useState<any>(null);
   const [filteredZones, setFilteredZones] = useState(heatMapZones);
   const [map, setMap] = useState<any>(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const mapContainer = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { mapboxToken, geolocationEnabled } = useSettings();
@@ -397,6 +399,10 @@ export const InteractiveHeatMap = () => {
             <Button onClick={getCurrentLocation} variant="outline">
               <Navigation className="h-4 w-4 mr-2" />
               Mi Ubicación
+            </Button>
+            <Button onClick={() => setIsFullScreen(true)} variant="outline">
+              <Maximize2 className="h-4 w-4 mr-2" />
+              Pantalla Completa
             </Button>
           </div>
 
@@ -716,6 +722,12 @@ export const InteractiveHeatMap = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Full Screen Map */}
+      <FullScreenMap 
+        isOpen={isFullScreen} 
+        onClose={() => setIsFullScreen(false)} 
+      />
     </div>
   );
 };

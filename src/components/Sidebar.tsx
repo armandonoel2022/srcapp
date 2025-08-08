@@ -33,8 +33,7 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
     { id: 'registros', label: 'Registro de Acceso', icon: FileText },
     { id: 'consulta', label: 'Consultar Registros', icon: Search },
     { id: 'empleados', label: 'Gestión de Empleados', icon: Users },
-    { id: 'mapa-calor', label: 'Mapa de Calor', icon: MapPin },
-    { id: 'geocoding', label: 'Coordenadas Mejoradas', icon: CheckCircle }
+    { id: 'mapa-calor', label: 'Mapa de Calor', icon: MapPin }
   ];
 
   const adminItems = [

@@ -103,8 +103,6 @@ export const Dashboard = () => {
         return <EliminarEmpleados />;
       case 'mapa-calor':
         return <InteractiveHeatMap />;
-      case 'geocoding':
-        return <AutoGeocodingUpdater />;
       default:
         return <RegistroForm />;
     }
