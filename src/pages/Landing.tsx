@@ -275,15 +275,27 @@ export const Landing = () => {
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            {[1, 2, 3].map((index) => (
-              <Card key={index} className="overflow-hidden">
-                <img 
-                  src={`/images/img-${index}.jpg`} 
-                  alt={`Cliente ${index}`} 
-                  className="w-full h-48 object-cover"
-                />
-              </Card>
-            ))}
+            <Card className="overflow-hidden bg-white p-6 flex items-center justify-center min-h-[200px]">
+              <img 
+                src="/lovable-uploads/16a75dda-03e7-4bd6-990f-881b0e7c2349.png" 
+                alt="Unión Europea - Delegación en República Dominicana" 
+                className="w-full h-auto object-contain max-h-[150px]"
+              />
+            </Card>
+            <Card className="overflow-hidden bg-white p-6 flex items-center justify-center min-h-[200px]">
+              <img 
+                src="/lovable-uploads/003029fd-2192-42ef-bdf9-c2e52ff3fb9b.png" 
+                alt="Embajada de Alemania en Santo Domingo" 
+                className="w-full h-auto object-contain max-h-[150px]"
+              />
+            </Card>
+            <Card className="overflow-hidden bg-white p-6 flex items-center justify-center min-h-[200px]">
+              <img 
+                src="/lovable-uploads/4f4dcb4d-091f-44c1-9c3d-ef9f121b3cb6.png" 
+                alt="República Francesa" 
+                className="w-full h-auto object-contain max-h-[150px]"
+              />
+            </Card>
           </div>
           
           <div className="text-center">
