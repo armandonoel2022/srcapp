@@ -7,84 +7,24 @@ import { MapPin, Search, Navigation, AlertTriangle, CheckCircle, AlertCircle, In
 import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/contexts/SettingsContext';
 
-// Datos completos del mapa de calor del Distrito Nacional
+// Zonas del Distrito Nacional basadas en el mapa oficial
 const heatMapZones = [
-  // Zonas Rojas (Calientes) - Alto riesgo
-  { name: "24 de Abril", type: "hot", color: "red", coords: [18.497878, -69.883417], population: 53870 },
-  { name: "Cristo Rey", type: "hot", color: "red", coords: [18.488505, -69.895349], population: 257038 },
-  { name: "Domingo Savio", type: "hot", color: "red", coords: [18.495288, -69.888075], population: 184863 },
-  { name: "Ensanche Capotillo", type: "hot", color: "red", coords: [18.507381, -69.901876], population: 134708 },
-  { name: "Gualey", type: "hot", color: "red", coords: [18.499763, -69.891837], population: 91147 },
-  { name: "La Zurza", type: "hot", color: "red", coords: [18.505435, -69.886834], population: 42896 },
-  { name: "Los Jardines", type: "hot", color: "red", coords: [18.490207, -69.889397], population: 97568 },
-  { name: "Los Restauradores", type: "hot", color: "red", coords: [18.473739, -69.909137], population: 78945 },
-  { name: "Nuevo Arroyo Hondo", type: "hot", color: "red", coords: [18.502733, -69.890475], population: 123501 },
-  { name: "Nuestra Señora de la Paz", type: "hot", color: "red", coords: [18.443993, -69.906206], population: 98961 },
-  { name: "Palma Real", type: "hot", color: "red", coords: [18.492512, -69.884084], population: 101543 },
-  { name: "Simón Bolívar", type: "hot", color: "red", coords: [18.487237, -69.903833], population: 88463 },
-  { name: "Villa Consuelo", type: "hot", color: "red", coords: [18.499863, -69.898137], population: 40621 },
-  { name: "Villa Francisca", type: "hot", color: "red", coords: [18.501873, -69.899408], population: 50185 },
-  { name: "Villa Juana", type: "hot", color: "red", coords: [18.495766, -69.897355], population: 60323 },
+  // Zonas Rojas (Alto riesgo) - Basadas en las áreas rosadas del mapa oficial
+  { name: "Zona Norte", type: "hot", color: "red", coords: [18.505, -69.885], population: 450000, area: "Norte del Distrito" },
+  { name: "Zona Este", type: "hot", color: "red", coords: [18.475, -69.860], population: 380000, area: "Este del Distrito" },
+  { name: "Zona Noroeste", type: "hot", color: "red", coords: [18.495, -69.910], population: 320000, area: "Noroeste del Distrito" },
 
-  // Zonas Amarillas (Intermedias) - Riesgo moderado  
-  { name: "Altos de Arroyo Hondo", type: "intermediate", color: "yellow", coords: [18.488585, -69.883337], population: 19617 },
-  { name: "Buenos Aires", type: "intermediate", color: "yellow", coords: [18.478221, -69.903802], population: 25770 },
-  { name: "Ensanche Espaillat", type: "intermediate", color: "yellow", coords: [18.471756, -69.890189], population: 16803 },
-  { name: "Ensanche La Fe", type: "intermediate", color: "yellow", coords: [18.453579, -69.883194], population: 19094 },
-  { name: "Ensanche Luperón", type: "intermediate", color: "yellow", coords: [18.509765, -69.892776], population: 23710 },
-  { name: "Ensanche Quisqueya", type: "intermediate", color: "yellow", coords: [18.499598, -69.898422], population: 24850 },
-  { name: "Honduras del Norte", type: "intermediate", color: "yellow", coords: [18.508700, -69.891990], population: 9771 },
-  { name: "Honduras del Oeste", type: "intermediate", color: "yellow", coords: [18.493714, -69.902170], population: 8884 },
-  { name: "Jardines del Sur", type: "intermediate", color: "yellow", coords: [18.487508, -69.888722], population: 8777 },
-  { name: "Julieta Morales", type: "intermediate", color: "yellow", coords: [18.477233, -69.884358], population: 14843 },
-  { name: "La Agustina", type: "intermediate", color: "yellow", coords: [18.491606, -69.898417], population: 20308 },
-  { name: "La Hondonada", type: "intermediate", color: "yellow", coords: [18.450578, -69.894164], population: 14575 },
-  { name: "La Isabela", type: "intermediate", color: "yellow", coords: [18.507069, -69.900611], population: 6865 },
-  { name: "La Julia", type: "intermediate", color: "yellow", coords: [18.477881, -69.892533], population: 12575 },
-  { name: "Las Praderas", type: "intermediate", color: "yellow", coords: [18.488879, -69.890641], population: 29765 },
-  { name: "Los Peralejos", type: "intermediate", color: "yellow", coords: [18.509583, -69.890091], population: 35684 },
-  { name: "Los Ríos", type: "intermediate", color: "yellow", coords: [18.488154, -69.885817], population: 27563 },
-  { name: "María Auxiliadora", type: "intermediate", color: "yellow", coords: [18.478637, -69.898413], population: 20456 },
-  { name: "Mata Hambre", type: "intermediate", color: "yellow", coords: [18.445989, -69.882972], population: 20456 },
-  { name: "Mejoramiento Social", type: "intermediate", color: "yellow", coords: [18.462462, -69.891256], population: 19753 },
-  { name: "Mirador Norte", type: "intermediate", color: "yellow", coords: [18.451860, -69.897212], population: 20465 },
-  { name: "Miraflores", type: "intermediate", color: "yellow", coords: [18.452282, -69.884280], population: 76862 },
-  { name: "Miramar", type: "intermediate", color: "yellow", coords: [18.453706, -69.887166], population: 59876 },
-  { name: "Paseo de los Indios", type: "intermediate", color: "yellow", coords: [18.449313, -69.905945], population: 28951 },
-  { name: "Los Próceres", type: "intermediate", color: "yellow", coords: [18.461390, -69.884935], population: 56513 },
-  { name: "Renacimiento", type: "intermediate", color: "yellow", coords: [18.479797, -69.895141], population: 20145 },
-  { name: "Viejo Arroyo Hondo", type: "intermediate", color: "yellow", coords: [18.455476, -69.895412], population: 38964 },
-  { name: "Villas Agrícolas", type: "intermediate", color: "yellow", coords: [18.470314, -69.903984], population: 48621 },
+  // Zonas Amarillas (Riesgo moderado) - Basadas en las áreas verdes/amarillentas del mapa
+  { name: "Zona Central Norte", type: "intermediate", color: "yellow", coords: [18.485, -69.890], population: 250000, area: "Centro Norte" },
+  { name: "Zona Central", type: "intermediate", color: "yellow", coords: [18.470, -69.895], population: 180000, area: "Centro del Distrito" },
+  { name: "Zona Oeste", type: "intermediate", color: "yellow", coords: [18.460, -69.920], population: 150000, area: "Oeste del Distrito" },
 
-  // Zonas Verdes (Frías) - Bajo riesgo
-  { name: "30 de Mayo", type: "cold", color: "green", coords: [18.504925, -69.894532], population: 5904 },
-  { name: "Arroyo Manzano", type: "cold", color: "green", coords: [18.504014, -69.902393], population: 5894 },
-  { name: "Atala", type: "cold", color: "green", coords: [18.479062, -69.895818], population: 3711 },
-  { name: "Bella Vista", type: "cold", color: "green", coords: [18.441362, -69.888175], population: 15593 },
-  { name: "El Cacique", type: "cold", color: "green", coords: [18.506927, -69.908688], population: 7671 },
-  { name: "Centro de los Héroes", type: "cold", color: "green", coords: [18.471893, -69.896859], population: 62 },
-  { name: "Centro Olímpico", type: "cold", color: "green", coords: [18.487083, -69.906702], population: 99 },
-  { name: "Cerros de Arroyo Hondo", type: "cold", color: "green", coords: [18.470562, -69.902018], population: 3258 },
-  { name: "Ciudad Colonial", type: "cold", color: "green", coords: [18.470559, -69.886930], population: 8472 },
-  { name: "Ciudad Nueva", type: "cold", color: "green", coords: [18.446137, -69.881238], population: 12540 },
-  { name: "Ciudad Universitaria", type: "cold", color: "green", coords: [18.473095, -69.903901], population: 8016 },
-  { name: "El Millón", type: "cold", color: "green", coords: [18.474448, -69.885801], population: 9137 },
-  { name: "Ensanche Naco", type: "cold", color: "green", coords: [18.495130, -69.884036], population: 11102 },
-  { name: "Gascue", type: "cold", color: "green", coords: [18.447708, -69.904161], population: 12562 },
-  { name: "General Antonio Duverge", type: "cold", color: "green", coords: [18.476234, -69.896119], population: 4382 },
-  { name: "Jardín Botánico", type: "cold", color: "green", coords: [18.442856, -69.902565], population: 271 },
-  { name: "Jardín Zoológico", type: "cold", color: "green", coords: [18.502321, -69.903194], population: 19 },
-  { name: "La Castellana", type: "cold", color: "green", coords: [18.455672, -69.889563], population: 10421 },
-  { name: "La Esperilla", type: "cold", color: "green", coords: [18.477404, -69.905623], population: 6807 },
-  { name: "Los Cacicazgos", type: "cold", color: "green", coords: [18.464052, -69.880419], population: 15725 },
-  { name: "Los Prados", type: "cold", color: "green", coords: [18.497975, -69.883099], population: 20457 },
-  { name: "Mirador Sur", type: "cold", color: "green", coords: [18.507991, -69.889138], population: 20211 },
-  { name: "Paraíso", type: "cold", color: "green", coords: [18.443605, -69.887395], population: 75862 },
-  { name: "Piantini", type: "cold", color: "green", coords: [18.474850, -69.887869], population: 59753 },
-  { name: "San Carlos", type: "cold", color: "green", coords: [18.480985, -69.903508], population: 13456 },
-  { name: "San Diego", type: "cold", color: "green", coords: [18.479975, -69.890404], population: 9864 },
-  { name: "San Geronimo", type: "cold", color: "green", coords: [18.448231, -69.900209], population: 8634 },
-  { name: "San Juan Bosco", type: "cold", color: "green", coords: [18.477594, -69.901184], population: 14352 }
+  // Zonas Verdes (Bajo riesgo) - Centro histórico y áreas seguras
+  { name: "Ciudad Colonial", type: "cold", color: "green", coords: [18.470, -69.887], population: 25000, area: "Centro Histórico" },
+  { name: "Zona Universitaria", type: "cold", color: "green", coords: [18.473, -69.904], population: 35000, area: "Área Universitaria" },
+  { name: "Zona Comercial Centro", type: "cold", color: "green", coords: [18.465, -69.892], population: 45000, area: "Centro Comercial" },
+  { name: "Zona Residencial Sur", type: "cold", color: "green", coords: [18.450, -69.885], population: 65000, area: "Residencial Sur" },
+  { name: "Malecón", type: "cold", color: "green", coords: [18.462, -69.878], population: 15000, area: "Zona Portuaria" }
 ];
 
 interface FullScreenMapProps {
@@ -123,8 +63,8 @@ export const FullScreenMap = ({ isOpen, onClose }: FullScreenMapProps) => {
         mapInstance.addControl(new mapboxgl.default.NavigationControl(), 'top-right');
 
         mapInstance.on('load', () => {
-          // Agregar marcadores para cada zona
-          heatMapZones.forEach(zone => {
+          // Agregar áreas de zona en lugar de puntos individuales
+          heatMapZones.forEach((zone, index) => {
             const markerColor = zone.type === 'hot' ? '#ef4444' : 
                                zone.type === 'intermediate' ? '#f59e0b' : '#22c55e';
             
@@ -133,22 +73,36 @@ export const FullScreenMap = ({ isOpen, onClose }: FullScreenMapProps) => {
                 <div class="p-3">
                   <h3 class="font-bold text-sm mb-1">${zone.name}</h3>
                   <p class="text-xs text-gray-600 mb-1">
-                    ${zone.type === 'hot' ? 'Zona Caliente - Alto riesgo' :
-                      zone.type === 'intermediate' ? 'Zona Intermedia - Riesgo moderado' :
-                      'Zona Fría - Bajo riesgo'}
+                    ${zone.type === 'hot' ? 'Zona de Alto Riesgo' :
+                      zone.type === 'intermediate' ? 'Zona de Riesgo Moderado' :
+                      'Zona de Bajo Riesgo'}
+                  </p>
+                  <p class="text-xs text-gray-500 mb-1">
+                    Área: ${zone.area}
                   </p>
                   <p class="text-xs text-gray-500">
-                    Población: ${zone.population?.toLocaleString() || 'N/A'}
+                    Población aprox: ${zone.population?.toLocaleString() || 'N/A'}
                   </p>
                 </div>
               `);
 
-            const marker = new mapboxgl.default.Marker({ color: markerColor })
+            // Crear marcador representativo del área
+            const el = document.createElement('div');
+            el.className = 'custom-marker';
+            el.style.backgroundColor = markerColor;
+            el.style.width = zone.type === 'hot' ? '20px' : zone.type === 'intermediate' ? '16px' : '12px';
+            el.style.height = zone.type === 'hot' ? '20px' : zone.type === 'intermediate' ? '16px' : '12px';
+            el.style.borderRadius = '50%';
+            el.style.border = '2px solid white';
+            el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+            el.style.cursor = 'pointer';
+
+            const marker = new mapboxgl.default.Marker(el)
               .setLngLat([zone.coords[1], zone.coords[0]])
               .setPopup(popup)
               .addTo(mapInstance);
 
-            marker.getElement().addEventListener('click', () => {
+            el.addEventListener('click', () => {
               setSelectedZone(zone);
             });
           });
@@ -336,6 +290,10 @@ export const FullScreenMap = ({ isOpen, onClose }: FullScreenMapProps) => {
                 {selectedZone.type === 'hot' ? 'ALTO' : 
                  selectedZone.type === 'intermediate' ? 'MEDIO' : 'BAJO'}
               </Badge>
+            </div>
+            <div>
+              <span>Área: </span>
+              <span className="font-medium">{selectedZone.area}</span>
             </div>
             <div>
               <span>Población: </span>
