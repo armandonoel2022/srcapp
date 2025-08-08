@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { LandingSidebar } from "@/components/LandingSidebar";
+import { SettingsMenu } from "@/components/SettingsMenu";
 import { 
   Shield, 
   Camera, 
@@ -133,13 +134,16 @@ export const Landing = () => {
               </div>
             </div>
             
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={() => navigate('/auth')}
-            >
-              Control de Acceso
-            </Button>
+            <div className="flex items-center gap-2">
+              <SettingsMenu />
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => navigate('/auth')}
+              >
+                Control de Acceso
+              </Button>
+            </div>
           </div>
         </div>
 

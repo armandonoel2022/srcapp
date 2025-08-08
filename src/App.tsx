@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { SettingsProvider } from "./contexts/SettingsContext";
 import { Auth } from "./pages/Auth";
 import { Dashboard } from "./pages/Dashboard";
 import { Landing } from "./pages/Landing";
@@ -27,27 +28,29 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
+    <SettingsProvider>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </SettingsProvider>
   </QueryClientProvider>
 );
 

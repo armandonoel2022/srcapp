@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Users, FileText, Plus, LogOut, Settings, UserPlus, Edit, Trash, Search, Home, MapPin } from 'lucide-react';
+import { Menu, Users, FileText, Plus, LogOut, Settings as SettingsIcon, UserPlus, Edit, Trash, Search, Home, MapPin } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
 import { useNavigate } from 'react-router-dom';
+import { SettingsMenu } from '@/components/SettingsMenu';
 
 interface SidebarProps {
   onNavigate: (section: string) => void;
@@ -101,10 +102,13 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
             </>
           )}
           
-          <div className="pt-4 border-t">
+          <div className="pt-4 border-t space-y-2">
+            <div className="px-2">
+              <SettingsMenu />
+            </div>
             <Button
               variant="ghost"
-              className="justify-start text-destructive hover:text-destructive"
+              className="justify-start text-destructive hover:text-destructive w-full"
               onClick={handleSignOut}
             >
               <LogOut className="mr-2 h-4 w-4" />
