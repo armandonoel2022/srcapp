@@ -63,49 +63,8 @@ export const FullScreenMap = ({ isOpen, onClose }: FullScreenMapProps) => {
         mapInstance.addControl(new mapboxgl.default.NavigationControl(), 'top-right');
 
         mapInstance.on('load', () => {
-          // Agregar áreas de zona en lugar de puntos individuales
-          heatMapZones.forEach((zone, index) => {
-            const markerColor = zone.type === 'hot' ? '#ef4444' : 
-                               zone.type === 'intermediate' ? '#f59e0b' : '#22c55e';
-            
-            const popup = new mapboxgl.default.Popup({ offset: 25 })
-              .setHTML(`
-                <div class="p-3">
-                  <h3 class="font-bold text-sm mb-1">${zone.name}</h3>
-                  <p class="text-xs text-gray-600 mb-1">
-                    ${zone.type === 'hot' ? 'Zona de Alto Riesgo' :
-                      zone.type === 'intermediate' ? 'Zona de Riesgo Moderado' :
-                      'Zona de Bajo Riesgo'}
-                  </p>
-                  <p class="text-xs text-gray-500 mb-1">
-                    Área: ${zone.area}
-                  </p>
-                  <p class="text-xs text-gray-500">
-                    Población aprox: ${zone.population?.toLocaleString() || 'N/A'}
-                  </p>
-                </div>
-              `);
-
-            // Crear marcador representativo del área
-            const el = document.createElement('div');
-            el.className = 'custom-marker';
-            el.style.backgroundColor = markerColor;
-            el.style.width = zone.type === 'hot' ? '20px' : zone.type === 'intermediate' ? '16px' : '12px';
-            el.style.height = zone.type === 'hot' ? '20px' : zone.type === 'intermediate' ? '16px' : '12px';
-            el.style.borderRadius = '50%';
-            el.style.border = '2px solid white';
-            el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-            el.style.cursor = 'pointer';
-
-            const marker = new mapboxgl.default.Marker(el)
-              .setLngLat([zone.coords[1], zone.coords[0]])
-              .setPopup(popup)
-              .addTo(mapInstance);
-
-            el.addEventListener('click', () => {
-              setSelectedZone(zone);
-            });
-          });
+          // Mapa limpio sin marcadores - solo mostrar el territorio del Distrito Nacional
+          console.log('Mapa del Distrito Nacional en pantalla completa cargado correctamente');
         });
 
         setMap(mapInstance);
@@ -234,27 +193,12 @@ export const FullScreenMap = ({ isOpen, onClose }: FullScreenMapProps) => {
         <div className="flex items-center gap-4 max-w-screen-xl mx-auto">
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            <h1 className="text-lg font-semibold">Mapa de Calor - Pantalla Completa</h1>
+            <h1 className="text-lg font-semibold">Mapa del Distrito Nacional - Pantalla Completa</h1>
           </div>
           
-          <div className="flex-1 max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar zona..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-10"
-              />
-            </div>
-          </div>
+          <div className="flex-1"></div>
           
           <div className="flex items-center gap-2">
-            <Button onClick={handleSearch} size="sm" variant="default">
-              <Search className="h-4 w-4 mr-2" />
-              Buscar
-            </Button>
             <Button onClick={getCurrentLocation} size="sm" variant="outline">
               <Navigation className="h-4 w-4 mr-2" />
               Mi Ubicación
@@ -270,38 +214,6 @@ export const FullScreenMap = ({ isOpen, onClose }: FullScreenMapProps) => {
       <div className="absolute inset-0 pt-20">
         <div ref={mapContainer} className="w-full h-full" />
       </div>
-
-      {/* Selected Zone Info */}
-      {selectedZone && (
-        <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur-sm rounded-lg border p-4 max-w-sm">
-          <div className="flex items-center gap-2 mb-2">
-            {selectedZone.type === 'hot' && <AlertTriangle className="h-4 w-4 text-destructive" />}
-            {selectedZone.type === 'intermediate' && <AlertCircle className="h-4 w-4 text-orange-600" />}
-            {selectedZone.type === 'cold' && <CheckCircle className="h-4 w-4 text-green-600" />}
-            <h3 className="font-semibold">{selectedZone.name}</h3>
-          </div>
-          <div className="space-y-1 text-sm">
-            <div className="flex items-center gap-2">
-              <span>Riesgo:</span>
-              <Badge 
-                variant={selectedZone.type === 'hot' ? 'destructive' : 
-                        selectedZone.type === 'intermediate' ? 'secondary' : 'default'}
-              >
-                {selectedZone.type === 'hot' ? 'ALTO' : 
-                 selectedZone.type === 'intermediate' ? 'MEDIO' : 'BAJO'}
-              </Badge>
-            </div>
-            <div>
-              <span>Área: </span>
-              <span className="font-medium">{selectedZone.area}</span>
-            </div>
-            <div>
-              <span>Población: </span>
-              <span className="font-medium">{selectedZone.population?.toLocaleString()} hab.</span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
