@@ -22,7 +22,7 @@ export const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate('/dashboard');
     }
   }, [user, navigate]);
 
@@ -58,7 +58,7 @@ export const Auth = () => {
             ? "Usuario registrado exitosamente" 
             : "Inicio de sesión exitoso"
         });
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (err) {
       toast({
