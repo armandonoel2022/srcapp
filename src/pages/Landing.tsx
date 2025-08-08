@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { LandingSidebar } from "@/components/LandingSidebar";
 import { 
   Shield, 
   Camera, 
@@ -82,14 +83,26 @@ export const Landing = () => {
   const [visitas, setVisitas] = useState(0);
 
   useEffect(() => {
-    // Visitor counter logic
-    let visitasCount = localStorage.getItem('contador_visitas');
-    if (!visitasCount) {
-      visitasCount = "0";
+    // Visitor counter logic - only count unique sessions
+    const sessionKey = 'session_started';
+    const sessionStarted = sessionStorage.getItem(sessionKey);
+    
+    if (!sessionStarted) {
+      // This is a new session, count the visit
+      sessionStorage.setItem(sessionKey, 'true');
+      
+      let visitasCount = localStorage.getItem('contador_visitas');
+      if (!visitasCount) {
+        visitasCount = "0";
+      }
+      const newCount = parseInt(visitasCount) + 1;
+      localStorage.setItem('contador_visitas', newCount.toString());
+      setVisitas(newCount);
+    } else {
+      // Load existing visit count without incrementing
+      const existingCount = localStorage.getItem('contador_visitas') || "0";
+      setVisitas(parseInt(existingCount));
     }
-    const newCount = parseInt(visitasCount) + 1;
-    localStorage.setItem('contador_visitas', newCount.toString());
-    setVisitas(newCount);
 
     // Auto-slide carousel
     const interval = setInterval(() => {
@@ -113,30 +126,17 @@ export const Landing = () => {
       <header className="w-full bg-primary text-primary-foreground sticky top-0 z-50 shadow-lg">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-4">
-            <div className="text-xl md:text-2xl font-bold">
-              Seguridad Residencial y Comercial S.R.L.
+            <div className="flex items-center gap-4">
+              <LandingSidebar />
+              <div className="text-lg md:text-xl font-bold">
+                Seguridad Residencial y Comercial S.R.L.
+              </div>
             </div>
             
-            <nav className="hidden md:flex space-x-6">
-              <a href="#inicio" className="hover:text-accent transition-colors">Inicio</a>
-              <a href="#nosotros" className="hover:text-accent transition-colors">Sobre nosotros</a>
-              <a href="#clientes" className="hover:text-accent transition-colors">Clientes</a>
-              <a href="#servicios" className="hover:text-accent transition-colors">Servicios</a>
-              <Button 
-                variant="secondary" 
-                size="sm"
-                onClick={() => navigate('/auth')}
-                className="ml-4"
-              >
-                Control de Acceso
-              </Button>
-            </nav>
-
             <Button 
               variant="secondary" 
               size="sm"
               onClick={() => navigate('/auth')}
-              className="md:hidden"
             >
               Control de Acceso
             </Button>
@@ -152,7 +152,7 @@ export const Landing = () => {
       </header>
 
       {/* Hero Section with Carousel */}
-      <section id="inicio" className="relative h-[60vh] md:h-[80vh] overflow-hidden">
+      <section id="inicio" className="relative h-[40vh] md:h-[50vh] overflow-hidden">
         {heroSlides.map((slide, index) => (
           <div
             key={index}

@@ -135,6 +135,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('customUser');
     setUser(null);
     setSession(null);
+    // Redirect to landing page after sign out
+    window.location.href = '/';
   };
 
   const isAdmin = user?.type === 'admin' || user?.role === 'administrador';

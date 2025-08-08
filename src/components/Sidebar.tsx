@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Users, FileText, Plus, LogOut, Settings, UserPlus, Edit, Trash, Search } from 'lucide-react';
+import { Menu, Users, FileText, Plus, LogOut, Settings, UserPlus, Edit, Trash, Search, Home, MapPin } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
+import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
   onNavigate: (section: string) => void;
@@ -13,6 +14,7 @@ interface SidebarProps {
 export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { signOut, isAdmin: authIsAdmin } = useAuth();
+  const navigate = useNavigate();
   
   console.log('Sidebar Debug - authIsAdmin from useAuth:', authIsAdmin);
 
@@ -29,7 +31,8 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
   const basicItems = [
     { id: 'registros', label: 'Registro de Acceso', icon: FileText },
     { id: 'consulta', label: 'Consultar Registros', icon: Search },
-    { id: 'empleados', label: 'Gestión de Empleados', icon: Users }
+    { id: 'empleados', label: 'Gestión de Empleados', icon: Users },
+    { id: 'mapa-calor', label: 'Mapa de Calor', icon: MapPin }
   ];
 
   const adminItems = [
@@ -55,6 +58,16 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
           <SheetTitle>Menú de Administración</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col space-y-2 mt-6">
+          {/* Home button */}
+          <Button
+            variant="ghost"
+            className="justify-start"
+            onClick={() => navigate('/')}
+          >
+            <Home className="mr-2 h-4 w-4" />
+            Ir al Inicio
+          </Button>
+          
           {/* Basic functionality */}
           {basicItems.map((item) => (
             <Button

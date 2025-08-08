@@ -15,6 +15,7 @@ import { EditarRegistros } from '@/components/EditarRegistros';
 import { EliminarEmpleados } from '@/components/EliminarEmpleados';
 import { PasswordChangeModal } from '@/components/PasswordChangeModal';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
+import { HeatMap } from '@/components/HeatMap';
 
 export const Dashboard = () => {
   const { user, signOut, isAdmin } = useAuth();
@@ -98,6 +99,8 @@ export const Dashboard = () => {
         return <EditarRegistros />;
       case 'eliminar-empleados':
         return <EliminarEmpleados />;
+      case 'mapa-calor':
+        return <HeatMap />;
       default:
         return <RegistroForm />;
     }

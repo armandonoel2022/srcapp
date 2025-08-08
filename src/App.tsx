@@ -22,7 +22,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  return user ? <>{children}</> : <Navigate to="/auth" />;
+  return user ? <>{children}</> : <Navigate to="/auth" replace />;
 };
 
 const App = () => (
