@@ -76,12 +76,12 @@ export const Auth = () => {
         <div className="bg-white rounded-lg shadow-lg p-8 space-y-6"
              style={{ boxShadow: "var(--shadow-form)" }}>
           
-          {/* SRC Banner */}
+          {/* Logo SRC */}
           <div className="text-center space-y-4">
             <img 
-              src="/lovable-uploads/d39f0302-dbf2-4a41-8258-65c43ff877fd.png" 
+              src="/src/assets/src-logo.png" 
               alt="SRC Logo" 
-              className="w-24 h-24 mx-auto"
+              className="w-32 h-32 mx-auto"
             />
             <h1 className="text-2xl font-bold text-[hsl(var(--title-dark))]">
               {isSignUp ? "Registrarse" : "Iniciar Sesión"}
@@ -134,21 +134,6 @@ export const Auth = () => {
               {isSignUp ? "¿Ya tienes cuenta? Iniciar Sesión" : "¿No tienes cuenta? Registrarse"}
             </Button>
           </form>
-
-          {/* Credenciales de prueba */}
-          <div className="text-center pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600 mb-2">Credenciales de acceso:</p>
-            <div className="text-xs text-gray-500 space-y-1">
-              <div>
-                <strong>Administrador:</strong><br />
-                admin@src.com / Src_Admin@2025
-              </div>
-              <div>
-                <strong>Agente:</strong><br />
-                agente@src.com / Src_Control@2025
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
