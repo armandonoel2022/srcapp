@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // If custom login fails, try regular Supabase auth
       const { error: supabaseError } = await supabase.auth.signInWithPassword({
-        email: `${username}@srccontrol.local`,
+        email: username, // Use the username directly as email
         password,
       });
       
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
-      email: `${username}@srccontrol.local`,
+      email: username, // Use the username directly as email
       password,
       options: {
         emailRedirectTo: redirectUrl
