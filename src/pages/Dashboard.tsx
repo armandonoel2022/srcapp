@@ -11,6 +11,7 @@ import { GestionEmpleados } from '@/components/GestionEmpleados';
 import { Sidebar } from '@/components/Sidebar';
 import { ConsultaRegistros } from '@/components/ConsultaRegistros';
 import { GestionUsuarios } from '@/components/GestionUsuarios';
+import { EditarRegistros } from '@/components/EditarRegistros';
 import { PasswordChangeModal } from '@/components/PasswordChangeModal';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
 
@@ -93,7 +94,7 @@ export const Dashboard = () => {
       case 'usuarios':
         return <GestionUsuarios />;
       case 'editar-registros':
-        return <div className="p-6"><h2 className="text-2xl font-bold">Editar Entradas y Salidas</h2><p>Función en desarrollo...</p></div>;
+        return <EditarRegistros />;
       case 'eliminar-empleados':
         return <div className="p-6"><h2 className="text-2xl font-bold">Eliminar Empleados</h2><p>Función en desarrollo...</p></div>;
       default:
