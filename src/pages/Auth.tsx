@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const Auth = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [creatingUsers, setCreatingUsers] = useState(false);
   
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -66,6 +68,30 @@ export const Auth = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createInitialUsers = async () => {
+    setCreatingUsers(true);
+    try {
+      const response = await supabase.functions.invoke('create-admin-users');
+      
+      if (response.error) {
+        throw response.error;
+      }
+
+      toast({
+        title: "Usuarios creados",
+        description: "Los usuarios administrador y agente han sido creados exitosamente. Ya puedes iniciar sesión."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `Error al crear usuarios: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setCreatingUsers(false);
     }
   };
 
@@ -133,6 +159,22 @@ export const Auth = () => {
             >
               {isSignUp ? "¿Ya tienes cuenta? Iniciar Sesión" : "¿No tienes cuenta? Registrarse"}
             </Button>
+
+            {/* Botón para crear usuarios iniciales */}
+            <div className="pt-4 border-t border-gray-200">
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                onClick={createInitialUsers}
+                disabled={creatingUsers}
+              >
+                {creatingUsers ? "Creando usuarios..." : "Crear usuarios del sistema"}
+              </Button>
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                Haz clic aquí para crear los usuarios administrador y agente automáticamente
+              </p>
+            </div>
           </form>
         </div>
       </div>
