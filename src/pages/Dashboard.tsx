@@ -17,6 +17,7 @@ import { PasswordChangeModal } from '@/components/PasswordChangeModal';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
 import { HeatMap } from '@/components/HeatMap';
 import { InteractiveHeatMap } from '@/components/InteractiveHeatMap';
+import { GeocodingManager } from '@/components/GeocodingManager';
 
 export const Dashboard = () => {
   const { user, signOut, isAdmin } = useAuth();
@@ -102,6 +103,8 @@ export const Dashboard = () => {
         return <EliminarEmpleados />;
       case 'mapa-calor':
         return <InteractiveHeatMap />;
+      case 'geocoding':
+        return <GeocodingManager />;
       default:
         return <RegistroForm />;
     }
