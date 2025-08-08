@@ -159,22 +159,6 @@ export const Auth = () => {
             >
               {isSignUp ? "¿Ya tienes cuenta? Iniciar Sesión" : "¿No tienes cuenta? Registrarse"}
             </Button>
-
-            {/* Botón para crear usuarios iniciales */}
-            <div className="pt-4 border-t border-gray-200">
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full"
-                onClick={createInitialUsers}
-                disabled={creatingUsers}
-              >
-                {creatingUsers ? "Creando usuarios..." : "Crear usuarios del sistema"}
-              </Button>
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                Haz clic aquí para crear los usuarios administrador y agente automáticamente
-              </p>
-            </div>
           </form>
         </div>
       </div>
