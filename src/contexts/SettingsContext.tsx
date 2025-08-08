@@ -19,7 +19,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>('system');
   const [geolocationEnabled, setGeolocationEnabled] = useState(true);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [mapboxToken, setMapboxToken] = useState('');
+  const [mapboxToken, setMapboxToken] = useState('pk.eyJ1IjoiYXJtYW5kb25vZWwiLCJhIjoiY21jeGx1eDF5MDJ4YTJqbjdlamQ4aTRxNCJ9.6M0rLVxf5UTiE7EBw7qjTQ');
 
   // Load settings from localStorage on mount
   useEffect(() => {
