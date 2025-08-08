@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Users, FileText, Plus, LogOut, Settings as SettingsIcon, UserPlus, Edit, Trash, Search, Home, MapPin } from 'lucide-react';
+import { Menu, Users, FileText, Plus, LogOut, Settings as SettingsIcon, UserPlus, Edit, Trash, Search, Home, MapPin, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
 import { useNavigate } from 'react-router-dom';
@@ -34,7 +34,7 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
     { id: 'consulta', label: 'Consultar Registros', icon: Search },
     { id: 'empleados', label: 'Gestión de Empleados', icon: Users },
     { id: 'mapa-calor', label: 'Mapa de Calor', icon: MapPin },
-    { id: 'geocoding', label: 'Geocoding Manager', icon: SettingsIcon }
+    { id: 'geocoding', label: 'Coordenadas Mejoradas', icon: CheckCircle }
   ];
 
   const adminItems = [

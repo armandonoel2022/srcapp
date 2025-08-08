@@ -6,44 +6,46 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, Search, Navigation, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-// Datos del mapa de calor del Distrito Nacional - Coordenadas corregidas dentro del área terrestre
+// Datos del mapa de calor del Distrito Nacional - Coordenadas precisas por geocoding
 const heatMapZones = [
-  // Zonas Rojas (Calientes) - Alto riesgo
-  { name: "24 de Abril", type: "hot", color: "red", coords: [18.4756, -69.9034], population: 53870 },
-  { name: "Villa Consuelo", type: "hot", color: "red", coords: [18.4833, -69.9014], population: 40621 },
-  { name: "Ensanche Simón Bolívar", type: "hot", color: "red", coords: [18.5000, -69.9035], population: 88463 },
-  { name: "San Juan Bosco", type: "hot", color: "red", coords: [18.5000, -69.9025], population: 14352 },
-  { name: "Cristo Rey", type: "hot", color: "red", coords: [18.4589, -69.9056] },
-  { name: "Gualey", type: "hot", color: "red", coords: [18.4789, -69.9023] },
-  { name: "Villa Juana", type: "hot", color: "red", coords: [18.4611, -69.9042] },
-  { name: "Capotillo", type: "hot", color: "red", coords: [18.4912, -69.9056] },
-  { name: "Guachupita", type: "hot", color: "red", coords: [18.4834, -69.9001] },
-  { name: "La Ciénaga", type: "hot", color: "red", coords: [18.4861, -69.9012] },
+  { name: "24 de Abril", type: "hot", color: "red", coords: [18.497878, -69.883417] },
+  { name: "Cristo Rey", type: "hot", color: "red", coords: [18.488505, -69.895349] },
+  { name: "Domingo Savio", type: "hot", color: "red", coords: [18.495288, -69.888075] },
+  { name: "Ensanche Capotillo", type: "hot", color: "red", coords: [18.507381, -69.901876] },
+  { name: "Gualey", type: "hot", color: "red", coords: [18.499763, -69.891837] },
+  { name: "La Zurza", type: "hot", color: "red", coords: [18.505435, -69.886834] },
+  { name: "Los Jardines", type: "hot", color: "red", coords: [18.490207, -69.889397] },
+  { name: "Los Restauradores", type: "hot", color: "red", coords: [18.473739, -69.909137] },
+  { name: "Nuevo Arroyo Hondo", type: "hot", color: "red", coords: [18.502733, -69.890475] },
+  { name: "Nuestra Señora de la Paz", type: "hot", color: "red", coords: [18.443993, -69.906206] },
+  { name: "Palma Real", type: "hot", color: "red", coords: [18.492512, -69.884084] },
+  { name: "Simón Bolívar", type: "hot", color: "red", coords: [18.487237, -69.903833] },
+  { name: "Villa Consuelo", type: "hot", color: "red", coords: [18.499863, -69.898137] },
+  { name: "Villa Francisca", type: "hot", color: "red", coords: [18.501873, -69.899408] },
+  { name: "Villa Juana", type: "hot", color: "red", coords: [18.495766, -69.897355] },
   
   // Zonas Amarillas (Intermedias) - Riesgo moderado
-  { name: "Altos de Arroyo Hondo", type: "intermediate", color: "yellow", coords: [18.4934, -69.9034], population: 19617 },
-  { name: "Villa Agrippina", type: "intermediate", color: "yellow", coords: [18.4712, -69.9045] },
-  { name: "Palma Real", type: "intermediate", color: "yellow", coords: [18.4823, -69.9023] },
-  { name: "Mirador Norte", type: "intermediate", color: "yellow", coords: [18.4934, -69.9034] },
-  { name: "Villa María", type: "intermediate", color: "yellow", coords: [18.4623, -69.9045] },
-  { name: "Ensanche Quisqueya", type: "intermediate", color: "yellow", coords: [18.4689, -69.9023] },
-  { name: "Los Jardines", type: "intermediate", color: "yellow", coords: [18.4567, -69.9034] },
-  { name: "Villa Francisca", type: "intermediate", color: "yellow", coords: [18.4678, -69.9056] },
-  { name: "30 de Mayo", type: "intermediate", color: "yellow", coords: [18.4612, -69.9034], population: 5904 },
+  { name: "Altos de Arroyo Hondo", type: "intermediate", color: "yellow", coords: [18.488585, -69.883337] },
+  { name: "Buenos Aires", type: "intermediate", color: "yellow", coords: [18.478221, -69.903802] },
+  { name: "Ensanche Espaillat", type: "intermediate", color: "yellow", coords: [18.471756, -69.890189] },
+  { name: "Ensanche La Fe", type: "intermediate", color: "yellow", coords: [18.453579, -69.883194] },
+  { name: "Ensanche Luperón", type: "intermediate", color: "yellow", coords: [18.509765, -69.892776] },
+  { name: "Ensanche Quisqueya", type: "intermediate", color: "yellow", coords: [18.499598, -69.898422] },
+  { name: "Honduras del Norte", type: "intermediate", color: "yellow", coords: [18.508700, -69.891990] },
+  { name: "Honduras del Oeste", type: "intermediate", color: "yellow", coords: [18.493714, -69.902170] },
+  { name: "30 de Mayo", type: "intermediate", color: "yellow", coords: [18.504925, -69.894532] },
   
   // Zonas Verdes (Frías) - Bajo riesgo
-  { name: "Ciudad Colonial", type: "cold", color: "green", coords: [18.4700, -69.8880], population: 8472 },
-  { name: "Gazcue", type: "cold", color: "green", coords: [18.4656, -69.9012] },
-  { name: "Zona Universitaria", type: "cold", color: "green", coords: [18.4623, -69.8934] },
-  { name: "Mirador Sur", type: "cold", color: "green", coords: [18.4567, -69.9034] },
-  { name: "Bella Vista", type: "cold", color: "green", coords: [18.4712, -69.9023] },
-  { name: "Ensanche Naco", type: "cold", color: "green", coords: [18.4789, -69.9012] },
-  { name: "Piantini", type: "cold", color: "green", coords: [18.4823, -69.9034] },
-  { name: "Ensanche Paraíso", type: "cold", color: "green", coords: [18.4756, -69.9045] },
-  { name: "Ensanche Serralles", type: "cold", color: "green", coords: [18.4689, -69.9056] },
-  { name: "La Esperilla", type: "cold", color: "green", coords: [18.4634, -69.9023] },
-  { name: "Evaristo Morales", type: "cold", color: "green", coords: [18.4767, -69.9034] },
-  { name: "Los Cacicazgos", type: "cold", color: "green", coords: [18.4756, -69.9012] }
+  { name: "Ciudad Colonial", type: "cold", color: "green", coords: [18.470559, -69.886930] },
+  { name: "Gascue", type: "cold", color: "green", coords: [18.447708, -69.904161] },
+  { name: "Zona Universitaria", type: "cold", color: "green", coords: [18.473095, -69.903901] },
+  { name: "Bella Vista", type: "cold", color: "green", coords: [18.441362, -69.888175] },
+  { name: "Ensanche Naco", type: "cold", color: "green", coords: [18.495130, -69.884036] },
+  { name: "Piantini", type: "cold", color: "green", coords: [18.474850, -69.887869] },
+  { name: "Paraíso", type: "cold", color: "green", coords: [18.443605, -69.887395] },
+  { name: "La Esperilla", type: "cold", color: "green", coords: [18.477404, -69.905623] },
+  { name: "Los Cacicazgos", type: "cold", color: "green", coords: [18.464052, -69.880419] },
+  { name: "San Juan Bosco", type: "cold", color: "green", coords: [18.477594, -69.901184] }
 ];
 
 export const HeatMap = () => {
