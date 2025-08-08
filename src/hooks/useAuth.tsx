@@ -2,15 +2,14 @@ import { useState, useEffect, createContext, useContext, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-interface CustomUser {
-  id: string;
-  username: string;
-  type: 'admin' | 'user';
-  email?: string;
+interface CustomUser extends User {
+  username?: string;
+  role?: string;
+  type?: 'admin' | 'user';
 }
 
 interface AuthContextType {
-  user: User | CustomUser | null;
+  user: CustomUser | null;
   session: Session | null;
   loading: boolean;
   signIn: (username: string, password: string) => Promise<{ error: any }>;
@@ -22,24 +21,58 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | CustomUser | null>(null);
+  const [user, setUser] = useState<CustomUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Set up auth state listener for regular Supabase auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
+        if (session?.user) {
+          // Load user profile to get role information
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('username, role')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+          
+          const userWithProfile: CustomUser = {
+            ...session.user,
+            username: profile?.username,
+            role: profile?.role,
+            type: profile?.role === 'administrador' ? 'admin' : 'user'
+          };
+          setUser(userWithProfile);
+        } else {
+          setUser(null);
+        }
         setLoading(false);
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        // Load user profile to get role information
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('username, role')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        
+        const userWithProfile: CustomUser = {
+          ...session.user,
+          username: profile?.username,
+          role: profile?.role,
+          type: profile?.role === 'administrador' ? 'admin' : 'user'
+        };
+        setUser(userWithProfile);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
@@ -101,7 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
   };
 
-  const isAdmin = user && (user as CustomUser)?.type === 'admin';
+  const isAdmin = user?.type === 'admin' || user?.role === 'administrador';
 
   const value = {
     user,

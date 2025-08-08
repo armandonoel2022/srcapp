@@ -84,11 +84,16 @@ serve(async (req) => {
       );
     }
 
-    // Return the session data
+    // Return the session data with role information
     return new Response(
       JSON.stringify({ 
         session: signInData.session,
-        user: signInData.user
+        user: {
+          ...signInData.user,
+          username: profileData.username,
+          role: profileData.role,
+          type: profileData.role === 'administrador' ? 'admin' : 'user'
+        }
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
