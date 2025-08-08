@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0';
 
 const corsHeaders = {
@@ -25,75 +25,72 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client
+    // Initialize Supabase client with service role key
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
 
-    // First check if it's an admin user
-    const { data: adminData, error: adminError } = await supabase
-      .from('administradores')
-      .select('*')
+    // Find user profile by username
+    const { data: profileData, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('user_id, username, role')
       .eq('username', username)
       .maybeSingle();
 
-    if (adminData && !adminError) {
-      // Verify admin password (simple comparison for now)
-      // In production, you should use proper password hashing
-      const isValidPassword = password === 'Src_Control@2025';
-      
-      if (isValidPassword) {
-        // Create a custom session for admin
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            user: { 
-              id: adminData.id,
-              username: adminData.username,
-              type: 'admin'
-            }
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
+    if (profileError || !profileData) {
+      console.log('Profile not found for username:', username);
+      return new Response(
+        JSON.stringify({ error: 'Invalid credentials' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    // Check if it's a regular user
-    const { data: userData, error: userError } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('username', username)
-      .maybeSingle();
+    // Get the user's email from auth.users table
+    const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(profileData.user_id);
 
-    if (userData && !userError) {
-      // For simplicity, we'll do a direct password comparison
-      // In production, you should use proper password hashing verification
-      const isValidPassword = password === userData.password;
-      
-      if (isValidPassword) {
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            user: { 
-              id: userData.id,
-              username: userData.username,
-              type: 'user'
-            }
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
+    if (authError || !authUser.user) {
+      console.log('Auth user not found for user_id:', profileData.user_id);
+      return new Response(
+        JSON.stringify({ error: 'Invalid credentials' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    // Invalid credentials
+    // Try to sign in with email and password
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: authUser.user.email!,
+      password: password,
+    });
+
+    if (signInError || !signInData.session) {
+      console.log('Sign in failed:', signInError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Invalid credentials' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Return the session data
     return new Response(
-      JSON.stringify({ error: 'Invalid credentials' }),
+      JSON.stringify({ 
+        session: signInData.session,
+        user: signInData.user
+      }),
       { 
-        status: 401, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );

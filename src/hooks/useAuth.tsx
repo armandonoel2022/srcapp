@@ -58,28 +58,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     
     try {
-      // First try custom login (admin/usuarios tables)
+      // Try custom login with username
       const { data, error } = await supabase.functions.invoke('custom-login', {
         body: { username, password }
       });
 
-      if (data?.success) {
-        const customUser = data.user;
-        setUser(customUser);
-        setSession(null); // No Supabase session for custom users
-        localStorage.setItem('customUser', JSON.stringify(customUser));
+      if (data?.session && data?.user) {
+        // Set the session from the custom login
+        setSession(data.session);
+        setUser(data.user);
         setLoading(false);
         return { error: null };
       }
 
-      // If custom login fails, try regular Supabase auth
-      const { error: supabaseError } = await supabase.auth.signInWithPassword({
-        email: username, // Use the username directly as email
-        password,
-      });
-      
+      // If custom login fails, return the error
       setLoading(false);
-      return { error: supabaseError || data?.error };
+      return { error: data?.error || error || 'Invalid credentials' };
     } catch (err) {
       setLoading(false);
       return { error: err };
@@ -107,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
   };
 
-  const isAdmin = (user as CustomUser)?.type === 'admin';
+  const isAdmin = user && (user as CustomUser)?.type === 'admin';
 
   const value = {
     user,
