@@ -23,14 +23,18 @@ export const useUserProfiles = () => {
   const loadUserProfiles = async () => {
     setLoading(true);
     try {
+      console.log('Loading user profiles...');
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
+      console.log('User profiles query result:', { data, error });
       if (error) throw error;
       setProfiles(data || []);
+      console.log('Profiles set:', data?.length || 0);
     } catch (error: any) {
+      console.error('Error loading profiles:', error);
       toast({
         title: "Error",
         description: `Error al cargar perfiles: ${error.message}`,
