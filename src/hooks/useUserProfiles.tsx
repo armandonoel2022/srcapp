@@ -171,7 +171,13 @@ export const useUserProfiles = () => {
     }
   };
 
-  const isAdmin = () => currentUserProfile?.role === 'administrador';
+  const isAdmin = () => {
+    console.log('useUserProfiles isAdmin - currentUserProfile:', currentUserProfile);
+    console.log('useUserProfiles isAdmin - role:', currentUserProfile?.role);
+    const result = currentUserProfile?.role === 'administrador';
+    console.log('useUserProfiles isAdmin - result:', result);
+    return result;
+  };
   const requiresPasswordChange = () => currentUserProfile?.requires_password_change === true;
 
   useEffect(() => {

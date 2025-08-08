@@ -14,6 +14,8 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { signOut } = useAuth();
   const { isAdmin } = useUserProfiles();
+  
+  console.log('Sidebar Debug - isAdmin from useUserProfiles:', isAdmin());
 
   const handleNavigation = (section: string) => {
     onNavigate(section);
@@ -38,6 +40,9 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
   ];
 
   const menuItems = isAdmin() ? [...basicItems, ...adminItems] : basicItems;
+  
+  console.log('Sidebar Debug - menuItems length:', menuItems.length);
+  console.log('Sidebar Debug - showing admin items:', isAdmin());
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>

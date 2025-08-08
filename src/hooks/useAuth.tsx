@@ -98,6 +98,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (data?.session && data?.user) {
         // Set the session from the custom login
+        console.log('Custom login successful:', data.user);
+        console.log('User role:', data.user.role);
+        console.log('User type:', data.user.type);
         setSession(data.session);
         setUser(data.user);
         setLoading(false);
@@ -135,6 +138,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isAdmin = user?.type === 'admin' || user?.role === 'administrador';
+  
+  console.log('Auth Debug - User:', user);
+  console.log('Auth Debug - isAdmin:', isAdmin);
+  console.log('Auth Debug - user.type:', user?.type);
+  console.log('Auth Debug - user.role:', user?.role);
 
   const value = {
     user,
