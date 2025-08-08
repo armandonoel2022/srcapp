@@ -9,24 +9,79 @@ import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/contexts/SettingsContext';
 import { FullScreenMap } from '@/components/FullScreenMap';
 
-// Zonas del Distrito Nacional basadas en el mapa oficial
+// Zonas del Distrito Nacional - Listado completo
 const heatMapZones = [
-  // Zonas Rojas (Alto riesgo) - Basadas en las áreas rosadas del mapa oficial
-  { name: "Zona Norte", type: "hot", color: "red", coords: [18.505, -69.885], population: 450000, area: "Norte del Distrito" },
-  { name: "Zona Este", type: "hot", color: "red", coords: [18.475, -69.860], population: 380000, area: "Este del Distrito" },
-  { name: "Zona Noroeste", type: "hot", color: "red", coords: [18.495, -69.910], population: 320000, area: "Noroeste del Distrito" },
-
-  // Zonas Amarillas (Riesgo moderado) - Basadas en las áreas verdes/amarillentas del mapa
-  { name: "Zona Central Norte", type: "intermediate", color: "yellow", coords: [18.485, -69.890], population: 250000, area: "Centro Norte" },
-  { name: "Zona Central", type: "intermediate", color: "yellow", coords: [18.470, -69.895], population: 180000, area: "Centro del Distrito" },
-  { name: "Zona Oeste", type: "intermediate", color: "yellow", coords: [18.460, -69.920], population: 150000, area: "Oeste del Distrito" },
-
-  // Zonas Verdes (Bajo riesgo) - Centro histórico y áreas seguras
-  { name: "Ciudad Colonial", type: "cold", color: "green", coords: [18.470, -69.887], population: 25000, area: "Centro Histórico" },
-  { name: "Zona Universitaria", type: "cold", color: "green", coords: [18.473, -69.904], population: 35000, area: "Área Universitaria" },
-  { name: "Zona Comercial Centro", type: "cold", color: "green", coords: [18.465, -69.892], population: 45000, area: "Centro Comercial" },
-  { name: "Zona Residencial Sur", type: "cold", color: "green", coords: [18.450, -69.885], population: 65000, area: "Residencial Sur" },
-  { name: "Malecón", type: "cold", color: "green", coords: [18.462, -69.878], population: 15000, area: "Zona Portuaria" }
+  { name: "24 de Abril", type: "hot", color: "red", coords: [18.497878, -69.883417] },
+  { name: "Cristo Rey", type: "hot", color: "red", coords: [18.488505, -69.895349] },
+  { name: "Domingo Savio", type: "hot", color: "red", coords: [18.495288, -69.888075] },
+  { name: "Ensanche Capotillo", type: "hot", color: "red", coords: [18.507381, -69.901876] },
+  { name: "Gualey", type: "hot", color: "red", coords: [18.499763, -69.891837] },
+  { name: "La Zurza", type: "hot", color: "red", coords: [18.505435, -69.886834] },
+  { name: "Los Jardines", type: "hot", color: "red", coords: [18.490207, -69.889397] },
+  { name: "Los Restauradores", type: "hot", color: "red", coords: [18.473739, -69.909137] },
+  { name: "Nuevo Arroyo Hondo", type: "hot", color: "red", coords: [18.502733, -69.890475] },
+  { name: "Nuestra Señora de la Paz", type: "hot", color: "red", coords: [18.443993, -69.906206] },
+  { name: "Palma Real", type: "hot", color: "red", coords: [18.492512, -69.884084] },
+  { name: "Simón Bolívar", type: "hot", color: "red", coords: [18.487237, -69.903833] },
+  { name: "Villa Consuelo", type: "hot", color: "red", coords: [18.499863, -69.898137] },
+  { name: "Villa Francisca", type: "hot", color: "red", coords: [18.501873, -69.899408] },
+  { name: "Villa Juana", type: "hot", color: "red", coords: [18.495766, -69.897355] },
+  { name: "Altos de Arroyo Hondo", type: "intermediate", color: "yellow", coords: [18.488585, -69.883337] },
+  { name: "Buenos Aires", type: "intermediate", color: "yellow", coords: [18.478221, -69.903802] },
+  { name: "Ensanche Espaillat", type: "intermediate", color: "yellow", coords: [18.471756, -69.890189] },
+  { name: "Ensanche La Fe", type: "intermediate", color: "yellow", coords: [18.453579, -69.883194] },
+  { name: "Ensanche Luperón", type: "intermediate", color: "yellow", coords: [18.509765, -69.892776] },
+  { name: "Ensanche Quisqueya", type: "intermediate", color: "yellow", coords: [18.499598, -69.898422] },
+  { name: "Honduras del Norte", type: "intermediate", color: "yellow", coords: [18.508700, -69.891990] },
+  { name: "Honduras del Oeste", type: "intermediate", color: "yellow", coords: [18.493714, -69.902170] },
+  { name: "Jardines del Sur", type: "intermediate", color: "yellow", coords: [18.487508, -69.888722] },
+  { name: "Julieta Morales", type: "intermediate", color: "yellow", coords: [18.477233, -69.884358] },
+  { name: "La Agustina", type: "intermediate", color: "yellow", coords: [18.491606, -69.898417] },
+  { name: "La Hondonada", type: "intermediate", color: "yellow", coords: [18.450578, -69.894164] },
+  { name: "La Isabela", type: "intermediate", color: "yellow", coords: [18.507069, -69.900611] },
+  { name: "La Julia", type: "intermediate", color: "yellow", coords: [18.477881, -69.892533] },
+  { name: "Las Praderas", type: "intermediate", color: "yellow", coords: [18.488879, -69.890641] },
+  { name: "Los Peralejos", type: "intermediate", color: "yellow", coords: [18.509583, -69.890091] },
+  { name: "Los Ríos", type: "intermediate", color: "yellow", coords: [18.488154, -69.885817] },
+  { name: "María Auxiliadora", type: "intermediate", color: "yellow", coords: [18.478637, -69.898413] },
+  { name: "Mata Hambre", type: "intermediate", color: "yellow", coords: [18.445989, -69.882972] },
+  { name: "Mejoramiento Social", type: "intermediate", color: "yellow", coords: [18.462462, -69.891256] },
+  { name: "Mirador Norte", type: "intermediate", color: "yellow", coords: [18.451860, -69.897212] },
+  { name: "Miraflores", type: "intermediate", color: "yellow", coords: [18.452282, -69.884280] },
+  { name: "Miramar", type: "intermediate", color: "yellow", coords: [18.453706, -69.887166] },
+  { name: "Paseo de los Indios", type: "intermediate", color: "yellow", coords: [18.449313, -69.905945] },
+  { name: "Los Próceres", type: "intermediate", color: "yellow", coords: [18.461390, -69.884935] },
+  { name: "Renacimiento", type: "intermediate", color: "yellow", coords: [18.479797, -69.895141] },
+  { name: "Viejo Arroyo Hondo", type: "intermediate", color: "yellow", coords: [18.455476, -69.895412] },
+  { name: "Villas Agrícolas", type: "intermediate", color: "yellow", coords: [18.470314, -69.903984] },
+  { name: "30 de Mayo", type: "cold", color: "green", coords: [18.504925, -69.894532] },
+  { name: "Arroyo Manzano", type: "cold", color: "green", coords: [18.504014, -69.902393] },
+  { name: "Atala", type: "cold", color: "green", coords: [18.479062, -69.895818] },
+  { name: "Bella Vista", type: "cold", color: "green", coords: [18.441362, -69.888175] },
+  { name: "El Cacique", type: "cold", color: "green", coords: [18.506927, -69.908688] },
+  { name: "Centro de los Héroes", type: "cold", color: "green", coords: [18.471893, -69.896859] },
+  { name: "Centro Olímpico", type: "cold", color: "green", coords: [18.487083, -69.906702] },
+  { name: "Cerros de Arroyo Hondo", type: "cold", color: "green", coords: [18.470562, -69.902018] },
+  { name: "Ciudad Colonial", type: "cold", color: "green", coords: [18.470559, -69.886930] },
+  { name: "Ciudad Nueva", type: "cold", color: "green", coords: [18.446137, -69.881238] },
+  { name: "Ciudad Universitaria", type: "cold", color: "green", coords: [18.473095, -69.903901] },
+  { name: "El Millón", type: "cold", color: "green", coords: [18.474448, -69.885801] },
+  { name: "Ensanche Naco", type: "cold", color: "green", coords: [18.495130, -69.884036] },
+  { name: "Gascue", type: "cold", color: "green", coords: [18.447708, -69.904161] },
+  { name: "General Antonio Duverge", type: "cold", color: "green", coords: [18.476234, -69.896119] },
+  { name: "Jardín Botánico", type: "cold", color: "green", coords: [18.442856, -69.902565] },
+  { name: "Jardín Zoológico", type: "cold", color: "green", coords: [18.502321, -69.903194] },
+  { name: "La Castellana", type: "cold", color: "green", coords: [18.455672, -69.889563] },
+  { name: "La Esperilla", type: "cold", color: "green", coords: [18.477404, -69.905623] },
+  { name: "Los Cacicazgos", type: "cold", color: "green", coords: [18.464052, -69.880419] },
+  { name: "Los Prados", type: "cold", color: "green", coords: [18.497975, -69.883099] },
+  { name: "Mirador Sur", type: "cold", color: "green", coords: [18.507991, -69.889138] },
+  { name: "Paraíso", type: "cold", color: "green", coords: [18.443605, -69.887395] },
+  { name: "Piantini", type: "cold", color: "green", coords: [18.474850, -69.887869] },
+  { name: "San Carlos", type: "cold", color: "green", coords: [18.480985, -69.903508] },
+  { name: "San Diego", type: "cold", color: "green", coords: [18.479975, -69.890404] },
+  { name: "San Geronimo", type: "cold", color: "green", coords: [18.448231, -69.900209] },
+  { name: "San Juan Bosco", type: "cold", color: "green", coords: [18.477594, -69.901184] }
 ];
 
 export const InteractiveHeatMap = () => {
@@ -120,6 +175,12 @@ export const InteractiveHeatMap = () => {
       return;
     }
 
+    // Mostrar indicador de carga
+    toast({
+      title: "Obteniendo ubicación...",
+      description: "Por favor permite el acceso a tu ubicación",
+    });
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -127,32 +188,68 @@ export const InteractiveHeatMap = () => {
         
         // Centrar mapa en ubicación actual
         if (map) {
-          map.flyTo({ center: [longitude, latitude], zoom: 14 });
+          map.flyTo({ 
+            center: [longitude, latitude], 
+            zoom: 14,
+            duration: 1500
+          });
           
-          // Agregar marcador de ubicación actual
+          // Agregar marcador de ubicación actual (solo este marcador está permitido)
           const mapboxgl = require('mapbox-gl');
-          new mapboxgl.Marker({ color: '#3b82f6' })
+          
+          // Remover marcadores previos de ubicación
+          const existingMarkers = document.querySelectorAll('.user-location-marker');
+          existingMarkers.forEach(marker => marker.remove());
+          
+          // Crear nuevo marcador de ubicación del usuario
+          const el = document.createElement('div');
+          el.className = 'user-location-marker';
+          el.style.width = '15px';
+          el.style.height = '15px';
+          el.style.backgroundColor = '#3b82f6';
+          el.style.border = '3px solid white';
+          el.style.borderRadius = '50%';
+          el.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.5)';
+          
+          new mapboxgl.Marker(el)
             .setLngLat([longitude, latitude])
-            .setPopup(new mapboxgl.Popup().setHTML('<div class="p-2"><strong>Tu ubicación</strong></div>'))
+            .setPopup(
+              new mapboxgl.Popup({ offset: 15 })
+                .setHTML('<div class="p-2 text-center"><strong>Tu ubicación actual</strong></div>')
+            )
             .addTo(map);
         }
         
-        // Verificar en qué zona está el usuario
-        const nearestZone = findNearestZone(latitude, longitude);
-        if (nearestZone) {
-          setSelectedZone(nearestZone);
-          toast({
-            title: "Ubicación detectada",
-            description: `Te encuentras cerca de ${nearestZone.name} - ${getZoneTypeName(nearestZone.type)}`,
-          });
-        }
+        toast({
+          title: "Ubicación encontrada",
+          description: `Coordenadas: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+        });
       },
       (error) => {
+        let errorMessage = "No se pudo obtener tu ubicación actual";
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Permiso de ubicación denegado. Actívalo en tu navegador.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Información de ubicación no disponible.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Tiempo de espera agotado al obtener la ubicación.";
+            break;
+        }
+        
         toast({
           title: "Error de ubicación",
-          description: "No se pudo obtener tu ubicación actual",
+          description: errorMessage,
           variant: "destructive"
         });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
       }
     );
   };
@@ -176,12 +273,13 @@ export const InteractiveHeatMap = () => {
       if (map) {
         map.flyTo({ 
           center: [foundZone.coords[1], foundZone.coords[0]], 
-          zoom: 15 
+          zoom: 15,
+          duration: 1500
         });
       }
       toast({
         title: "Zona encontrada",
-        description: `Mostrando información de ${foundZone.name}`,
+        description: `Información de ${foundZone.name}`,
       });
     } else {
       toast({
@@ -291,8 +389,24 @@ export const InteractiveHeatMap = () => {
             Mapa interactivo del Distrito Nacional, Santo Domingo, República Dominicana.
           </div>
           
-          {/* Solo controles básicos del mapa */}
+          {/* Controles con búsqueda restaurada */}
           <div className="flex gap-2 flex-wrap">
+            <div className="flex-1 min-w-64">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar zona, barrio o municipio..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                />
+              </div>
+            </div>
+            <Button onClick={handleSearch} variant="default">
+              <Search className="h-4 w-4 mr-2" />
+              Buscar
+            </Button>
             <Button onClick={getCurrentLocation} variant="outline">
               <Navigation className="h-4 w-4 mr-2" />
               Mi Ubicación
@@ -353,13 +467,9 @@ export const InteractiveHeatMap = () => {
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-medium">Área:</span>
-                <span className="text-sm">{selectedZone.area}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">Población aprox:</span>
-                <span className="text-sm">
-                  {selectedZone.population?.toLocaleString() || 'No disponible'} habitantes
+                <span className="font-medium">Coordenadas:</span>
+                <span className="font-mono text-sm">
+                  {selectedZone.coords[0].toFixed(4)}, {selectedZone.coords[1].toFixed(4)}
                 </span>
               </div>
               <div className="mt-4 p-3 rounded bg-muted/50">
@@ -392,7 +502,48 @@ export const InteractiveHeatMap = () => {
         </Card>
       )}
 
-      {/* Zone Lists */}
+      {/* Search Results */}
+      {searchQuery && filteredZones.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Resultados de búsqueda ({filteredZones.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {filteredZones.map((zone) => (
+                <div
+                  key={zone.name}
+                  className="flex items-center justify-between p-3 rounded border hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setSelectedZone(zone);
+                    if (map) {
+                      map.flyTo({ 
+                        center: [zone.coords[1], zone.coords[0]], 
+                        zoom: 15 
+                      });
+                    }
+                  }}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      {getZoneIcon(zone.type)}
+                      <span className="font-medium">{zone.name}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground ml-6">
+                      {getZoneTypeName(zone.type)}
+                    </div>
+                  </div>
+                  <Badge variant={getZoneBadgeVariant(zone.type)}>
+                    {zone.type === 'hot' ? 'ALTO' : zone.type === 'intermediate' ? 'MEDIO' : 'BAJO'}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Zone Lists - Listados completos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Hot Zones */}
         <Card>
@@ -424,7 +575,7 @@ export const InteractiveHeatMap = () => {
                     <span className="text-sm font-medium">{zone.name}</span>
                   </div>
                   <div className="text-xs text-muted-foreground ml-6">
-                    {zone.area} • {zone.population?.toLocaleString()} hab.
+                    Coordenadas: {zone.coords[0].toFixed(4)}, {zone.coords[1].toFixed(4)}
                   </div>
                 </div>
                 <Badge variant="destructive" className="text-xs">ALTO</Badge>
@@ -438,21 +589,21 @@ export const InteractiveHeatMap = () => {
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2 text-orange-600">
               <AlertCircle className="h-5 w-5" />
-              Zonas Intermedias ({intermediateZones.length})
+              Zonas de Riesgo Moderado ({intermediateZones.length})
             </CardTitle>
-            <p className="text-sm text-muted-foreground">Riesgo moderado - Mantener precaución</p>
+            <p className="text-sm text-muted-foreground">Mantener precaución - Nivel intermedio</p>
           </CardHeader>
           <CardContent className="space-y-2 max-h-80 overflow-y-auto">
             {intermediateZones.map((zone) => (
               <div
                 key={zone.name}
-                className="flex items-center justify-between p-2 rounded border border-orange-200 bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer"
+                className="flex items-center justify-between p-3 rounded border border-orange-200 bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer"
                 onClick={() => {
                   setSelectedZone(zone);
                   if (map) {
                     map.flyTo({ 
                       center: [zone.coords[1], zone.coords[0]], 
-                      zoom: 15 
+                      zoom: 13 
                     });
                   }
                 }}
@@ -463,7 +614,7 @@ export const InteractiveHeatMap = () => {
                     <span className="text-sm font-medium">{zone.name}</span>
                   </div>
                   <div className="text-xs text-muted-foreground ml-6">
-                    {zone.population?.toLocaleString()} hab.
+                    Coordenadas: {zone.coords[0].toFixed(4)}, {zone.coords[1].toFixed(4)}
                   </div>
                 </div>
                 <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800">MEDIO</Badge>
@@ -477,21 +628,21 @@ export const InteractiveHeatMap = () => {
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2 text-green-600">
               <CheckCircle className="h-5 w-5" />
-              Zonas Frías ({coldZones.length})
+              Zonas de Bajo Riesgo ({coldZones.length})
             </CardTitle>
-            <p className="text-sm text-muted-foreground">Bajo riesgo - Relativamente seguras</p>
+            <p className="text-sm text-muted-foreground">Relativamente seguras - Precauciones básicas</p>
           </CardHeader>
           <CardContent className="space-y-2 max-h-80 overflow-y-auto">
             {coldZones.map((zone) => (
               <div
                 key={zone.name}
-                className="flex items-center justify-between p-2 rounded border border-green-200 bg-green-50 hover:bg-green-100 transition-colors cursor-pointer"
+                className="flex items-center justify-between p-3 rounded border border-green-200 bg-green-50 hover:bg-green-100 transition-colors cursor-pointer"
                 onClick={() => {
                   setSelectedZone(zone);
                   if (map) {
                     map.flyTo({ 
                       center: [zone.coords[1], zone.coords[0]], 
-                      zoom: 15 
+                      zoom: 13 
                     });
                   }
                 }}
@@ -502,7 +653,7 @@ export const InteractiveHeatMap = () => {
                     <span className="text-sm font-medium">{zone.name}</span>
                   </div>
                   <div className="text-xs text-muted-foreground ml-6">
-                    {zone.population?.toLocaleString()} hab.
+                    Coordenadas: {zone.coords[0].toFixed(4)}, {zone.coords[1].toFixed(4)}
                   </div>
                 </div>
                 <Badge variant="default" className="text-xs bg-green-100 text-green-800">BAJO</Badge>
@@ -511,47 +662,6 @@ export const InteractiveHeatMap = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Search Results */}
-      {searchQuery && filteredZones.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Resultados de búsqueda ({filteredZones.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {filteredZones.map((zone) => (
-                <div
-                  key={zone.name}
-                  className="flex items-center justify-between p-3 rounded border hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => {
-                    setSelectedZone(zone);
-                    if (map) {
-                      map.flyTo({ 
-                        center: [zone.coords[1], zone.coords[0]], 
-                        zoom: 15 
-                      });
-                    }
-                  }}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      {getZoneIcon(zone.type)}
-                      <span className="font-medium">{zone.name}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground ml-6">
-                      {zone.area} • {zone.population?.toLocaleString()} habitantes
-                    </div>
-                  </div>
-                  <Badge variant={getZoneBadgeVariant(zone.type)}>
-                    {zone.type === 'hot' ? 'ALTO' : zone.type === 'intermediate' ? 'MEDIO' : 'BAJO'}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Statistics Summary */}
       <Card>
@@ -564,28 +674,28 @@ export const InteractiveHeatMap = () => {
               <div className="text-2xl font-bold text-destructive">{hotZones.length}</div>
               <div className="text-sm text-muted-foreground">Zonas de Alto Riesgo</div>
               <div className="text-xs text-muted-foreground">
-                {hotZones.reduce((sum, zone) => sum + (zone.population || 0), 0).toLocaleString()} hab.
+                Barrios clasificados como peligrosos
               </div>
             </div>
             <div className="text-center p-4 rounded bg-orange-50 border border-orange-200">
               <div className="text-2xl font-bold text-orange-600">{intermediateZones.length}</div>
               <div className="text-sm text-muted-foreground">Zonas de Riesgo Moderado</div>
               <div className="text-xs text-muted-foreground">
-                {intermediateZones.reduce((sum, zone) => sum + (zone.population || 0), 0).toLocaleString()} hab.
+                Barrios con precauciones normales
               </div>
             </div>
             <div className="text-center p-4 rounded bg-green-50 border border-green-200">
               <div className="text-2xl font-bold text-green-600">{coldZones.length}</div>
               <div className="text-sm text-muted-foreground">Zonas de Bajo Riesgo</div>
               <div className="text-xs text-muted-foreground">
-                {coldZones.reduce((sum, zone) => sum + (zone.population || 0), 0).toLocaleString()} hab.
+                Barrios relativamente seguros
               </div>
             </div>
             <div className="text-center p-4 rounded bg-muted/50 border">
               <div className="text-2xl font-bold">{heatMapZones.length}</div>
-              <div className="text-sm text-muted-foreground">Áreas Totales</div>
+              <div className="text-sm text-muted-foreground">Total de Sectores</div>
               <div className="text-xs text-muted-foreground">
-                {heatMapZones.reduce((sum, zone) => sum + (zone.population || 0), 0).toLocaleString()} hab.
+                Barrios mapeados en el Distrito
               </div>
             </div>
           </div>
