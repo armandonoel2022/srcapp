@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export type UserRole = 'administrador' | 'agente_seguridad';
+export type UserRole = 'administrador' | 'agente_seguridad' | 'cliente';
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   user_id: string;
   username: string;
   role: UserRole;
   requires_password_change: boolean;
+  active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -139,6 +140,32 @@ export const useUserProfiles = () => {
     }
   };
 
+  const toggleUserActive = async (userId: string, active: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ active })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      await loadUserProfiles();
+      toast({
+        title: active ? "Usuario habilitado" : "Usuario deshabilitado",
+        description: `El usuario ha sido ${active ? 'habilitado' : 'deshabilitado'} exitosamente`
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `Error al ${active ? 'habilitar' : 'deshabilitar'} usuario: ${error.message}`,
+        variant: "destructive"
+      });
+      return { success: false };
+    }
+  };
+
   const updatePassword = async (newPassword: string) => {
     try {
       const { error: authError } = await supabase.auth.updateUser({
@@ -197,6 +224,7 @@ export const useUserProfiles = () => {
     createUserProfile,
     updateUserRole,
     updatePassword,
+    toggleUserActive,
     isAdmin,
     requiresPasswordChange
   };

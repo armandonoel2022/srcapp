@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface CustomUser extends User {
   username?: string;
   role?: string;
-  type?: 'admin' | 'user';
+  type?: 'admin' | 'user' | 'client';
 }
 
 interface AuthContextType {
@@ -42,7 +42,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             ...session.user,
             username: profile?.username,
             role: profile?.role,
-            type: profile?.role === 'administrador' ? 'admin' : 'user'
+            type: profile?.role === 'administrador' ? 'admin' : 
+                  profile?.role === 'cliente' ? 'client' : 'user'
           };
           setUser(userWithProfile);
         } else {
@@ -67,7 +68,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           ...session.user,
           username: profile?.username,
           role: profile?.role,
-          type: profile?.role === 'administrador' ? 'admin' : 'user'
+          type: profile?.role === 'administrador' ? 'admin' : 
+                profile?.role === 'cliente' ? 'client' : 'user'
         };
         setUser(userWithProfile);
       } else {

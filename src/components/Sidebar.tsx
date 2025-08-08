@@ -10,9 +10,10 @@ import { SettingsMenu } from '@/components/SettingsMenu';
 interface SidebarProps {
   onNavigate: (section: string) => void;
   currentSection: string;
+  isClient?: boolean;
 }
 
-export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
+export const Sidebar = ({ onNavigate, currentSection, isClient = false }: SidebarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { signOut, isAdmin: authIsAdmin } = useAuth();
   const navigate = useNavigate();
@@ -29,6 +30,10 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
     setIsOpen(false);
   };
 
+  const clientItems = [
+    { id: 'mapa-calor', label: 'Mapa de Calor', icon: MapPin }
+  ];
+
   const basicItems = [
     { id: 'registros', label: 'Registro de Acceso', icon: FileText },
     { id: 'consulta', label: 'Consultar Registros', icon: Search },
@@ -42,7 +47,7 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
     { id: 'eliminar-empleados', label: 'Eliminar Empleados', icon: Trash }
   ];
 
-  const menuItems = authIsAdmin ? [...basicItems, ...adminItems] : basicItems;
+  const menuItems = isClient ? clientItems : (authIsAdmin ? [...basicItems, ...adminItems] : basicItems);
   
   console.log('Sidebar Debug - menuItems length:', menuItems.length);
   console.log('Sidebar Debug - showing admin items:', authIsAdmin);
@@ -56,7 +61,7 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
       </SheetTrigger>
       <SheetContent side="left" className="w-80">
         <SheetHeader>
-          <SheetTitle>Menú de Administración</SheetTitle>
+          <SheetTitle>{isClient ? 'Menú Cliente' : 'Menú de Administración'}</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col space-y-2 mt-6">
           {/* Home button */}
@@ -69,36 +74,54 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
             Ir al Inicio
           </Button>
           
-          {/* Basic functionality */}
-          {basicItems.map((item) => (
-            <Button
-              key={item.id}
-              variant={currentSection === item.id ? "default" : "ghost"}
-              className="justify-start"
-              onClick={() => handleNavigation(item.id)}
-            >
-              <item.icon className="mr-2 h-4 w-4" />
-              {item.label}
-            </Button>
-          ))}
-          
-          {/* Admin functionality */}
-          {authIsAdmin && (
+          {/* Menu items based on user role */}
+          {isClient ? (
+            // Client users only see heat map
+            clientItems.map((item) => (
+              <Button
+                key={item.id}
+                variant={currentSection === item.id ? "default" : "ghost"}
+                className="justify-start"
+                onClick={() => handleNavigation(item.id)}
+              >
+                <item.icon className="mr-2 h-4 w-4" />
+                {item.label}
+              </Button>
+            ))
+          ) : (
             <>
-              <div className="pt-4 border-t">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Funciones Administrativas</h3>
-                {adminItems.map((item) => (
-                  <Button
-                    key={item.id}
-                    variant={currentSection === item.id ? "default" : "ghost"}
-                    className="justify-start"
-                    onClick={() => handleNavigation(item.id)}
-                  >
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.label}
-                  </Button>
-                ))}
-              </div>
+              {/* Basic functionality for regular users */}
+              {basicItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={currentSection === item.id ? "default" : "ghost"}
+                  className="justify-start"
+                  onClick={() => handleNavigation(item.id)}
+                >
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.label}
+                </Button>
+              ))}
+              
+              {/* Admin functionality */}
+              {authIsAdmin && (
+                <>
+                  <div className="pt-4 border-t">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Funciones Administrativas</h3>
+                    {adminItems.map((item) => (
+                      <Button
+                        key={item.id}
+                        variant={currentSection === item.id ? "default" : "ghost"}
+                        className="justify-start"
+                        onClick={() => handleNavigation(item.id)}
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {item.label}
+                      </Button>
+                    ))}
+                  </div>
+                </>
+              )}
             </>
           )}
           

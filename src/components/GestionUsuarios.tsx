@@ -10,7 +10,7 @@ import { Users, Plus, Edit } from 'lucide-react';
 import { useUserProfiles, UserRole } from '@/hooks/useUserProfiles';
 
 export const GestionUsuarios = () => {
-  const { profiles, loading, loadUserProfiles, createUserProfile, updateUserRole } = useUserProfiles();
+  const { profiles, loading, loadUserProfiles, createUserProfile, updateUserRole, toggleUserActive } = useUserProfiles();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string>('');
@@ -60,7 +60,20 @@ export const GestionUsuarios = () => {
   };
 
   const getRoleName = (role: UserRole) => {
-    return role === 'administrador' ? 'Administrador' : 'Agente de Seguridad';
+    switch (role) {
+      case 'administrador':
+        return 'Administrador';
+      case 'agente_seguridad':
+        return 'Agente de Seguridad';
+      case 'cliente':
+        return 'Cliente';
+      default:
+        return role;
+    }
+  };
+
+  const handleToggleActive = async (userId: string, currentActive: boolean) => {
+    await toggleUserActive(userId, !currentActive);
   };
 
   return (
@@ -126,8 +139,9 @@ export const GestionUsuarios = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="administrador">Administrador</SelectItem>
-                      <SelectItem value="agente_seguridad">Agente de Seguridad</SelectItem>
+                          <SelectItem value="administrador">Administrador</SelectItem>
+                          <SelectItem value="agente_seguridad">Agente de Seguridad</SelectItem>
+                          <SelectItem value="cliente">Cliente</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -176,6 +190,7 @@ export const GestionUsuarios = () => {
                 <TableRow>
                   <TableHead>Usuario</TableHead>
                   <TableHead>Rol</TableHead>
+                  <TableHead>Estado</TableHead>
                   <TableHead>Fecha de Creación</TableHead>
                   <TableHead>Cambio de Contraseña</TableHead>
                   <TableHead>Acciones</TableHead>
@@ -184,13 +199,13 @@ export const GestionUsuarios = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-4">
+                    <TableCell colSpan={6} className="text-center py-4">
                       Cargando usuarios...
                     </TableCell>
                   </TableRow>
                 ) : profiles.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-4">
+                    <TableCell colSpan={6} className="text-center py-4">
                       No hay usuarios registrados
                     </TableCell>
                   </TableRow>
@@ -199,6 +214,13 @@ export const GestionUsuarios = () => {
                     <TableRow key={profile.id}>
                       <TableCell className="font-medium">{profile.username}</TableCell>
                       <TableCell>{getRoleName(profile.role)}</TableCell>
+                      <TableCell>
+                        {profile.active ? (
+                          <span className="text-green-600">Activo</span>
+                        ) : (
+                          <span className="text-red-600">Inactivo</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {new Date(profile.created_at).toLocaleDateString()}
                       </TableCell>
@@ -209,7 +231,7 @@ export const GestionUsuarios = () => {
                           <span className="text-green-600">No requerido</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="space-x-2">
                         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
                           <DialogTrigger asChild>
                             <Button 
@@ -242,6 +264,7 @@ export const GestionUsuarios = () => {
                                   <SelectContent>
                                     <SelectItem value="administrador">Administrador</SelectItem>
                                     <SelectItem value="agente_seguridad">Agente de Seguridad</SelectItem>
+                                    <SelectItem value="cliente">Cliente</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
@@ -260,6 +283,14 @@ export const GestionUsuarios = () => {
                             </div>
                           </DialogContent>
                         </Dialog>
+                        
+                        <Button 
+                          variant={profile.active ? "destructive" : "default"} 
+                          size="sm"
+                          onClick={() => handleToggleActive(profile.user_id, profile.active)}
+                        >
+                          {profile.active ? "Deshabilitar" : "Habilitar"}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

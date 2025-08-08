@@ -9,10 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, Palette, MapPin, Shield, Eye, EyeOff } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useToast } from '@/hooks/use-toast';
+import { TwoFactorSetup } from '@/components/TwoFactorSetup';
 
 export const SettingsMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showMapboxToken, setShowMapboxToken] = useState(false);
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
   const { 
     theme, 
     setTheme, 
@@ -130,7 +132,13 @@ export const SettingsMenu = () => {
                 </div>
                 <Switch 
                   checked={twoFactorEnabled} 
-                  onCheckedChange={setTwoFactorEnabled}
+                  onCheckedChange={(enabled) => {
+                    if (enabled && !twoFactorEnabled) {
+                      setShowTwoFactorSetup(true);
+                    } else {
+                      setTwoFactorEnabled(enabled);
+                    }
+                  }}
                 />
               </div>
               
@@ -182,6 +190,12 @@ export const SettingsMenu = () => {
           </Card>
         </div>
       </SheetContent>
+      
+      <TwoFactorSetup
+        isOpen={showTwoFactorSetup}
+        onClose={() => setShowTwoFactorSetup(false)}
+        onComplete={() => setTwoFactorEnabled(true)}
+      />
     </Sheet>
   );
 };

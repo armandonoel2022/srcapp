@@ -154,6 +154,7 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          active: boolean
           created_at: string
           id: string
           requires_password_change: boolean
@@ -163,6 +164,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          active?: boolean
           created_at?: string
           id?: string
           requires_password_change?: boolean
@@ -172,6 +174,7 @@ export type Database = {
           username: string
         }
         Update: {
+          active?: boolean
           created_at?: string
           id?: string
           requires_password_change?: boolean
@@ -262,7 +265,7 @@ export type Database = {
       }
     }
     Enums: {
-      user_role: "administrador" | "agente_seguridad"
+      user_role: "administrador" | "agente_seguridad" | "cliente"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -390,7 +393,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_role: ["administrador", "agente_seguridad"],
+      user_role: ["administrador", "agente_seguridad", "cliente"],
     },
   },
 } as const

@@ -151,14 +151,7 @@ export const Auth = () => {
               {loading ? "Cargando..." : (isSignUp ? "Registrarse" : "Iniciar Sesión")}
             </Button>
             
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp ? "¿Ya tienes cuenta? Iniciar Sesión" : "¿No tienes cuenta? Registrarse"}
-            </Button>
+            {/* Remove signup option since all users are SRC employees */}
           </form>
         </div>
       </div>

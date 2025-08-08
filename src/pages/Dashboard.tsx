@@ -22,9 +22,11 @@ import { AutoGeocodingUpdater } from '@/components/AutoGeocodingUpdater';
 export const Dashboard = () => {
   const { user, signOut, isAdmin } = useAuth();
   const { requiresPasswordChange } = useUserProfiles();
+  
+  const isClient = user?.type === 'client' || user?.role === 'cliente';
   const { toast } = useToast();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [currentSection, setCurrentSection] = useState('registros');
+  const [currentSection, setCurrentSection] = useState(isClient ? 'mapa-calor' : 'registros');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [stats, setStats] = useState({
     empleados: 0,
@@ -88,6 +90,11 @@ export const Dashboard = () => {
   };
 
   const renderCurrentSection = () => {
+    // If user is client, only allow access to heat map
+    if (isClient) {
+      return <InteractiveHeatMap />;
+    }
+    
     switch (currentSection) {
       case 'registros':
         return <RegistroForm />;
@@ -113,6 +120,7 @@ export const Dashboard = () => {
       <Sidebar 
         onNavigate={setCurrentSection} 
         currentSection={currentSection}
+        isClient={isClient}
       />
 
       {/* Main Content */}
