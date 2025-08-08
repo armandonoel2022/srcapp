@@ -8,42 +8,84 @@ import { MapPin, Search, Navigation, AlertTriangle, CheckCircle, AlertCircle, In
 import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/contexts/SettingsContext';
 
-// Datos del mapa de calor del Distrito Nacional
+// Datos completos del mapa de calor del Distrito Nacional
 const heatMapZones = [
-  // Zonas Rojas (Calientes)
-  { name: "La Ciénaga", type: "hot", color: "red", coords: [18.4861, -69.9312] },
-  { name: "Villa Juana", type: "hot", color: "red", coords: [18.4611, -69.9242] },
-  { name: "Cristo Rey", type: "hot", color: "red", coords: [18.4589, -69.9456] },
-  { name: "Gualey", type: "hot", color: "red", coords: [18.4789, -69.9123] },
-  { name: "Simón Bolívar", type: "hot", color: "red", coords: [18.4678, -69.9234] },
-  { name: "24 de Abril", type: "hot", color: "red", coords: [18.4756, -69.9334] },
-  { name: "Capotillo", type: "hot", color: "red", coords: [18.4912, -69.9456] },
-  { name: "Guachupita", type: "hot", color: "red", coords: [18.4834, -69.9201] },
-  { name: "Villa Consuelo", type: "hot", color: "red", coords: [18.4523, -69.9123] },
-  { name: "Los Alcarrizos (parte)", type: "hot", color: "red", coords: [18.4445, -69.9567] },
-  
-  // Zonas Amarillas (Intermedias)
-  { name: "Villa Agrippina", type: "intermediate", color: "yellow", coords: [18.4712, -69.9345] },
-  { name: "Palma Real", type: "intermediate", color: "yellow", coords: [18.4823, -69.9123] },
-  { name: "Los Cacicazgos", type: "intermediate", color: "yellow", coords: [18.4756, -69.9012] },
-  { name: "Mirador Norte", type: "intermediate", color: "yellow", coords: [18.4934, -69.9234] },
-  { name: "Villa María", type: "intermediate", color: "yellow", coords: [18.4623, -69.9345] },
-  { name: "Ensanche Quisqueya", type: "intermediate", color: "yellow", coords: [18.4689, -69.9123] },
-  { name: "Los Jardines", type: "intermediate", color: "yellow", coords: [18.4567, -69.9234] },
-  { name: "Villa Francisca", type: "intermediate", color: "yellow", coords: [18.4678, -69.9456] },
-  
-  // Zonas Verdes (Frías)
-  { name: "Zona Colonial", type: "cold", color: "green", coords: [18.4539, -69.8826] },
-  { name: "Gazcue", type: "cold", color: "green", coords: [18.4656, -69.9012] },
-  { name: "Zona Universitaria", type: "cold", color: "green", coords: [18.4623, -69.8934] },
-  { name: "Mirador Sur", type: "cold", color: "green", coords: [18.4567, -69.9234] },
-  { name: "Bella Vista", type: "cold", color: "green", coords: [18.4712, -69.9123] },
-  { name: "Ensanche Naco", type: "cold", color: "green", coords: [18.4789, -69.9012] },
-  { name: "Piantini", type: "cold", color: "green", coords: [18.4823, -69.9234] },
-  { name: "Ensanche Paraíso", type: "cold", color: "green", coords: [18.4756, -69.9345] },
-  { name: "Ensanche Serralles", type: "cold", color: "green", coords: [18.4689, -69.9456] },
-  { name: "La Esperilla", type: "cold", color: "green", coords: [18.4634, -69.9123] },
-  { name: "Evaristo Morales", type: "cold", color: "green", coords: [18.4767, -69.9234] }
+  // Zonas Rojas (Calientes) - Alto riesgo
+  { name: "24 de Abril", type: "hot", color: "red", coords: [18.4756, -69.9334], population: 53870 },
+  { name: "Cristo Rey", type: "hot", color: "red", coords: [18.4589, -69.9456], population: 257038 },
+  { name: "Domingo Savio", type: "hot", color: "red", coords: [18.4445, -69.9567], population: 184863 },
+  { name: "Ensanche Capotillo", type: "hot", color: "red", coords: [18.4912, -69.9456], population: 134708 },
+  { name: "Gualey", type: "hot", color: "red", coords: [18.4789, -69.9123], population: 91147 },
+  { name: "La Zurza", type: "hot", color: "red", coords: [18.4834, -69.9201], population: 42896 },
+  { name: "Los Jardines", type: "hot", color: "red", coords: [18.4567, -69.9234], population: 97568 },
+  { name: "Los Restauradores", type: "hot", color: "red", coords: [18.4523, -69.9123], population: 78945 },
+  { name: "Nuevo Arroyo Hondo", type: "hot", color: "red", coords: [18.5012, -69.9345], population: 123501 },
+  { name: "Nuestra Señora de la Paz", type: "hot", color: "red", coords: [18.4678, -69.9234], population: 98961 },
+  { name: "Palma Real", type: "hot", color: "red", coords: [18.4823, -69.9123], population: 101543 },
+  { name: "Simón Bolívar", type: "hot", color: "red", coords: [18.4678, -69.9345], population: 88463 },
+  { name: "Villa Consuelo", type: "hot", color: "red", coords: [18.4623, -69.9345], population: 40621 },
+  { name: "Villa Francisca", type: "hot", color: "red", coords: [18.4678, -69.9456], population: 50185 },
+  { name: "Villa Juana", type: "hot", color: "red", coords: [18.4611, -69.9242], population: 60323 },
+
+  // Zonas Amarillas (Intermedias) - Riesgo moderado  
+  { name: "Altos de Arroyo Hondo", type: "intermediate", color: "yellow", coords: [18.4934, -69.9234], population: 19617 },
+  { name: "Buenos Aires", type: "intermediate", color: "yellow", coords: [18.4712, -69.9345], population: 25770 },
+  { name: "Ensanche Espaillat", type: "intermediate", color: "yellow", coords: [18.4689, -69.9123], population: 16803 },
+  { name: "Ensanche La Fe", type: "intermediate", color: "yellow", coords: [18.4756, -69.9012], population: 19094 },
+  { name: "Ensanche Luperón", type: "intermediate", color: "yellow", coords: [18.4823, -69.9234], population: 23710 },
+  { name: "Ensanche Quisqueya", type: "intermediate", color: "yellow", coords: [18.4689, -69.9123], population: 24850 },
+  { name: "Honduras del Norte", type: "intermediate", color: "yellow", coords: [18.4867, -69.9234], population: 9771 },
+  { name: "Honduras del Oeste", type: "intermediate", color: "yellow", coords: [18.4823, -69.9345], population: 8884 },
+  { name: "Jardines del Sur", type: "intermediate", color: "yellow", coords: [18.4456, -69.9123], population: 8777 },
+  { name: "Julieta Morales", type: "intermediate", color: "yellow", coords: [18.4634, -69.9234], population: 14843 },
+  { name: "La Agustina", type: "intermediate", color: "yellow", coords: [18.4712, -69.9456], population: 20308 },
+  { name: "La Hondonada", type: "intermediate", color: "yellow", coords: [18.4789, -69.9345], population: 14575 },
+  { name: "La Isabela", type: "intermediate", color: "yellow", coords: [18.4656, -69.9123], population: 6865 },
+  { name: "La Julia", type: "intermediate", color: "yellow", coords: [18.4723, -69.9189], population: 12575 },
+  { name: "Las Praderas", type: "intermediate", color: "yellow", coords: [18.4567, -69.9345], population: 29765 },
+  { name: "Los Peralejos", type: "intermediate", color: "yellow", coords: [18.4634, -69.9456], population: 35684 },
+  { name: "Los Ríos", type: "intermediate", color: "yellow", coords: [18.4789, -69.9234], population: 27563 },
+  { name: "María Auxiliadora", type: "intermediate", color: "yellow", coords: [18.4678, -69.9123], population: 20456 },
+  { name: "Mata Hambre", type: "intermediate", color: "yellow", coords: [18.4712, -69.9234], population: 20456 },
+  { name: "Mejoramiento Social", type: "intermediate", color: "yellow", coords: [18.4823, -69.9456], population: 19753 },
+  { name: "Mirador Norte", type: "intermediate", color: "yellow", coords: [18.4934, -69.9123], population: 20465 },
+  { name: "Miraflores", type: "intermediate", color: "yellow", coords: [18.4756, -69.9345], population: 76862 },
+  { name: "Miramar", type: "intermediate", color: "yellow", coords: [18.4689, -69.9234], population: 59876 },
+  { name: "Paseo de los Indios", type: "intermediate", color: "yellow", coords: [18.4634, -69.9123], population: 28951 },
+  { name: "Los Próceres", type: "intermediate", color: "yellow", coords: [18.4767, -69.9189], population: 56513 },
+  { name: "Renacimiento", type: "intermediate", color: "yellow", coords: [18.4612, -69.9456], population: 20145 },
+  { name: "Viejo Arroyo Hondo", type: "intermediate", color: "yellow", coords: [18.4945, -69.9123], population: 38964 },
+  { name: "Villas Agrícolas", type: "intermediate", color: "yellow", coords: [18.4723, -69.9234], population: 48621 },
+
+  // Zonas Verdes (Frías) - Bajo riesgo
+  { name: "30 de Mayo", type: "cold", color: "green", coords: [18.4612, -69.9234], population: 5904 },
+  { name: "Arroyo Manzano", type: "cold", color: "green", coords: [18.4789, -69.9123], population: 5894 },
+  { name: "Atala", type: "cold", color: "green", coords: [18.4656, -69.9345], population: 3711 },
+  { name: "Bella Vista", type: "cold", color: "green", coords: [18.4712, -69.9123], population: 15593 },
+  { name: "El Cacique", type: "cold", color: "green", coords: [18.4634, -69.9189], population: 7671 },
+  { name: "Centro de los Héroes", type: "cold", color: "green", coords: [18.4567, -69.9012], population: 62 },
+  { name: "Centro Olímpico", type: "cold", color: "green", coords: [18.4589, -69.9123], population: 99 },
+  { name: "Cerros de Arroyo Hondo", type: "cold", color: "green", coords: [18.4923, -69.9234], population: 3258 },
+  { name: "Ciudad Colonial", type: "cold", color: "green", coords: [18.4539, -69.8826], population: 8472 },
+  { name: "Ciudad Nueva", type: "cold", color: "green", coords: [18.4612, -69.9034], population: 12540 },
+  { name: "Ciudad Universitaria", type: "cold", color: "green", coords: [18.4623, -69.8934], population: 8016 },
+  { name: "El Millón", type: "cold", color: "green", coords: [18.4789, -69.9345], population: 9137 },
+  { name: "Ensanche Naco", type: "cold", color: "green", coords: [18.4789, -69.9012], population: 11102 },
+  { name: "Gascue", type: "cold", color: "green", coords: [18.4656, -69.9012], population: 12562 },
+  { name: "General Antonio Duverge", type: "cold", color: "green", coords: [18.4634, -69.9345], population: 4382 },
+  { name: "Jardín Botánico", type: "cold", color: "green", coords: [18.4712, -69.9234], population: 271 },
+  { name: "Jardín Zoológico", type: "cold", color: "green", coords: [18.4723, -69.9123], population: 19 },
+  { name: "La Castellana", type: "cold", color: "green", coords: [18.4678, -69.9234], population: 10421 },
+  { name: "La Esperilla", type: "cold", color: "green", coords: [18.4634, -69.9123], population: 6807 },
+  { name: "Los Cacicazgos", type: "cold", color: "green", coords: [18.4756, -69.9012], population: 15725 },
+  { name: "Los Prados", type: "cold", color: "green", coords: [18.4789, -69.9189], population: 20457 },
+  { name: "Mirador Sur", type: "cold", color: "green", coords: [18.4567, -69.9234], population: 20211 },
+  { name: "Paraíso", type: "cold", color: "green", coords: [18.4756, -69.9345], population: 75862 },
+  { name: "Piantini", type: "cold", color: "green", coords: [18.4823, -69.9234], population: 59753 },
+  { name: "San Carlos", type: "cold", color: "green", coords: [18.4689, -69.9123], population: 13456 },
+  { name: "San Diego", type: "cold", color: "green", coords: [18.4634, -69.9234], population: 9864 },
+  { name: "San Geronimo", type: "cold", color: "green", coords: [18.4712, -69.9345], population: 8634 },
+  { name: "San Juan Bosco", type: "cold", color: "green", coords: [18.4756, -69.9123], population: 14352 }
 ];
 
 export const InteractiveHeatMap = () => {
@@ -55,6 +97,11 @@ export const InteractiveHeatMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { mapboxToken, geolocationEnabled } = useSettings();
+
+  // Separate zones by type
+  const hotZones = heatMapZones.filter(zone => zone.type === 'hot');
+  const intermediateZones = heatMapZones.filter(zone => zone.type === 'intermediate');
+  const coldZones = heatMapZones.filter(zone => zone.type === 'cold');
 
   // Filtrar zonas por búsqueda
   useEffect(() => {
@@ -97,12 +144,15 @@ export const InteractiveHeatMap = () => {
             
             const popup = new mapboxgl.default.Popup({ offset: 25 })
               .setHTML(`
-                <div class="p-2">
-                  <h3 class="font-bold text-sm">${zone.name}</h3>
-                  <p class="text-xs text-gray-600">
+                <div class="p-3">
+                  <h3 class="font-bold text-sm mb-1">${zone.name}</h3>
+                  <p class="text-xs text-gray-600 mb-1">
                     ${zone.type === 'hot' ? 'Zona Caliente - Alto riesgo' :
                       zone.type === 'intermediate' ? 'Zona Intermedia - Riesgo moderado' :
                       'Zona Fría - Bajo riesgo'}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    Población: ${zone.population?.toLocaleString() || 'N/A'}
                   </p>
                 </div>
               `);
@@ -400,9 +450,9 @@ export const InteractiveHeatMap = () => {
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-medium">Coordenadas:</span>
-                <span className="font-mono text-sm">
-                  {selectedZone.coords[0].toFixed(4)}, {selectedZone.coords[1].toFixed(4)}
+                <span className="font-medium">Población:</span>
+                <span className="text-sm">
+                  {selectedZone.population?.toLocaleString() || 'No disponible'} habitantes
                 </span>
               </div>
               <div className="mt-4 p-3 rounded bg-muted/50">
@@ -435,14 +485,134 @@ export const InteractiveHeatMap = () => {
         </Card>
       )}
 
+      {/* Zone Lists */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Hot Zones */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Zonas Calientes ({hotZones.length})
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Alto riesgo - Extremar precauciones</p>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-80 overflow-y-auto">
+            {hotZones.map((zone) => (
+              <div
+                key={zone.name}
+                className="flex items-center justify-between p-2 rounded border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-colors cursor-pointer"
+                onClick={() => {
+                  setSelectedZone(zone);
+                  if (map) {
+                    map.flyTo({ 
+                      center: [zone.coords[1], zone.coords[0]], 
+                      zoom: 15 
+                    });
+                  }
+                }}
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    <span className="text-sm font-medium">{zone.name}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground ml-6">
+                    {zone.population?.toLocaleString()} hab.
+                  </div>
+                </div>
+                <Badge variant="destructive" className="text-xs">ALTO</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Intermediate Zones */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2 text-orange-600">
+              <AlertCircle className="h-5 w-5" />
+              Zonas Intermedias ({intermediateZones.length})
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Riesgo moderado - Mantener precaución</p>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-80 overflow-y-auto">
+            {intermediateZones.map((zone) => (
+              <div
+                key={zone.name}
+                className="flex items-center justify-between p-2 rounded border border-orange-200 bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer"
+                onClick={() => {
+                  setSelectedZone(zone);
+                  if (map) {
+                    map.flyTo({ 
+                      center: [zone.coords[1], zone.coords[0]], 
+                      zoom: 15 
+                    });
+                  }
+                }}
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-orange-600" />
+                    <span className="text-sm font-medium">{zone.name}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground ml-6">
+                    {zone.population?.toLocaleString()} hab.
+                  </div>
+                </div>
+                <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800">MEDIO</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Cold Zones */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-5 w-5" />
+              Zonas Frías ({coldZones.length})
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Bajo riesgo - Relativamente seguras</p>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-80 overflow-y-auto">
+            {coldZones.map((zone) => (
+              <div
+                key={zone.name}
+                className="flex items-center justify-between p-2 rounded border border-green-200 bg-green-50 hover:bg-green-100 transition-colors cursor-pointer"
+                onClick={() => {
+                  setSelectedZone(zone);
+                  if (map) {
+                    map.flyTo({ 
+                      center: [zone.coords[1], zone.coords[0]], 
+                      zoom: 15 
+                    });
+                  }
+                }}
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium">{zone.name}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground ml-6">
+                    {zone.population?.toLocaleString()} hab.
+                  </div>
+                </div>
+                <Badge variant="default" className="text-xs bg-green-100 text-green-800">BAJO</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Search Results */}
       {searchQuery && filteredZones.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Resultados de búsqueda</CardTitle>
+            <CardTitle className="text-lg">Resultados de búsqueda ({filteredZones.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-60 overflow-y-auto">
               {filteredZones.map((zone) => (
                 <div
                   key={zone.name}
@@ -457,9 +627,14 @@ export const InteractiveHeatMap = () => {
                     }
                   }}
                 >
-                  <div className="flex items-center gap-2">
-                    {getZoneIcon(zone.type)}
-                    <span className="font-medium">{zone.name}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      {getZoneIcon(zone.type)}
+                      <span className="font-medium">{zone.name}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground ml-6">
+                      {zone.population?.toLocaleString()} habitantes
+                    </div>
                   </div>
                   <Badge variant={getZoneBadgeVariant(zone.type)}>
                     {zone.type === 'hot' ? 'ALTO' : zone.type === 'intermediate' ? 'MEDIO' : 'BAJO'}
@@ -470,6 +645,45 @@ export const InteractiveHeatMap = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Statistics Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Estadísticas del Distrito Nacional</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 rounded bg-destructive/5 border border-destructive/20">
+              <div className="text-2xl font-bold text-destructive">{hotZones.length}</div>
+              <div className="text-sm text-muted-foreground">Zonas Calientes</div>
+              <div className="text-xs text-muted-foreground">
+                {hotZones.reduce((sum, zone) => sum + (zone.population || 0), 0).toLocaleString()} hab.
+              </div>
+            </div>
+            <div className="text-center p-4 rounded bg-orange-50 border border-orange-200">
+              <div className="text-2xl font-bold text-orange-600">{intermediateZones.length}</div>
+              <div className="text-sm text-muted-foreground">Zonas Intermedias</div>
+              <div className="text-xs text-muted-foreground">
+                {intermediateZones.reduce((sum, zone) => sum + (zone.population || 0), 0).toLocaleString()} hab.
+              </div>
+            </div>
+            <div className="text-center p-4 rounded bg-green-50 border border-green-200">
+              <div className="text-2xl font-bold text-green-600">{coldZones.length}</div>
+              <div className="text-sm text-muted-foreground">Zonas Frías</div>
+              <div className="text-xs text-muted-foreground">
+                {coldZones.reduce((sum, zone) => sum + (zone.population || 0), 0).toLocaleString()} hab.
+              </div>
+            </div>
+            <div className="text-center p-4 rounded bg-muted/50 border">
+              <div className="text-2xl font-bold">{heatMapZones.length}</div>
+              <div className="text-sm text-muted-foreground">Total Sectores</div>
+              <div className="text-xs text-muted-foreground">
+                {heatMapZones.reduce((sum, zone) => sum + (zone.population || 0), 0).toLocaleString()} hab.
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Legend */}
       <Card>
