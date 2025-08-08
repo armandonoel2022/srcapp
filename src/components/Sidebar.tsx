@@ -12,10 +12,9 @@ interface SidebarProps {
 
 export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { signOut } = useAuth();
-  const { isAdmin } = useUserProfiles();
+  const { signOut, isAdmin: authIsAdmin } = useAuth();
   
-  console.log('Sidebar Debug - isAdmin from useUserProfiles:', isAdmin());
+  console.log('Sidebar Debug - authIsAdmin from useAuth:', authIsAdmin);
 
   const handleNavigation = (section: string) => {
     onNavigate(section);
@@ -39,10 +38,10 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
     { id: 'eliminar-empleados', label: 'Eliminar Empleados', icon: Trash }
   ];
 
-  const menuItems = isAdmin() ? [...basicItems, ...adminItems] : basicItems;
+  const menuItems = authIsAdmin ? [...basicItems, ...adminItems] : basicItems;
   
   console.log('Sidebar Debug - menuItems length:', menuItems.length);
-  console.log('Sidebar Debug - showing admin items:', isAdmin());
+  console.log('Sidebar Debug - showing admin items:', authIsAdmin);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -70,7 +69,7 @@ export const Sidebar = ({ onNavigate, currentSection }: SidebarProps) => {
           ))}
           
           {/* Admin functionality */}
-          {isAdmin() && (
+          {authIsAdmin && (
             <>
               <div className="pt-4 border-t">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">Funciones Administrativas</h3>
