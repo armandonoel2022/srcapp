@@ -60,19 +60,19 @@ const services = [
 
 const heroSlides = [
   {
-    image: "/images/home-slide-1.jpg",
-    title: "",
-    subtitle: ""
+    image: "/lovable-uploads/8c849656-25f2-4daa-9b5d-e66a516e7b08.png",
+    title: "Seguridad Confiable y Profesional",
+    subtitle: "Protegemos lo que más valoras"
   },
   {
-    image: "/images/home-slide-4.png", 
+    image: "/lovable-uploads/ac750eed-3e14-482e-9aa8-30668ff17d9d.png", 
     title: "Seguridad personalizada a su medida",
-    subtitle: ""
+    subtitle: "Vehículos blindados y escoltas especializadas"
   },
   {
-    image: "/images/home-slide-3.jpg",
+    image: "/lovable-uploads/1014d84d-c8c1-4c1e-a6d5-f7c6b41f72fb.png",
     title: "Centro de Monitoreo 24/7",
-    subtitle: ""
+    subtitle: "Vigilancia constante para tu tranquilidad"
   }
 ];
 
@@ -258,8 +258,8 @@ export const Landing = () => {
             </div>
             <div className="relative">
               <img 
-                src="/images/about-img.jpg" 
-                alt="Sobre nosotros" 
+                src="/lovable-uploads/63fce2c4-bcf0-4b70-80e4-e92402a8bee3.png" 
+                alt="Sobre nosotros - Equipo SRC" 
                 className="w-full h-96 object-cover rounded-lg shadow-lg"
               />
             </div>
