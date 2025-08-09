@@ -301,6 +301,10 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
       </div>
 
       <div className="flex justify-center space-x-4 no-print">
+        <Button variant="outline" onClick={handlePrint} className="flex items-center gap-2">
+          <FileText className="w-4 h-4" />
+          Imprimir
+        </Button>
         <Button variant="outline" onClick={handleExportCSV} className="flex items-center gap-2">
           <Download className="w-4 h-4" />
           Exportar CSV
