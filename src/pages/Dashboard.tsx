@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Users, Shield, FileText, Clock } from 'lucide-react';
+import { LogOut, Users, Shield, FileText, Clock, Search, UserPlus } from 'lucide-react';
 import { RegistroForm } from '@/components/RegistroForm';
 import { GestionEmpleados } from '@/components/GestionEmpleados';
 import { Sidebar } from '@/components/Sidebar';
@@ -97,7 +97,32 @@ export const Dashboard = () => {
     
     switch (currentSection) {
       case 'registros':
-        return <RegistroForm />;
+        return (
+          <div className="space-y-6">
+            <RegistroForm />
+            {/* Quick Access Buttons */}
+            <div className="flex gap-4 justify-center">
+              <Button
+                onClick={() => setCurrentSection('consulta')}
+                variant="outline"
+                size="lg"
+                className="flex items-center gap-2"
+              >
+                <Search className="h-5 w-5" />
+                Consultar Horas
+              </Button>
+              <Button
+                onClick={() => setCurrentSection('empleados')}
+                variant="outline"
+                size="lg"
+                className="flex items-center gap-2"
+              >
+                <UserPlus className="h-5 w-5" />
+                Agregar Empleado
+              </Button>
+            </div>
+          </div>
+        );
       case 'consulta':
         return <ConsultaRegistros onNavigateToForm={() => setCurrentSection('registros')} />;
       case 'empleados':
@@ -111,7 +136,32 @@ export const Dashboard = () => {
       case 'mapa-calor':
         return <InteractiveHeatMap />;
       default:
-        return <RegistroForm />;
+        return (
+          <div className="space-y-6">
+            <RegistroForm />
+            {/* Quick Access Buttons */}
+            <div className="flex gap-4 justify-center">
+              <Button
+                onClick={() => setCurrentSection('consulta')}
+                variant="outline"
+                size="lg"
+                className="flex items-center gap-2"
+              >
+                <Search className="h-5 w-5" />
+                Consultar Horas
+              </Button>
+              <Button
+                onClick={() => setCurrentSection('empleados')}
+                variant="outline"
+                size="lg"
+                className="flex items-center gap-2"
+              >
+                <UserPlus className="h-5 w-5" />
+                Agregar Empleado
+              </Button>
+            </div>
+          </div>
+        );
     }
   };
 

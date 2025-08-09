@@ -20,61 +20,63 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
-const services = [
+const getServices = (t: (key: string) => string) => [
   {
-    title: "Seguridad y Protección",
+    titleKey: "services.security.title",
     icon: Shield,
-    description: "Oficiales de seguridad con o sin armas para proteger vidas, bienes y propiedades.",
+    descriptionKey: "services.security.description",
     image: "/images/icon-1.png"
   },
   {
-    title: "Seguridad electrónica", 
+    titleKey: "services.electronic.title", 
     icon: Monitor,
-    description: "Sistemas de alarmas inalámbricas PowerMaster-10 y PowerMaster-30.",
+    descriptionKey: "services.electronic.description",
     image: "/images/icon-2.png"
   },
   {
-    title: "Cámaras de seguridad",
+    titleKey: "services.cameras.title",
     icon: Camera,
-    description: "Sistemas integrados de vigilancia con alta eficiencia en rendimiento.",
+    descriptionKey: "services.cameras.description",
     image: "/images/icon-3.png"
   },
   {
-    title: "Consultoría de Seguridad",
+    titleKey: "services.consulting.title",
     icon: AlertTriangle,
-    description: "Análisis de riesgos con recomendaciones para mejorar sistemas de seguridad.",
+    descriptionKey: "services.consulting.description",
     image: "/images/icon-4.png"
   },
   {
-    title: "Capacitaciones",
+    titleKey: "services.training.title",
     icon: Users,
-    description: "Charlas preventivas para minimizar riesgos de asaltos y fraudes.",
+    descriptionKey: "services.training.description",
     image: "/images/icon-5.png"
   },
   {
-    title: "Otros servicios",
+    titleKey: "services.other.title",
     icon: Shield,
-    description: "Investigaciones especiales, GPS tracking, drones y más.",
+    descriptionKey: "services.other.description",
     image: "/images/icon-6.png"
   }
 ];
 
-const heroSlides = [
+const getHeroSlides = (t: (key: string) => string) => [
   {
     image: "/lovable-uploads/8c849656-25f2-4daa-9b5d-e66a516e7b08.png",
-    title: "Seguridad Confiable y Profesional",
-    subtitle: "Protegemos lo que más valoras"
+    titleKey: "hero.slide1.title",
+    subtitleKey: "hero.slide1.subtitle"
   },
   {
     image: "/lovable-uploads/ac750eed-3e14-482e-9aa8-30668ff17d9d.png", 
-    title: "Seguridad personalizada a su medida",
-    subtitle: "Vehículos blindados y escoltas especializadas"
+    titleKey: "hero.slide2.title",
+    subtitleKey: "hero.slide2.subtitle"
   },
   {
     image: "/lovable-uploads/1014d84d-c8c1-4c1e-a6d5-f7c6b41f72fb.png",
-    title: "Centro de Monitoreo 24/7",
-    subtitle: "Vigilancia constante para tu tranquilidad"
+    titleKey: "hero.slide3.title",
+    subtitleKey: "hero.slide3.subtitle"
   }
 ];
 
@@ -82,6 +84,10 @@ export const Landing = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [visitas, setVisitas] = useState(0);
+  const { t } = useLanguage();
+  
+  const services = getServices(t);
+  const heroSlides = getHeroSlides(t);
 
   useEffect(() => {
     // Visitor counter logic - only count unique sessions
@@ -130,18 +136,19 @@ export const Landing = () => {
             <div className="flex items-center gap-4">
               <LandingSidebar />
               <div className="text-lg md:text-xl font-bold">
-                Seguridad Residencial y Comercial S.R.L.
+                {t('header.title')}
               </div>
             </div>
             
             <div className="flex items-center gap-2">
+              <LanguageToggle />
               <SettingsMenu />
               <Button 
                 variant="secondary" 
                 size="sm"
                 onClick={() => navigate('/auth')}
               >
-                Control de Acceso
+                {t('header.accessControl')}
               </Button>
             </div>
           </div>
@@ -150,7 +157,7 @@ export const Landing = () => {
         {/* Visitor counter */}
         <div className="bg-secondary text-secondary-foreground py-2">
           <div className="container mx-auto px-4 text-center">
-            <p className="text-sm">Visitas: <span className="font-bold">{visitas}</span></p>
+            <p className="text-sm">{t('header.visitors')}: <span className="font-bold">{visitas}</span></p>
           </div>
         </div>
       </header>
@@ -171,13 +178,13 @@ export const Landing = () => {
           >
             <div className="absolute inset-0 bg-black/40">
               <div className="container mx-auto px-4 h-full flex items-center justify-center">
-                {slide.title && (
+                {slide.titleKey && (
                   <div className="text-center text-white">
                     <h1 className="text-3xl md:text-5xl font-bold mb-4">
-                      {slide.title}
+                      {t(slide.titleKey)}
                     </h1>
-                    {slide.subtitle && (
-                      <p className="text-xl md:text-2xl">{slide.subtitle}</p>
+                    {slide.subtitleKey && (
+                      <p className="text-xl md:text-2xl">{t(slide.subtitleKey)}</p>
                     )}
                   </div>
                 )}
@@ -218,7 +225,7 @@ export const Landing = () => {
       <section id="servicios" className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
-            Nuestros Servicios
+            {t('services.title')}
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -231,10 +238,10 @@ export const Landing = () => {
                     </div>
                   </div>
                   <h3 className="text-xl font-semibold mb-3 text-card-foreground">
-                    {service.title}
+                    {t(service.titleKey)}
                   </h3>
                   <p className="text-muted-foreground">
-                    {service.description}
+                    {t(service.descriptionKey)}
                   </p>
                 </CardContent>
               </Card>
@@ -249,15 +256,13 @@ export const Landing = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                Sobre nosotros
+                {t('about.title')}
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Somos una empresa Dominicana con raíces internacionales, que tiene por objetivo 
-                desarrollar, establecer y realizar todo tipo de servicios de seguridad según la 
-                necesidad del cliente, en el sector público y privado a nivel nacional e internacional.
+                {t('about.description')}
               </p>
               <Button variant="default" size="lg">
-                Leer más
+                {t('about.readMore')}
               </Button>
             </div>
             <div className="relative">
@@ -275,7 +280,7 @@ export const Landing = () => {
       <section id="clientes" className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
-            Nuestros Clientes
+            {t('clients.title')}
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -304,7 +309,7 @@ export const Landing = () => {
           
           <div className="text-center">
             <Button variant="outline" size="lg">
-              Ver más
+              {t('clients.seeMore')}
             </Button>
           </div>
         </div>
@@ -314,15 +319,13 @@ export const Landing = () => {
       <section className="py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Conócenos
+            {t('cta.title')}
           </h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Somos una Empresa Dominicana especializada en servicios de seguridad, 
-            fundada en el año 2004 como respuesta a la creciente demanda de servicios 
-            de seguridad con una mejor calidad en la República Dominicana.
+            {t('cta.description')}
           </p>
           <Button variant="secondary" size="lg">
-            Conoce más
+            {t('cta.knowMore')}
           </Button>
         </div>
       </section>
@@ -333,28 +336,28 @@ export const Landing = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Quick Links */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Enlaces rápidos</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('footer.quickLinks')}</h3>
               <ul className="space-y-2">
-                <li><a href="#inicio" className="text-muted-foreground hover:text-foreground transition-colors">Inicio</a></li>
-                <li><a href="#nosotros" className="text-muted-foreground hover:text-foreground transition-colors">Sobre nosotros</a></li>
-                <li><a href="#clientes" className="text-muted-foreground hover:text-foreground transition-colors">Clientes</a></li>
-                <li><a href="#servicios" className="text-muted-foreground hover:text-foreground transition-colors">Servicios</a></li>
+                <li><a href="#inicio" className="text-muted-foreground hover:text-foreground transition-colors">{t('nav.home')}</a></li>
+                <li><a href="#nosotros" className="text-muted-foreground hover:text-foreground transition-colors">{t('nav.about')}</a></li>
+                <li><a href="#clientes" className="text-muted-foreground hover:text-foreground transition-colors">{t('nav.customers')}</a></li>
+                <li><a href="#servicios" className="text-muted-foreground hover:text-foreground transition-colors">{t('nav.services')}</a></li>
               </ul>
             </div>
 
             {/* Additional Links */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Enlaces adicionales</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('footer.additionalLinks')}</h3>
               <ul className="space-y-2">
-                <li><a href="mailto:contacto@src.com.do" className="text-muted-foreground hover:text-foreground transition-colors">Déjanos un mensaje</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Políticas de privacidad</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Términos y condiciones</a></li>
+                <li><a href="mailto:contacto@src.com.do" className="text-muted-foreground hover:text-foreground transition-colors">{t('footer.leaveMessage')}</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">{t('footer.privacy')}</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">{t('footer.terms')}</a></li>
               </ul>
             </div>
 
             {/* Contact */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Contacto</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('footer.contact')}</h3>
               <ul className="space-y-2">
                 <li className="flex items-center space-x-2">
                   <Phone className="h-4 w-4" />
@@ -377,7 +380,7 @@ export const Landing = () => {
 
             {/* Social Media */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Síguenos</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('footer.followUs')}</h3>
               <ul className="space-y-2">
                 <li className="flex items-center space-x-2">
                   <Facebook className="h-4 w-4" />
@@ -401,7 +404,7 @@ export const Landing = () => {
 
           <div className="border-t border-border mt-8 pt-8 text-center">
             <p className="text-muted-foreground">
-              Elaborado por <span className="text-foreground font-semibold">Armando Noel Diseñador Web</span> | All Rights Reserved!
+              {t('footer.madeBy')} <span className="text-foreground font-semibold">Armando Noel Diseñador Web</span> | {t('footer.rights')}
             </p>
           </div>
         </div>
