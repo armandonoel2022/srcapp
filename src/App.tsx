@@ -8,6 +8,7 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import { Auth } from "./pages/Auth";
 import { Dashboard } from "./pages/Dashboard";
 import { Landing } from "./pages/Landing";
+import { About } from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Landing />} />
+              <Route path="/about" element={<About />} />
               <Route path="/auth" element={<Auth />} />
               <Route
                 path="/dashboard"

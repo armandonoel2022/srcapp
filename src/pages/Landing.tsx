@@ -261,7 +261,7 @@ export const Landing = () => {
               <p className="text-muted-foreground text-lg leading-relaxed">
                 {t('about.description')}
               </p>
-              <Button variant="default" size="lg">
+              <Button variant="default" size="lg" onClick={() => navigate('/about')}>
                 {t('about.readMore')}
               </Button>
             </div>
@@ -308,7 +308,7 @@ export const Landing = () => {
           </div>
           
           <div className="text-center">
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" onClick={() => navigate('/about')}>
               {t('clients.seeMore')}
             </Button>
           </div>
@@ -324,7 +324,7 @@ export const Landing = () => {
           <p className="text-xl mb-8 max-w-3xl mx-auto">
             {t('cta.description')}
           </p>
-          <Button variant="secondary" size="lg">
+          <Button variant="secondary" size="lg" onClick={() => navigate('/about')}>
             {t('cta.knowMore')}
           </Button>
         </div>
