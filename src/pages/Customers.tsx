@@ -1,33 +1,46 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { LandingSidebar } from "@/components/LandingSidebar";
 import { SettingsMenu } from "@/components/SettingsMenu";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Star } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Home } from "lucide-react";
+import { useState } from "react";
 
-export const About = () => {
+const clientLogos = [
+  {
+    src: "/lovable-uploads/86a47fcd-5dd5-4de9-83c5-e0d6219bc278.png",
+    alt: "Unión Europea - Delegación en República Dominicana"
+  },
+  {
+    src: "/lovable-uploads/03619d85-decf-4bc7-900e-0a03326c0f7d.png", 
+    alt: "Embajada de Alemania en Santo Domingo"
+  },
+  {
+    src: "/lovable-uploads/6bdc10b1-554f-4455-9b25-c6e005da197e.png",
+    alt: "República Francesa"
+  },
+  {
+    src: "/lovable-uploads/ccf2ed77-93cc-45c0-a71c-6a456e204077.png",
+    alt: "Reino de los Países Bajos"
+  },
+  {
+    src: "/lovable-uploads/0eb22463-78c0-4036-9ea2-44712fa6e09f.png",
+    alt: "Alianza Francesa"
+  },
+  {
+    src: "/lovable-uploads/af9f20ab-1742-45b3-a624-cef5e4398ba7.png",
+    alt: "European Investment Bank"
+  }
+];
+
+export const Customers = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [showMore, setShowMore] = useState(false);
 
-  const missionVisionValues = [
-    {
-      titleKey: "about.mission.title",
-      contentKey: "about.mission.content",
-      stars: 5
-    },
-    {
-      titleKey: "about.vision.title", 
-      contentKey: "about.vision.content",
-      stars: 5
-    },
-    {
-      titleKey: "about.values.title",
-      contentKey: "about.values.content",
-      stars: 5
-    }
-  ];
+  const displayedClients = showMore ? clientLogos : clientLogos.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,6 +64,7 @@ export const About = () => {
                 onClick={() => navigate('/')}
                 className="mr-2"
               >
+                <Home className="h-4 w-4 mr-2" />
                 {t('nav.home')}
               </Button>
               <Button 
@@ -70,7 +84,7 @@ export const About = () => {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `url(/lovable-uploads/63fce2c4-bcf0-4b70-80e4-e92402a8bee3.png)`,
+            backgroundImage: `url(/lovable-uploads/d39f0302-dbf2-4a41-8258-65c43ff877fd.png)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
@@ -79,7 +93,7 @@ export const About = () => {
             <div className="container mx-auto px-4 h-full flex items-center justify-center">
               <div className="text-center text-white">
                 <h1 className="text-3xl md:text-5xl font-bold">
-                  {t('about.pageTitle')}
+                  {t('clients.title')}
                 </h1>
               </div>
             </div>
@@ -87,66 +101,46 @@ export const About = () => {
         </div>
       </section>
 
-      {/* About Content Section */}
+      {/* Clients Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
-            <div className="relative">
-              <img 
-                src="/lovable-uploads/63fce2c4-bcf0-4b70-80e4-e92402a8bee3.png" 
-                alt="Sobre nosotros - Equipo SRC" 
-                className="w-full h-96 object-cover rounded-lg shadow-lg"
-              />
-            </div>
-            <div className="space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                {t('about.whyChooseUs')}
-              </h2>
-              <div className="space-y-4 text-muted-foreground text-lg leading-relaxed">
-                <p>{t('about.description1')}</p>
-                <p>{t('about.description2')}</p>
-              </div>
-              
-              <h3 className="text-2xl font-bold text-foreground mt-8">
-                {t('about.ourGoal')}
-              </h3>
-              <div className="space-y-4 text-muted-foreground text-lg leading-relaxed">
-                <p>{t('about.goal1')}</p>
-                <p>{t('about.goal2')}</p>
-                <p>{t('about.goal3')}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Mission, Vision, Values Section */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
-            {t('about.knowAboutUs')}
+            {t('clients.title')}
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {missionVisionValues.map((item, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
-                <CardContent className="p-6 text-center">
-                  <div className="mb-4 flex justify-center space-x-1">
-                    {[...Array(item.stars)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <h3 className="text-xl font-semibold mb-4 text-card-foreground">
-                    {t(item.titleKey)}
-                  </h3>
-                  <div className="text-muted-foreground space-y-2">
-                    {t(item.contentKey).split('\n').map((line, i) => (
-                      line.trim() && <p key={i}>{line.trim()}</p>
-                    ))}
-                  </div>
-                </CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {displayedClients.map((client, index) => (
+              <Card key={index} className="overflow-hidden bg-white p-6 flex items-center justify-center min-h-[200px] hover:shadow-lg transition-shadow duration-300">
+                <img 
+                  src={client.src}
+                  alt={client.alt}
+                  className="w-full h-auto object-contain max-h-[150px]"
+                />
               </Card>
             ))}
+          </div>
+          
+          <div className="text-center space-y-4">
+            {!showMore && clientLogos.length > 3 && (
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={() => setShowMore(true)}
+              >
+                {t('clients.seeMore')}
+              </Button>
+            )}
+            
+            <div>
+              <Button 
+                variant="default" 
+                size="lg" 
+                onClick={() => navigate('/')}
+              >
+                <Home className="h-4 w-4 mr-2" />
+                {t('nav.home')}
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -161,7 +155,7 @@ export const About = () => {
               <ul className="space-y-2">
                 <li><a href="/" className="text-muted-foreground hover:text-foreground transition-colors">{t('nav.home')}</a></li>
                 <li><a href="/about" className="text-muted-foreground hover:text-foreground transition-colors">{t('nav.about')}</a></li>
-                <li><a href="/#clientes" className="text-muted-foreground hover:text-foreground transition-colors">{t('nav.customers')}</a></li>
+                <li><a href="/customers" className="text-muted-foreground hover:text-foreground transition-colors">{t('nav.customers')}</a></li>
                 <li><a href="/#servicios" className="text-muted-foreground hover:text-foreground transition-colors">{t('nav.services')}</a></li>
               </ul>
             </div>

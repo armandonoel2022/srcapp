@@ -308,7 +308,7 @@ export const Landing = () => {
           </div>
           
           <div className="text-center">
-            <Button variant="outline" size="lg" onClick={() => navigate('/about')}>
+            <Button variant="outline" size="lg" onClick={() => navigate('/customers')}>
               {t('clients.seeMore')}
             </Button>
           </div>
