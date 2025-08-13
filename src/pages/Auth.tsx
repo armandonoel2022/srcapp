@@ -98,6 +98,16 @@ export const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4" 
          style={{ background: "var(--gradient-blue-form)" }}>
+      {/* Home Button */}
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={() => navigate('/')}
+        className="absolute top-4 left-4 bg-white/90 hover:bg-white"
+      >
+        Inicio
+      </Button>
+      
       <div className="w-full max-w-md">
         <div className="bg-white rounded-lg shadow-lg p-8 space-y-6"
              style={{ boxShadow: "var(--shadow-form)" }}>

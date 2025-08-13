@@ -50,7 +50,10 @@ export const Customers = () => {
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center gap-4">
               <LandingSidebar />
-              <div className="text-lg md:text-xl font-bold">
+              <div 
+                className="text-lg md:text-xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => navigate('/')}
+              >
                 {t('header.title')}
               </div>
             </div>
@@ -129,6 +132,12 @@ export const Customers = () => {
               >
                 {t('clients.seeMore')}
               </Button>
+            )}
+            
+            {showMore && (
+              <p className="text-muted-foreground text-lg">
+                {t('clients.allClientsShown')}
+              </p>
             )}
             
             <div>

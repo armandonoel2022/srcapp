@@ -69,6 +69,7 @@ const translations = {
     // Clients
     'clients.title': 'Nuestros Clientes',
     'clients.seeMore': 'Ver más',
+    'clients.allClientsShown': 'Mostrando todos nuestros clientes',
     
     // CTA
     'cta.title': 'Conócenos',
@@ -144,6 +145,7 @@ const translations = {
     // Clients
     'clients.title': 'Our Customers',
     'clients.seeMore': 'Know more',
+    'clients.allClientsShown': 'Showing all our clients',
     
     // CTA
     'cta.title': 'Know more about us',

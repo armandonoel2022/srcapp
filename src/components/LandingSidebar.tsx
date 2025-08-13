@@ -17,9 +17,21 @@ export const LandingSidebar = () => {
 
   const handleNavigation = (href: string) => {
     if (href.startsWith('#')) {
-      const element = document.querySelector(href);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+      // First navigate to home page if not already there
+      if (window.location.pathname !== '/') {
+        navigate('/');
+        // Wait a bit for navigation then scroll
+        setTimeout(() => {
+          const element = document.querySelector(href);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      } else {
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     }
     setIsOpen(false);
