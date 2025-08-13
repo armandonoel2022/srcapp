@@ -22,6 +22,7 @@ const translations = {
     'nav.about': 'Sobre nosotros',
     'nav.customers': 'Clientes',
     'nav.services': 'Servicios',
+    'nav.navigation': 'Navegación',
     
     // Hero section
     'hero.slide1.title': 'Seguridad Confiable y Profesional',
@@ -98,6 +99,7 @@ const translations = {
     'nav.about': 'About us',
     'nav.customers': 'Customers',
     'nav.services': 'Services',
+    'nav.navigation': 'Navigation',
     
     // Hero section
     'hero.slide1.title': 'Reliable and Professional Security',

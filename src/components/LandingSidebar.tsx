@@ -3,16 +3,18 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, Home, User, Users2, Briefcase, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const LandingSidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const navigationItems = [
-    { id: 'inicio', label: 'Inicio', icon: Home, href: '#inicio' },
-    { id: 'nosotros', label: 'Sobre nosotros', icon: User, href: '#nosotros' },
-    { id: 'clientes', label: 'Clientes', icon: Users2, href: '#clientes' },
-    { id: 'servicios', label: 'Servicios', icon: Briefcase, href: '#servicios' },
+    { id: 'inicio', label: t('nav.home'), icon: Home, href: '#inicio' },
+    { id: 'nosotros', label: t('nav.about'), icon: User, href: '#nosotros' },
+    { id: 'clientes', label: t('nav.customers'), icon: Users2, href: '#clientes' },
+    { id: 'servicios', label: t('nav.services'), icon: Briefcase, href: '#servicios' },
   ];
 
   const handleNavigation = (href: string) => {
@@ -51,7 +53,7 @@ export const LandingSidebar = () => {
       </SheetTrigger>
       <SheetContent side="left" className="w-80">
         <SheetHeader>
-          <SheetTitle>Navegación</SheetTitle>
+          <SheetTitle>{t('nav.navigation')}</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col space-y-2 mt-6">
           {/* Navigation items */}
@@ -74,7 +76,7 @@ export const LandingSidebar = () => {
               onClick={handleAccessControl}
             >
               <Shield className="mr-2 h-4 w-4" />
-              Control de Acceso
+              {t('header.accessControl')}
             </Button>
           </div>
         </div>
