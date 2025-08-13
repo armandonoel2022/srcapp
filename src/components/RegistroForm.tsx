@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { useRegistros } from '@/hooks/useRegistros';
 import { EmpleadoSelector } from './EmpleadoSelector';
 import { VisitanteForm } from './VisitanteForm';
+import { RegistrationTypeSelector } from './RegistrationTypeSelector';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, User, Shield } from 'lucide-react';
+import { Clock, User, Shield, ArrowLeft } from 'lucide-react';
 import srcLogo from '@/assets/src-logo.png';
 
 export const RegistroForm = () => {
   const { guardarRegistro, obtenerUltimoAgente, loading } = useRegistros();
+  const [showTypeSelector, setShowTypeSelector] = useState(true);
   
   // Estados del formulario
   const [seguridad, setSeguridad] = useState('');
@@ -120,10 +122,35 @@ export const RegistroForm = () => {
     }
   };
 
+  const handleTypeSelect = (type: 'empleado' | 'visitante') => {
+    setTipoPersona(type);
+    setShowTypeSelector(false);
+  };
+
+  const handleBackToTypeSelector = () => {
+    setShowTypeSelector(true);
+  };
+
+  if (showTypeSelector) {
+    return <RegistrationTypeSelector onTypeSelect={handleTypeSelect} />;
+  }
+
   return (
     <div className="min-h-screen p-6" style={{ background: "var(--gradient-blue-form)" }}>
       <Card className="w-full max-w-2xl mx-auto" style={{ boxShadow: "var(--shadow-form)" }}>
         <CardHeader className="text-center">
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBackToTypeSelector}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Cambiar tipo
+          </Button>
+          <div className="flex-1" />
+        </div>
         <div className="flex flex-col items-center mb-4">
           <img 
             src={srcLogo} 
@@ -136,6 +163,11 @@ export const RegistroForm = () => {
           <CardTitle className="text-xl font-bold font-poppins" style={{ color: "hsl(var(--title-dark))" }}>
             RESIDENCIA DE FRANCIA
           </CardTitle>
+          <div className="mt-2 px-4 py-2 rounded-lg" style={{ background: "hsl(var(--primary) / 0.1)" }}>
+            <span className="text-sm font-semibold" style={{ color: "hsl(var(--primary))" }}>
+              {tipoPersona === 'empleado' ? 'REGISTRO DE EMPLEADO' : 'REGISTRO DE VISITANTE'}
+            </span>
+          </div>
         </div>
         <div className="text-lg font-semibold text-muted-foreground">
           Fecha: {currentTime.toLocaleDateString('es-ES', { 

@@ -1,9 +1,10 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { CameraScanner } from './CameraScanner';
 import { useVisitorCache } from '@/hooks/useVisitorCache';
 import { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Camera } from 'lucide-react';
 
 interface VisitanteFormProps {
   nombre: string;
@@ -29,6 +30,7 @@ export const VisitanteForm = ({
   const { getVisitorData, searchVisitors } = useVisitorCache();
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearch, setShowSearch] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const handleCedulaChange = async (value: string) => {
     onCedulaChange(value);
@@ -58,6 +60,13 @@ export const VisitanteForm = ({
     onMatriculaChange(visitor.matricula || '');
     setShowSearch(false);
     setSearchResults([]);
+  };
+
+  const handleScannedData = (data: { cedula: string; nombre: string; apellido: string }) => {
+    onCedulaChange(data.cedula);
+    onNombreChange(data.nombre);
+    onApellidoChange(data.apellido);
+    setIsCameraOpen(false);
   };
 
   return (
@@ -93,13 +102,25 @@ export const VisitanteForm = ({
               value={cedula}
               onChange={(e) => handleCedulaChange(e.target.value)}
               required
+              placeholder="000-0000000-0"
             />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsCameraOpen(true)}
+              className="flex items-center gap-1"
+              title="Escanear cédula"
+            >
+              <Camera className="w-4 h-4" />
+            </Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={handleSearchVisitors}
               className="flex items-center gap-1"
+              title="Buscar visitante"
             >
               <Search className="w-4 h-4" />
             </Button>
@@ -130,6 +151,12 @@ export const VisitanteForm = ({
           />
         </div>
       </div>
+
+      <CameraScanner
+        isOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        onDataScanned={handleScannedData}
+      />
     </div>
   );
 };
