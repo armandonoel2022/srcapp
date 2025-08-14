@@ -96,48 +96,88 @@ export const useIDScanner = () => {
   const parseIDText = (text: string): IDData => {
     console.log('OCR Text:', text);
     
+    // Clean the text
+    const cleanText = text.replace(/[^\w\sáéíóúñÁÉÍÓÚÑ\-]/g, ' ').replace(/\s+/g, ' ').trim();
+    
     // Patterns for Dominican ID
     const cedulaPattern = /\b\d{3}-?\d{7}-?\d{1}\b/g;
-    const nombrePattern = /(?:NOMBRES?|NAME)[:\s]*([A-ZÁÉÍÓÚÑ\s]+)/i;
-    const apellidoPattern = /(?:APELLIDOS?|SURNAME)[:\s]*([A-ZÁÉÍÓÚÑ\s]+)/i;
     
-    // Alternative patterns for names without labels
-    const linePattern = /^([A-ZÁÉÍÓÚÑ\s]{2,})\s+([A-ZÁÉÍÓÚÑ\s]{2,})$/m;
+    // Multiple patterns for names in Spanish
+    const nombrePatterns = [
+      /(?:NOMBRES?|NAME|PRIMER NOMBRE)[:\s]*([A-ZÁÉÍÓÚÑ\s]+)/i,
+      /NOMBRE[:\s]*([A-ZÁÉÍÓÚÑ\s]+)/i,
+    ];
+    
+    const apellidoPatterns = [
+      /(?:APELLIDOS?|SURNAME|PRIMER APELLIDO)[:\s]*([A-ZÁÉÍÓÚÑ\s]+)/i,
+      /APELLIDO[:\s]*([A-ZÁÉÍÓÚÑ\s]+)/i,
+    ];
+    
+    // Pattern for lines with only uppercase names (common in ID cards)
+    const nameLinePattern = /^([A-ZÁÉÍÓÚÑ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ]{2,})*)\s+([A-ZÁÉÍÓÚÑ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ]{2,})*)$/;
 
     let cedula = '';
     let nombre = '';
     let apellido = '';
 
-    // Extract cedula
-    const cedulaMatch = text.match(cedulaPattern);
-    if (cedulaMatch) {
-      cedula = cedulaMatch[0].replace(/-/g, '');
+    // Extract cedula (more flexible pattern)
+    const cedulaMatches = text.match(/\d{3}[\-\s]?\d{7}[\-\s]?\d{1}/g);
+    if (cedulaMatches) {
+      cedula = cedulaMatches[0].replace(/[\-\s]/g, '');
     }
 
-    // Extract nombres
-    const nombreMatch = text.match(nombrePattern);
-    if (nombreMatch) {
-      nombre = nombreMatch[1].trim();
+    // Extract nombres using multiple patterns
+    for (const pattern of nombrePatterns) {
+      const match = cleanText.match(pattern);
+      if (match && match[1]) {
+        nombre = match[1].trim().split(/\s+/).slice(0, 2).join(' '); // Take first 2 words
+        break;
+      }
     }
 
-    // Extract apellidos
-    const apellidoMatch = text.match(apellidoPattern);
-    if (apellidoMatch) {
-      apellido = apellidoMatch[1].trim();
+    // Extract apellidos using multiple patterns
+    for (const pattern of apellidoPatterns) {
+      const match = cleanText.match(pattern);
+      if (match && match[1]) {
+        apellido = match[1].trim().split(/\s+/).slice(0, 2).join(' '); // Take first 2 words
+        break;
+      }
     }
 
-    // If no labeled matches, try to extract from lines
+    // If no labeled matches, try to extract from lines with only uppercase letters
     if (!nombre && !apellido) {
-      const lines = text.split('\n').filter(line => line.trim().length > 0);
+      const lines = cleanText.split('\n').filter(line => line.trim().length > 5);
+      
       for (const line of lines) {
-        const lineMatch = line.match(linePattern);
-        if (lineMatch && !nombre && !apellido) {
-          nombre = lineMatch[1].trim();
-          apellido = lineMatch[2].trim();
+        const trimmedLine = line.trim();
+        
+        // Skip lines with numbers or too many spaces
+        if (/\d/.test(trimmedLine) || trimmedLine.split(/\s+/).length > 6) continue;
+        
+        // Look for lines with 2-4 words in uppercase
+        const words = trimmedLine.split(/\s+/).filter(word => word.length > 1);
+        if (words.length >= 2 && words.length <= 4 && words.every(word => /^[A-ZÁÉÍÓÚÑ]+$/.test(word))) {
+          if (!nombre) {
+            nombre = words.slice(0, 2).join(' ');
+          } else if (!apellido) {
+            apellido = words.join(' ');
+            break;
+          }
+        }
+        
+        // Alternative: look for pattern with clear name structure
+        const nameMatch = trimmedLine.match(nameLinePattern);
+        if (nameMatch && !nombre && !apellido) {
+          nombre = nameMatch[1].trim();
+          apellido = nameMatch[2].trim();
           break;
         }
       }
     }
+
+    // Clean up extracted data
+    nombre = nombre.replace(/\s+/g, ' ').trim();
+    apellido = apellido.replace(/\s+/g, ' ').trim();
 
     return {
       cedula: cedula,
