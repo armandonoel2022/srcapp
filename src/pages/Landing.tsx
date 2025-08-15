@@ -153,6 +153,11 @@ export const Landing = () => {
               </div>
             </div>
             
+            {/* Mobile: Language toggle only */}
+            <div className="md:hidden">
+              <LanguageToggle />
+            </div>
+            
             {/* Desktop: Language toggle and Control de Acceso */}
             <div className="hidden md:flex items-center gap-2">
               <LanguageToggle />

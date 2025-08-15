@@ -189,7 +189,7 @@ export const Dashboard = () => {
       )}
 
       {/* Main Content */}
-      <main className={`p-4 ${!isMobile ? 'ml-64' : 'pt-16'}`}>
+      <main className={`${!isMobile ? 'ml-64 p-4' : 'pt-4 px-2 pb-4'} min-h-screen`}>
         {renderCurrentSection()}
       </main>
 

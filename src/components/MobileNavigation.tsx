@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { SettingsMenu } from '@/components/SettingsMenu';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { AnimatedMenuButton } from '@/components/AnimatedMenuButton';
 import { 
-  Menu, 
   Home, 
   FileText, 
   Search, 
@@ -108,20 +108,26 @@ export const MobileNavigation = ({ onNavigate, currentSection, isClient }: Mobil
       
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="fixed top-4 left-4 z-50 bg-white/90 hover:bg-white shadow-md"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+          <div className="fixed top-4 left-4 z-50">
+            <AnimatedMenuButton 
+              onClick={() => setIsOpen(true)} 
+              isOpen={isOpen}
+            />
+          </div>
         </SheetTrigger>
         
         <SheetContent side="left" className="w-80 p-0">
           <div className="flex flex-col h-full">
-            {/* Header */}
+            {/* Header with SRC Logo */}
             <div className="p-6 border-b bg-primary text-primary-foreground">
-              <h2 className="text-lg font-semibold">Navegación</h2>
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/src/assets/src-logo.png" 
+                  alt="SRC Logo" 
+                  className="h-8 w-8 object-contain"
+                />
+                <h2 className="text-lg font-semibold">SRC</h2>
+              </div>
             </div>
             
             {/* Navigation Items */}
