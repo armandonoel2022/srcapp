@@ -108,7 +108,9 @@ export const VisitanteForm = ({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 console.log('🎯 Camera button clicked! Opening camera modal...');
                 setIsCameraOpen(true);
                 console.log('🎯 Camera state set to true');
