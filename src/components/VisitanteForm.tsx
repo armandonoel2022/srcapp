@@ -44,14 +44,22 @@ export const VisitanteForm = ({
   };
 
   const handleSearchVisitors = async () => {
+    console.log('🔍 Searching visitors with query:', cedula);
     if (cedula.length >= 2) {
       const results = await searchVisitors(cedula);
+      console.log('🔍 Search results:', results);
       setSearchResults(results);
       setShowSearch(true);
+      if (results.length === 0) {
+        console.log('🔍 No visitors found');
+      }
+    } else {
+      console.log('🔍 Query too short, need at least 2 characters');
     }
   };
 
   const selectVisitor = (visitor: any) => {
+    console.log('👤 Selecting visitor:', visitor);
     onCedulaChange(visitor.cedula);
     onNombreChange(visitor.nombre);
     onApellidoChange(visitor.apellido);
