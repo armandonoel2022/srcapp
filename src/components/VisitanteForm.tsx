@@ -114,7 +114,13 @@ export const VisitanteForm = ({
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleSearchVisitors}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔍 SEARCH BUTTON CLICKED!');
+                console.log('🔍 Current cedula value:', cedula);
+                handleSearchVisitors();
+              }}
               className="flex items-center gap-1"
               title="Buscar visitante"
             >
