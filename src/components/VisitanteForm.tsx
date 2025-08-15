@@ -108,7 +108,11 @@ export const VisitanteForm = ({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setIsCameraOpen(true)}
+              onClick={() => {
+                console.log('🎯 Camera button clicked! Opening camera modal...');
+                setIsCameraOpen(true);
+                console.log('🎯 Camera state set to true');
+              }}
               className="flex items-center gap-1"
               title="Escanear cédula"
             >
@@ -154,9 +158,17 @@ export const VisitanteForm = ({
 
       <CameraScanner
         isOpen={isCameraOpen}
-        onClose={() => setIsCameraOpen(false)}
+        onClose={() => {
+          console.log('🎯 Closing camera modal...');
+          setIsCameraOpen(false);
+        }}
         onDataScanned={handleScannedData}
       />
+      
+      {/* Debugging info */}
+      <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'red', color: 'white', padding: '5px', zIndex: 9999 }}>
+        Camera Modal: {isCameraOpen ? 'OPEN' : 'CLOSED'}
+      </div>
     </div>
   );
 };
