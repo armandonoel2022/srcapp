@@ -113,6 +113,35 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Mobile optimization */
+  html {
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+  }
+  
+  /* Smooth scrolling for mobile */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevent zoom on input focus on iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  
+  /* Mobile viewport fix */
+  .mobile-viewport {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
 }
 
 /* Screen-only elements (hidden during print) */

@@ -148,31 +148,20 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 space-y-6">
       {/* Header with Navigation */}
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <div className="text-center flex-1 space-y-4">
           <img 
             src={srcLogo} 
             alt="SRC Logo" 
-            className="w-24 h-24 mx-auto"
+            className="w-16 h-16 md:w-24 md:h-24 mx-auto"
           />
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-lg md:text-2xl font-bold">
             CONTROL DE ACCESO DIARIO EN PUESTO RESIDENCIA DE FRANCIA
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-sm md:text-lg text-muted-foreground">
             Fecha: {fechaFormateada}
           </p>
         </div>
-        
-        {onNavigateToForm && (
-          <Button 
-            onClick={onNavigateToForm}
-            variant="outline" 
-            className="flex items-center gap-2 self-start"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Volver al Formulario
-          </Button>
-        )}
       </div>
 
       {/* Filtros */}
@@ -300,8 +289,18 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
         />
       </div>
 
-      <div className="flex justify-center space-x-4 no-print">
-        <Button variant="outline" onClick={handleExportCSV} className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row justify-center items-center gap-4 no-print">
+        {onNavigateToForm && (
+          <Button 
+            onClick={onNavigateToForm}
+            variant="outline" 
+            className="flex items-center gap-2 w-full md:w-auto"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver al Formulario
+          </Button>
+        )}
+        <Button variant="outline" onClick={handleExportCSV} className="flex items-center gap-2 w-full md:w-auto">
           <Download className="w-4 h-4" />
           Exportar CSV
         </Button>

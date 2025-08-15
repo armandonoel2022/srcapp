@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { useSwipeable } from 'react-swipeable';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Home, User, Users2, Briefcase, Shield } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { SettingsMenu } from '@/components/SettingsMenu';
+import { Menu, Home, Info, Users, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -10,77 +13,108 @@ export const LandingSidebar = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const navigationItems = [
-    { id: 'inicio', label: t('nav.home'), icon: Home, href: '#inicio' },
-    { id: 'nosotros', label: t('nav.about'), icon: User, href: '#nosotros' },
-    { id: 'clientes', label: t('nav.customers'), icon: Users2, href: '#clientes' },
-    { id: 'servicios', label: t('nav.services'), icon: Briefcase, href: '#servicios' },
-  ];
-
-  const handleNavigation = (href: string) => {
-    if (href.startsWith('#')) {
-      // First navigate to home page if not already there
-      if (window.location.pathname !== '/') {
-        navigate('/');
-        // Wait a bit for navigation then scroll
-        setTimeout(() => {
-          const element = document.querySelector(href);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 100);
-      } else {
-        const element = document.querySelector(href);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
+  const handleSwipeRight = () => {
+    if (!isOpen) {
+      setIsOpen(true);
     }
-    setIsOpen(false);
   };
 
-  const handleAccessControl = () => {
-    navigate('/auth');
+  const handlers = useSwipeable({
+    onSwipedRight: handleSwipeRight,
+    preventScrollOnSwipe: true,
+    trackMouse: false,
+    trackTouch: true,
+    delta: 50
+  });
+
+  const handleNavigation = (path: string, hash?: string) => {
     setIsOpen(false);
+    if (hash) {
+      navigate(path);
+      setTimeout(() => {
+        const element = document.getElementById(hash);
+        element?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      navigate(path);
+    }
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-primary-foreground">
-          <Menu className="h-5 w-5" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="w-80">
-        <SheetHeader>
-          <SheetTitle>{t('nav.navigation')}</SheetTitle>
-        </SheetHeader>
-        <div className="flex flex-col space-y-2 mt-6">
-          {/* Navigation items */}
-          {navigationItems.map((item) => (
-            <Button
-              key={item.id}
-              variant="ghost"
-              className="justify-start"
-              onClick={() => handleNavigation(item.href)}
-            >
-              <item.icon className="mr-2 h-4 w-4" />
-              {item.label}
-            </Button>
-          ))}
-          
-          <div className="pt-4 border-t">
-            <Button
-              variant="default"
-              className="justify-start w-full"
-              onClick={handleAccessControl}
-            >
-              <Shield className="mr-2 h-4 w-4" />
-              {t('header.accessControl')}
-            </Button>
+    <>
+      {/* Swipe detection area */}
+      <div 
+        {...handlers}
+        className="fixed inset-0 z-0 pointer-events-none md:hidden"
+        style={{ pointerEvents: isOpen ? 'none' : 'auto' }}
+      />
+      
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        
+        <SheetContent side="left" className="w-80 p-0">
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="p-6 border-b bg-primary text-primary-foreground">
+              <h2 className="text-lg font-semibold">{t('nav.menu')}</h2>
+            </div>
+            
+            {/* Navigation Items */}
+            <div className="flex-1 p-4 space-y-2">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleNavigation('/', 'inicio')}
+              >
+                <Home className="mr-3 h-4 w-4" />
+                {t('nav.home')}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleNavigation('/', 'nosotros')}
+              >
+                <Info className="mr-3 h-4 w-4" />
+                {t('nav.about')}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleNavigation('/', 'clientes')}
+              >
+                <Users className="mr-3 h-4 w-4" />
+                {t('nav.customers')}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleNavigation('/', 'servicios')}
+              >
+                <Info className="mr-3 h-4 w-4" />
+                {t('nav.services')}
+              </Button>
+            </div>
+            
+            {/* Footer with Settings */}
+            <div className="border-t p-4 space-y-2">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium">Configuración</span>
+                <div className="flex items-center gap-2">
+                  <LanguageToggle />
+                  <SettingsMenu />
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };

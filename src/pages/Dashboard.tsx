@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { LogOut, Users, Shield, FileText, Clock, Search, UserPlus } from 'lucide-react';
 import { RegistroForm } from '@/components/RegistroForm';
 import { GestionEmpleados } from '@/components/GestionEmpleados';
 import { Sidebar } from '@/components/Sidebar';
+import { MobileNavigation } from '@/components/MobileNavigation';
 import { ConsultaRegistros } from '@/components/ConsultaRegistros';
 import { GestionUsuarios } from '@/components/GestionUsuarios';
 import { EditarRegistros } from '@/components/EditarRegistros';
@@ -25,6 +27,7 @@ export const Dashboard = () => {
   
   const isClient = user?.type === 'client' || user?.role === 'cliente';
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentSection, setCurrentSection] = useState(isClient ? 'mapa-calor' : 'registros');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -166,15 +169,27 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar 
-        onNavigate={setCurrentSection} 
-        currentSection={currentSection}
-        isClient={isClient}
-      />
+    <div className="min-h-screen bg-background mobile-viewport">
+      {/* Mobile Navigation */}
+      {isMobile && (
+        <MobileNavigation 
+          onNavigate={setCurrentSection} 
+          currentSection={currentSection}
+          isClient={isClient}
+        />
+      )}
+      
+      {/* Desktop Sidebar - Hidden on mobile */}
+      {!isMobile && (
+        <Sidebar 
+          onNavigate={setCurrentSection} 
+          currentSection={currentSection}
+          isClient={isClient}
+        />
+      )}
 
       {/* Main Content */}
-      <main className="p-6">
+      <main className={`p-4 ${!isMobile ? 'ml-64' : 'pt-16'}`}>
         {renderCurrentSection()}
       </main>
 
