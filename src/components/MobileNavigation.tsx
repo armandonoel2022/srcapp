@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { SettingsMenu } from '@/components/SettingsMenu';
-import { LanguageToggle } from '@/components/LanguageToggle';
 import { AnimatedMenuButton } from '@/components/AnimatedMenuButton';
 import { 
   Home, 
@@ -154,16 +152,8 @@ export const MobileNavigation = ({ onNavigate, currentSection, isClient }: Mobil
               ))}
             </div>
             
-            {/* Footer with Settings and Logout */}
+            {/* Footer with Logout only */}
             <div className="border-t p-4 space-y-2">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-medium">Configuración</span>
-                <div className="flex items-center gap-2">
-                  <LanguageToggle />
-                  <SettingsMenu />
-                </div>
-              </div>
-              
               <Button
                 variant="outline"
                 className="w-full justify-start text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"

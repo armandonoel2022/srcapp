@@ -20,6 +20,7 @@ import { useUserProfiles } from '@/hooks/useUserProfiles';
 import { HeatMap } from '@/components/HeatMap';
 import { InteractiveHeatMap } from '@/components/InteractiveHeatMap';
 import { AutoGeocodingUpdater } from '@/components/AutoGeocodingUpdater';
+import { DashboardHeader } from '@/components/DashboardHeader';
 
 export const Dashboard = () => {
   const { user, signOut, isAdmin } = useAuth();
@@ -170,6 +171,9 @@ export const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background mobile-viewport">
+      {/* Dashboard Header - Desktop only */}
+      <DashboardHeader currentTime={currentTime} />
+      
       {/* Mobile Navigation */}
       {isMobile && (
         <MobileNavigation 
@@ -188,9 +192,11 @@ export const Dashboard = () => {
         />
       )}
 
-      {/* Main Content */}
-      <main className={`${!isMobile ? 'ml-64 p-4' : 'pt-4 px-2 pb-4'} min-h-screen`}>
-        {renderCurrentSection()}
+      {/* Main Content - Full screen on mobile */}
+      <main className={`${!isMobile ? 'ml-64' : ''} min-h-screen`}>
+        <div className={`${!isMobile ? 'p-4' : 'p-2 pt-20'}`}>
+          {renderCurrentSection()}
+        </div>
       </main>
 
       {/* Password Change Modal */}

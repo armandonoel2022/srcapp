@@ -123,7 +123,7 @@ export const LandingSidebar = () => {
               </Button>
             </div>
             
-            {/* Footer with Settings */}
+            {/* Footer with Control de Acceso only */}
             <div className="border-t p-4 space-y-2">
               <Button
                 variant="ghost"
@@ -133,14 +133,6 @@ export const LandingSidebar = () => {
                 <Settings className="mr-3 h-4 w-4" />
                 Control de Acceso
               </Button>
-              
-              <div className="flex items-center justify-between pt-4">
-                <span className="text-sm font-medium">Configuración</span>
-                <div className="flex items-center gap-2">
-                  <LanguageToggle />
-                  <SettingsMenu />
-                </div>
-              </div>
             </div>
           </div>
         </SheetContent>
