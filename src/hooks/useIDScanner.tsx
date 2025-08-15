@@ -10,10 +10,13 @@ interface IDData {
 export const useIDScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const startCamera = async () => {
     try {
@@ -46,16 +49,15 @@ export const useIDScanner = () => {
       videoRef.current.srcObject = null;
     }
     setIsCameraActive(false);
+    setCapturedImage(null);
+    setPreviewMode(false);
   };
 
-  const captureAndScan = async (): Promise<IDData | null> => {
+  const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) {
       setError('Error en los componentes de video');
-      return null;
+      return;
     }
-
-    setIsScanning(true);
-    setError(null);
 
     try {
       const video = videoRef.current;
@@ -71,8 +73,33 @@ export const useIDScanner = () => {
       ctx.drawImage(video, 0, 0);
 
       const imageData = canvas.toDataURL('image/png');
+      setCapturedImage(imageData);
+      setPreviewMode(true);
+      setError(null);
+    } catch (err) {
+      setError('Error al capturar la imagen');
+      console.error('Capture error:', err);
+    }
+  };
 
-      const { data: { text } } = await Tesseract.recognize(imageData, 'spa', {
+  const retakePhoto = () => {
+    setCapturedImage(null);
+    setPreviewMode(false);
+    setError(null);
+  };
+
+  const scanCapturedImage = async (): Promise<IDData | null> => {
+    if (!capturedImage) {
+      setError('No hay imagen capturada para escanear');
+      return null;
+    }
+
+    setIsScanning(true);
+    setError(null);
+
+    try {
+
+      const { data: { text } } = await Tesseract.recognize(capturedImage, 'spa', {
         logger: m => console.log(m)
       });
 
@@ -189,11 +216,16 @@ export const useIDScanner = () => {
   return {
     isScanning,
     isCameraActive,
+    capturedImage,
+    previewMode,
     error,
     videoRef,
     canvasRef,
+    previewCanvasRef,
     startCamera,
     stopCamera,
-    captureAndScan
+    capturePhoto,
+    retakePhoto,
+    scanCapturedImage
   };
 };

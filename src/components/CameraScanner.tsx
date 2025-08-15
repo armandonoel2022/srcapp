@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, X, Scan, Edit } from 'lucide-react';
+import { Camera, X, Scan, Edit, RefreshCw, Check } from 'lucide-react';
 import { useIDScanner } from '@/hooks/useIDScanner';
 import { useState } from 'react';
 
@@ -17,12 +17,17 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerP
   const {
     isScanning,
     isCameraActive,
+    capturedImage,
+    previewMode,
     error,
     videoRef,
     canvasRef,
+    previewCanvasRef,
     startCamera,
     stopCamera,
-    captureAndScan
+    capturePhoto,
+    retakePhoto,
+    scanCapturedImage
   } = useIDScanner();
 
   const [manualData, setManualData] = useState({
@@ -37,12 +42,20 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerP
     onClose();
   };
 
+  const handleCapture = () => {
+    capturePhoto();
+  };
+
   const handleScan = async () => {
-    const data = await captureAndScan();
+    const data = await scanCapturedImage();
     if (data) {
       onDataScanned(data);
       handleClose();
     }
+  };
+
+  const handleRetake = () => {
+    retakePhoto();
   };
 
   const handleStartCamera = async () => {
@@ -89,12 +102,52 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerP
               <div className="text-center py-8">
                 <Camera className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-muted-foreground mb-4">
-                  Active la cámara y tome una foto clara de la cédula. Asegúrese de que el texto esté legible y sin reflejos.
+                  Active la cámara para tomar una foto clara de la cédula.
                 </p>
                 <Button onClick={handleStartCamera} className="gap-2">
                   <Camera className="h-4 w-4" />
                   Activar Cámara
                 </Button>
+              </div>
+            ) : previewMode && capturedImage ? (
+              <div className="space-y-4">
+                <div className="relative rounded-lg overflow-hidden bg-black">
+                  <img 
+                    src={capturedImage} 
+                    alt="Cédula capturada" 
+                    className="w-full h-64 object-contain"
+                  />
+                  <div className="absolute top-2 left-2 right-2 text-center">
+                    <span className="bg-black/70 text-white px-3 py-1 rounded text-sm">
+                      Vista previa - Verifique que el texto sea legible
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    🔍 <strong>Revise la imagen:</strong> ¿Se puede leer claramente la cédula, nombre y apellidos?
+                  </p>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleScan} 
+                    disabled={isScanning}
+                    className="flex-1 gap-2"
+                    style={{ background: "var(--gradient-blue-form)" }}
+                  >
+                    <Check className="h-4 w-4" />
+                    {isScanning ? 'Extrayendo datos...' : 'Extraer Datos'}
+                  </Button>
+                  <Button variant="outline" onClick={handleRetake} className="gap-2">
+                    <RefreshCw className="h-4 w-4" />
+                    Tomar otra
+                  </Button>
+                  <Button variant="outline" onClick={stopCamera}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -105,35 +158,38 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerP
                     playsInline
                     className="w-full h-64 object-cover"
                   />
-                  <div className="absolute inset-0 border-2 border-dashed border-white/50 m-8 rounded-lg pointer-events-none">
+                  <div className="absolute inset-0 border-2 border-dashed border-primary/60 m-8 rounded-lg pointer-events-none">
                     <div className="absolute top-2 left-2 right-2 text-center">
-                      <span className="bg-black/50 text-white px-2 py-1 rounded text-sm">
+                      <span className="bg-black/70 text-white px-3 py-1 rounded text-sm">
                         Coloque la cédula dentro del marco
                       </span>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-3/4 h-1/2 border-2 border-primary/80 rounded-lg bg-primary/10"></div>
                     </div>
                   </div>
                 </div>
                 
                 <div className="bg-muted/50 p-3 rounded-lg">
                   <p className="text-sm text-muted-foreground">
-                    💡 <strong>Consejos para mejor lectura:</strong>
+                    💡 <strong>Consejos para mejor captura:</strong>
                   </p>
                   <ul className="text-xs text-muted-foreground mt-1 space-y-1">
-                    <li>• Mantenga la cédula plana y sin reflejos</li>
+                    <li>• Mantenga la cédula plana y centrada</li>
+                    <li>• Evite reflejos y sombras</li>
+                    <li>• Use buena iluminación natural</li>
                     <li>• Asegúrese de que todo el texto sea visible</li>
-                    <li>• Use buena iluminación</li>
                   </ul>
                 </div>
                 
                 <div className="flex gap-2">
                   <Button 
-                    onClick={handleScan} 
-                    disabled={isScanning}
+                    onClick={handleCapture} 
                     className="flex-1 gap-2"
                     style={{ background: "var(--gradient-blue-form)" }}
                   >
-                    <Scan className="h-4 w-4" />
-                    {isScanning ? 'Procesando...' : 'Escanear Cédula'}
+                    <Camera className="h-4 w-4" />
+                    Capturar Foto
                   </Button>
                   <Button variant="outline" onClick={stopCamera}>
                     <X className="h-4 w-4" />
