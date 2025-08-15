@@ -21,6 +21,8 @@ export const useIDScanner = () => {
   const startCamera = async () => {
     try {
       setError(null);
+      console.log('Starting camera...');
+      
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'environment',
@@ -29,12 +31,33 @@ export const useIDScanner = () => {
         } 
       });
       
+      console.log('Camera stream obtained:', stream);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
-        setIsCameraActive(true);
+        
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          console.log('Video metadata loaded');
+          if (videoRef.current) {
+            videoRef.current.play().then(() => {
+              console.log('Video playing successfully');
+              setIsCameraActive(true);
+            }).catch((playError) => {
+              console.error('Error playing video:', playError);
+              setError('Error al reproducir el video de la cámara');
+            });
+          }
+        };
+        
+        videoRef.current.onerror = (videoError) => {
+          console.error('Video error:', videoError);
+          setError('Error en el video de la cámara');
+        };
       }
     } catch (err) {
+      console.error('Camera error:', err);
       setError('No se pudo acceder a la cámara. Verifique los permisos.');
       console.error('Camera access error:', err);
     }

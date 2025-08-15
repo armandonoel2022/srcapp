@@ -163,7 +163,10 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerP
                     ref={videoRef}
                     autoPlay
                     playsInline
+                    muted
                     className="w-full h-80 object-cover"
+                    onCanPlay={() => console.log('Video can play')}
+                    onPlay={() => console.log('Video started playing')}
                   />
                   {/* Cedula Frame Overlay */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
