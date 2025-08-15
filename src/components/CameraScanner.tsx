@@ -136,7 +136,7 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerP
                   <p className="text-gray-600 mb-4">
                     Active la cámara para tomar una foto clara de la cédula.
                   </p>
-                  <Button onClick={startCamera} className="gap-2">
+                  <Button onClick={handleStartCamera} className="gap-2">
                     <Camera className="h-4 w-4" />
                     Activar Cámara
                   </Button>
