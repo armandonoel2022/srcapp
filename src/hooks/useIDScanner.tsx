@@ -126,18 +126,26 @@ export const useIDScanner = () => {
     // Clean the text
     const cleanText = text.replace(/[^\w\sáéíóúñÁÉÍÓÚÑ\-]/g, ' ').replace(/\s+/g, ' ').trim();
     
-    // Patterns for Dominican ID
-    const cedulaPattern = /\b\d{3}-?\d{7}-?\d{1}\b/g;
+    // Enhanced patterns for Dominican ID extraction
+    const cedulaPatterns = [
+      /\b(\d{3}[\-\s]?\d{7}[\-\s]?\d{1})\b/g,
+      /(\d{11})/g, // Just 11 consecutive digits
+      /(\d{3}\s*\d{7}\s*\d{1})/g // With spaces
+    ];
     
-    // Multiple patterns for names in Spanish
+    // Enhanced name patterns with more variations
     const nombrePatterns = [
-      /(?:NOMBRES?|NAME|PRIMER NOMBRE)[:\s]*([A-ZÁÉÍÓÚÑ\s]+)/i,
-      /NOMBRE[:\s]*([A-ZÁÉÍÓÚÑ\s]+)/i,
+      /(?:NOMBRES?|NAME|PRIMER\s+NOMBRE)[:\s]*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]+)/i,
+      /NOMBRE[:\s]*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]+)/i,
+      /(?:GIVEN\s+NAME|FIRST\s+NAME)[:\s]*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]+)/i,
+      // Look for patterns like "JUAN CARLOS" in capital letters
+      /^([A-ZÁÉÍÓÚÑ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ]{2,}){0,2})$/m
     ];
     
     const apellidoPatterns = [
-      /(?:APELLIDOS?|SURNAME|PRIMER APELLIDO)[:\s]*([A-ZÁÉÍÓÚÑ\s]+)/i,
-      /APELLIDO[:\s]*([A-ZÁÉÍÓÚÑ\s]+)/i,
+      /(?:APELLIDOS?|SURNAME|FAMILY\s+NAME)[:\s]*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]+)/i,
+      /APELLIDO[:\s]*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]+)/i,
+      /(?:LAST\s+NAME)[:\s]*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]+)/i
     ];
     
     // Pattern for lines with only uppercase names (common in ID cards)
@@ -147,27 +155,36 @@ export const useIDScanner = () => {
     let nombre = '';
     let apellido = '';
 
-    // Extract cedula (more flexible pattern)
-    const cedulaMatches = text.match(/\d{3}[\-\s]?\d{7}[\-\s]?\d{1}/g);
-    if (cedulaMatches) {
-      cedula = cedulaMatches[0].replace(/[\-\s]/g, '');
-    }
-
-    // Extract nombres using multiple patterns
-    for (const pattern of nombrePatterns) {
-      const match = cleanText.match(pattern);
-      if (match && match[1]) {
-        nombre = match[1].trim().split(/\s+/).slice(0, 2).join(' '); // Take first 2 words
-        break;
+    // Extract cedula with multiple patterns
+    for (const pattern of cedulaPatterns) {
+      const matches = text.match(pattern);
+      if (matches) {
+        cedula = matches[0].replace(/[\-\s]/g, '');
+        if (cedula.length === 11) break; // Valid Dominican cedula length
       }
     }
 
-    // Extract apellidos using multiple patterns
+    // Extract nombres using enhanced patterns
+    for (const pattern of nombrePatterns) {
+      const match = cleanText.match(pattern);
+      if (match && match[1]) {
+        const extracted = match[1].trim().split(/\s+/).slice(0, 2).join(' ');
+        if (extracted.length > 2) {
+          nombre = extracted;
+          break;
+        }
+      }
+    }
+
+    // Extract apellidos using enhanced patterns
     for (const pattern of apellidoPatterns) {
       const match = cleanText.match(pattern);
       if (match && match[1]) {
-        apellido = match[1].trim().split(/\s+/).slice(0, 2).join(' '); // Take first 2 words
-        break;
+        const extracted = match[1].trim().split(/\s+/).slice(0, 2).join(' ');
+        if (extracted.length > 2) {
+          apellido = extracted;
+          break;
+        }
       }
     }
 

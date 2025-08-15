@@ -115,34 +115,41 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerP
                   <img 
                     src={capturedImage} 
                     alt="Cédula capturada" 
-                    className="w-full h-64 object-contain"
+                    className="w-full h-80 object-contain"
                   />
-                  <div className="absolute top-2 left-2 right-2 text-center">
-                    <span className="bg-black/70 text-white px-3 py-1 rounded text-sm">
-                      Vista previa - Verifique que el texto sea legible
+                  <div className="absolute top-3 left-3 right-3 text-center">
+                    <span className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                      ✓ Documento capturado - Revise la calidad
                     </span>
                   </div>
                 </div>
                 
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    🔍 <strong>Revise la imagen:</strong> ¿Se puede leer claramente la cédula, nombre y apellidos?
-                  </p>
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <div className="flex items-start gap-3">
+                    <div className="text-amber-600 dark:text-amber-400 text-lg">🔍</div>
+                    <div>
+                      <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-1">
+                        Verificación de calidad:
+                      </p>
+                      <p className="text-xs text-amber-800 dark:text-amber-200">
+                        ¿Se puede leer claramente la cédula, nombre completo y apellidos en la imagen?
+                      </p>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex gap-2">
                   <Button 
                     onClick={handleScan} 
                     disabled={isScanning}
-                    className="flex-1 gap-2"
-                    style={{ background: "var(--gradient-blue-form)" }}
+                    className="flex-1 gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg"
                   >
                     <Check className="h-4 w-4" />
-                    {isScanning ? 'Extrayendo datos...' : 'Extraer Datos'}
+                    {isScanning ? 'Extrayendo datos...' : 'Extraer Información'}
                   </Button>
                   <Button variant="outline" onClick={handleRetake} className="gap-2">
                     <RefreshCw className="h-4 w-4" />
-                    Tomar otra
+                    Repetir
                   </Button>
                   <Button variant="outline" onClick={stopCamera}>
                     <X className="h-4 w-4" />
@@ -156,43 +163,76 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerP
                     ref={videoRef}
                     autoPlay
                     playsInline
-                    className="w-full h-64 object-cover"
+                    className="w-full h-80 object-cover"
                   />
-                  <div className="absolute inset-0 border-2 border-dashed border-primary/60 m-8 rounded-lg pointer-events-none">
-                    <div className="absolute top-2 left-2 right-2 text-center">
-                      <span className="bg-black/70 text-white px-3 py-1 rounded text-sm">
-                        Coloque la cédula dentro del marco
-                      </span>
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-3/4 h-1/2 border-2 border-primary/80 rounded-lg bg-primary/10"></div>
+                  {/* Cedula Frame Overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    {/* Dark overlay with cutout for cedula */}
+                    <div className="absolute inset-0 bg-black/60"></div>
+                    
+                    {/* Cedula-shaped cutout (Dominican ID aspect ratio ~1.58:1) */}
+                    <div className="relative">
+                      <div 
+                        className="border-2 border-primary bg-transparent rounded-lg"
+                        style={{
+                          width: '280px',
+                          height: '177px', // 280/1.58 ≈ 177
+                          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)'
+                        }}
+                      >
+                        {/* Corner guides */}
+                        <div className="absolute -top-1 -left-1 w-6 h-6 border-l-4 border-t-4 border-primary rounded-tl-lg"></div>
+                        <div className="absolute -top-1 -right-1 w-6 h-6 border-r-4 border-t-4 border-primary rounded-tr-lg"></div>
+                        <div className="absolute -bottom-1 -left-1 w-6 h-6 border-l-4 border-b-4 border-primary rounded-bl-lg"></div>
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 border-r-4 border-b-4 border-primary rounded-br-lg"></div>
+                        
+                        {/* Instruction text */}
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-center">
+                          <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
+                            Coloque la cédula dentro del marco
+                          </span>
+                        </div>
+                        
+                        {/* Auto-detect indicator */}
+                        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-center">
+                          <span className="bg-muted text-muted-foreground px-2 py-1 rounded text-xs">
+                            📱 Detección automática activada
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    💡 <strong>Consejos para mejor captura:</strong>
-                  </p>
-                  <ul className="text-xs text-muted-foreground mt-1 space-y-1">
-                    <li>• Mantenga la cédula plana y centrada</li>
-                    <li>• Evite reflejos y sombras</li>
-                    <li>• Use buena iluminación natural</li>
-                    <li>• Asegúrese de que todo el texto sea visible</li>
-                  </ul>
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-start gap-3">
+                    <div className="text-blue-600 dark:text-blue-400 text-lg">💡</div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                        Consejos para el mejor escaneo:
+                      </p>
+                      <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                        <li>• Coloque la cédula completamente dentro del marco dorado</li>
+                        <li>• Mantenga el documento plano y sin doblar</li>
+                        <li>• Use buena iluminación, evite sombras y reflejos</li>
+                        <li>• Espere a que el texto se vea nítido antes de capturar</li>
+                        <li>• La cámara detectará automáticamente cuando esté lista</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex gap-2">
                   <Button 
                     onClick={handleCapture} 
-                    className="flex-1 gap-2"
-                    style={{ background: "var(--gradient-blue-form)" }}
+                    className="flex-1 gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
                   >
                     <Camera className="h-4 w-4" />
-                    Capturar Foto
+                    Capturar Cédula
                   </Button>
-                  <Button variant="outline" onClick={stopCamera}>
+                  <Button variant="outline" onClick={stopCamera} className="gap-2">
                     <X className="h-4 w-4" />
+                    Cancelar
                   </Button>
                 </div>
               </div>
