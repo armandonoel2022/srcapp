@@ -58,9 +58,16 @@ export const LandingSidebar = () => {
         
         <SheetContent side="left" className="w-80 p-0">
           <div className="flex flex-col h-full">
-            {/* Header */}
+            {/* Header with Logo */}
             <div className="p-6 border-b bg-primary text-primary-foreground">
-              <h2 className="text-lg font-semibold">{t('nav.menu')}</h2>
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/src/assets/src-logo.png" 
+                  alt="SRC Logo" 
+                  className="h-8 w-8 object-contain"
+                />
+                <h2 className="text-lg font-semibold">SRC</h2>
+              </div>
             </div>
             
             {/* Navigation Items */}
@@ -97,14 +104,23 @@ export const LandingSidebar = () => {
                 className="w-full justify-start"
                 onClick={() => handleNavigation('/', 'servicios')}
               >
-                <Info className="mr-3 h-4 w-4" />
+                 <Info className="mr-3 h-4 w-4" />
                 {t('nav.services')}
               </Button>
             </div>
             
             {/* Footer with Settings */}
             <div className="border-t p-4 space-y-2">
-              <div className="flex items-center justify-between mb-4">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => navigate('/auth')}
+              >
+                <Settings className="mr-3 h-4 w-4" />
+                Control de Acceso
+              </Button>
+              
+              <div className="flex items-center justify-between pt-4">
                 <span className="text-sm font-medium">Configuración</span>
                 <div className="flex items-center gap-2">
                   <LanguageToggle />

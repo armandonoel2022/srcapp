@@ -133,17 +133,9 @@ export const Landing = () => {
       <header className="w-full bg-primary text-primary-foreground sticky top-0 z-50 shadow-lg">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-3">
-            {/* Mobile: Show sidebar on left, title in center */}
-            <div className="flex items-center gap-4 md:flex-1">
-              <div className="md:hidden">
-                <LandingSidebar />
-              </div>
-              <div className="hidden md:flex items-center gap-4">
-                <LandingSidebar />
-                <div className="text-lg md:text-xl font-bold">
-                  {t('header.title')}
-                </div>
-              </div>
+            {/* Mobile: Sidebar trigger only */}
+            <div className="md:hidden">
+              <LandingSidebar />
             </div>
             
             {/* Mobile: Centered title */}
@@ -153,37 +145,24 @@ export const Landing = () => {
               </h1>
             </div>
             
-            {/* Desktop: Full title */}
-            <div className="hidden md:block text-lg md:text-xl font-bold">
-              {t('header.title')}
+            {/* Desktop: Sidebar + title */}
+            <div className="hidden md:flex items-center gap-4">
+              <LandingSidebar />
+              <div className="text-lg md:text-xl font-bold">
+                {t('header.title')}
+              </div>
             </div>
             
-            {/* Right side controls */}
-            <div className="flex items-center gap-2">
-              {/* Mobile: Only Control de Acceso button */}
-              <div className="md:hidden">
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  onClick={() => navigate('/auth')}
-                  className="text-xs px-2"
-                >
-                  Control de Acceso
-                </Button>
-              </div>
-              
-              {/* Desktop: All controls */}
-              <div className="hidden md:flex items-center gap-2">
-                <LanguageToggle />
-                <SettingsMenu />
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  onClick={() => navigate('/auth')}
-                >
-                  {t('header.accessControl')}
-                </Button>
-              </div>
+            {/* Desktop: Language toggle and Control de Acceso */}
+            <div className="hidden md:flex items-center gap-2">
+              <LanguageToggle />
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => navigate('/auth')}
+              >
+                {t('header.accessControl')}
+              </Button>
             </div>
           </div>
         </div>
