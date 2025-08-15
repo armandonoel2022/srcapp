@@ -19,9 +19,15 @@ export const useIDScanner = () => {
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const startCamera = async () => {
+    console.log('📹 Starting camera function called');
     try {
       setError(null);
-      console.log('Starting camera...');
+      console.log('📹 Requesting camera access...');
+      
+      // Check if navigator.mediaDevices exists
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera API not supported in this browser');
+      }
       
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
