@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import { useSwipeable } from 'react-swipeable';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { LanguageToggle } from '@/components/LanguageToggle';
-import { SettingsMenu } from '@/components/SettingsMenu';
-import { Menu, Home, Info, Users, Settings } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Menu, Home, User, Users2, Briefcase, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -13,130 +10,77 @@ export const LandingSidebar = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const handleSwipeRight = () => {
-    if (!isOpen) {
-      setIsOpen(true);
+  const navigationItems = [
+    { id: 'inicio', label: t('nav.home'), icon: Home, href: '#inicio' },
+    { id: 'nosotros', label: t('nav.about'), icon: User, href: '#nosotros' },
+    { id: 'clientes', label: t('nav.customers'), icon: Users2, href: '#clientes' },
+    { id: 'servicios', label: t('nav.services'), icon: Briefcase, href: '#servicios' },
+  ];
+
+  const handleNavigation = (href: string) => {
+    if (href.startsWith('#')) {
+      // First navigate to home page if not already there
+      if (window.location.pathname !== '/') {
+        navigate('/');
+        // Wait a bit for navigation then scroll
+        setTimeout(() => {
+          const element = document.querySelector(href);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      } else {
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
     }
+    setIsOpen(false);
   };
 
-  const handlers = useSwipeable({
-    onSwipedRight: handleSwipeRight,
-    preventScrollOnSwipe: true,
-    trackMouse: false,
-    trackTouch: true,
-    delta: 50,
-    touchEventOptions: { passive: false }
-  });
-
-  const handleNavigation = (path: string, hash?: string) => {
+  const handleAccessControl = () => {
+    navigate('/auth');
     setIsOpen(false);
-    if (hash) {
-      navigate(path);
-      setTimeout(() => {
-        const element = document.getElementById(hash);
-        element?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    } else {
-      navigate(path);
-    }
   };
 
   return (
-    <>
-      {/* Swipe detection area */}
-      <div 
-        {...handlers}
-        className="fixed inset-0 z-0 pointer-events-none md:hidden"
-        style={{ 
-          pointerEvents: isOpen ? 'none' : 'auto',
-          touchAction: 'pan-x'
-        }}
-      />
-      
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="relative z-50 touch-manipulation"
-            onTouchStart={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsOpen(true);
-            }}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
-        
-        <SheetContent side="left" className="w-80 p-0">
-          <div className="flex flex-col h-full">
-            {/* Header with Logo */}
-            <div className="p-6 border-b bg-primary text-primary-foreground">
-              <div className="flex items-center gap-3">
-                <img 
-                  src="/src/assets/src-logo.png" 
-                  alt="SRC Logo" 
-                  className="h-8 w-8 object-contain"
-                />
-                <h2 className="text-lg font-semibold">SRC</h2>
-              </div>
-            </div>
-            
-            {/* Navigation Items */}
-            <div className="flex-1 p-4 space-y-2">
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleNavigation('/', 'inicio')}
-              >
-                <Home className="mr-3 h-4 w-4" />
-                {t('nav.home')}
-              </Button>
-              
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleNavigation('/', 'nosotros')}
-              >
-                <Info className="mr-3 h-4 w-4" />
-                {t('nav.about')}
-              </Button>
-              
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleNavigation('/', 'clientes')}
-              >
-                <Users className="mr-3 h-4 w-4" />
-                {t('nav.customers')}
-              </Button>
-              
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleNavigation('/', 'servicios')}
-              >
-                 <Info className="mr-3 h-4 w-4" />
-                {t('nav.services')}
-              </Button>
-            </div>
-            
-            {/* Footer with Control de Acceso only */}
-            <div className="border-t p-4 space-y-2">
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => navigate('/auth')}
-              >
-                <Settings className="mr-3 h-4 w-4" />
-                Control de Acceso
-              </Button>
-            </div>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="text-primary-foreground">
+          <Menu className="h-5 w-5" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-80">
+        <SheetHeader>
+          <SheetTitle>{t('nav.navigation')}</SheetTitle>
+        </SheetHeader>
+        <div className="flex flex-col space-y-2 mt-6">
+          {/* Navigation items */}
+          {navigationItems.map((item) => (
+            <Button
+              key={item.id}
+              variant="ghost"
+              className="justify-start"
+              onClick={() => handleNavigation(item.href)}
+            >
+              <item.icon className="mr-2 h-4 w-4" />
+              {item.label}
+            </Button>
+          ))}
+          
+          <div className="pt-4 border-t">
+            <Button
+              variant="default"
+              className="justify-start w-full"
+              onClick={handleAccessControl}
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              {t('header.accessControl')}
+            </Button>
           </div>
-        </SheetContent>
-      </Sheet>
-    </>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };

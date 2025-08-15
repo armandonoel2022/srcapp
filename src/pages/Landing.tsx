@@ -132,35 +132,17 @@ export const Landing = () => {
       {/* Header */}
       <header className="w-full bg-primary text-primary-foreground sticky top-0 z-50 shadow-lg">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between py-3">
-            {/* Mobile: Sidebar trigger only */}
-            <div className="md:hidden">
-              <LandingSidebar />
-            </div>
-            
-            {/* Mobile: Centered title */}
-            <div className="md:hidden absolute left-1/2 transform -translate-x-1/2">
-              <h1 className="text-sm font-semibold text-center max-w-[200px] leading-tight">
-                Seguridad Residencial y Comercial S.R.L.
-              </h1>
-            </div>
-            
-            {/* Desktop: Sidebar + title */}
-            <div className="hidden md:flex items-center gap-4">
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-4">
               <LandingSidebar />
               <div className="text-lg md:text-xl font-bold">
                 {t('header.title')}
               </div>
             </div>
             
-            {/* Mobile: Language toggle only */}
-            <div className="md:hidden">
+            <div className="flex items-center gap-2">
               <LanguageToggle />
-            </div>
-            
-            {/* Desktop: Language toggle and Control de Acceso */}
-            <div className="hidden md:flex items-center gap-2">
-              <LanguageToggle />
+              <SettingsMenu />
               <Button 
                 variant="secondary" 
                 size="sm"

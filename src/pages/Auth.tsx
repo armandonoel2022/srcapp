@@ -96,8 +96,17 @@ export const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative" 
+    <div className="min-h-screen flex items-center justify-center p-4" 
          style={{ background: "var(--gradient-blue-form)" }}>
+      {/* Home Button */}
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={() => navigate('/')}
+        className="absolute top-4 left-4 bg-white/90 hover:bg-white"
+      >
+        Inicio
+      </Button>
       
       <div className="w-full max-w-md">
         <div className="bg-white rounded-lg shadow-lg p-8 space-y-6"
@@ -105,17 +114,11 @@ export const Auth = () => {
           
           {/* Logo SRC */}
           <div className="text-center space-y-4">
-            <div className="w-20 h-20 mx-auto flex items-center justify-center">
-              <img 
-                src="/src/assets/src-logo.png" 
-                alt="SRC Logo" 
-                className="max-w-full max-h-full object-contain"
-                onError={(e) => {
-                  console.error('Logo failed to load:', e);
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
+            <img 
+              src="/src/assets/src-logo.png" 
+              alt="SRC Logo" 
+              className="w-20 h-20 mx-auto"
+            />
             <h1 className="text-2xl font-bold text-[hsl(var(--title-dark))]">
               {isSignUp ? "Registrarse" : "Iniciar Sesión"}
             </h1>

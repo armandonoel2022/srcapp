@@ -103,12 +103,7 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerP
                     ref={videoRef}
                     autoPlay
                     playsInline
-                    muted
                     className="w-full h-64 object-cover"
-                    style={{ 
-                      transform: 'scaleX(-1)',
-                      WebkitTransform: 'scaleX(-1)'
-                    }}
                   />
                   <div className="absolute inset-0 border-2 border-dashed border-white/50 m-8 rounded-lg pointer-events-none">
                     <div className="absolute top-2 left-2 right-2 text-center">

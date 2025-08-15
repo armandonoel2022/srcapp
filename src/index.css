@@ -113,61 +113,12 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
-  
-  /* Mobile optimization */
-  html {
-    -webkit-text-size-adjust: 100%;
-    touch-action: manipulation;
-  }
-  
-  /* Smooth scrolling for mobile */
-  * {
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Prevent zoom on input focus on iOS */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="search"],
-  input[type="tel"],
-  input[type="url"],
-  select,
-  textarea {
-    font-size: 16px;
-  }
-  
-  /* Mobile viewport fix */
-  .mobile-viewport {
-    min-height: 100vh;
-    min-height: 100dvh;
-  }
 }
 
 /* Screen-only elements (hidden during print) */
-  .print-only {
-    display: none;
-  }
-
-  /* Animation keyframes for hamburger to logo */
-  @keyframes spin-scale {
-    0% {
-      transform: scale(0) rotate(0deg);
-      opacity: 0;
-    }
-    50% {
-      transform: scale(1.2) rotate(180deg);
-      opacity: 1;
-    }
-    100% {
-      transform: scale(1) rotate(360deg);
-      opacity: 1;
-    }
-  }
-
-  .animate-spin-scale {
-    animation: spin-scale 0.6s ease-in-out;
-  }
+.print-only {
+  display: none;
+}
 
 /* Print Styles */
 @media print {
