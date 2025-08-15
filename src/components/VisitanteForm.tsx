@@ -45,16 +45,23 @@ export const VisitanteForm = ({
 
   const handleSearchVisitors = async () => {
     console.log('🔍 Searching visitors with query:', cedula);
-    if (cedula.length >= 2) {
+    console.log('🔍 Query length:', cedula.length);
+    
+    if (cedula.length >= 1) { // Reduced minimum to 1 character for testing
+      console.log('🔍 Starting search...');
       const results = await searchVisitors(cedula);
       console.log('🔍 Search results:', results);
+      console.log('🔍 Results length:', results.length);
       setSearchResults(results);
       setShowSearch(true);
+      console.log('🔍 showSearch set to true');
+      
       if (results.length === 0) {
-        console.log('🔍 No visitors found');
+        console.log('🔍 No visitors found - showing empty state');
+        // Show dropdown even if empty to indicate search was performed
       }
     } else {
-      console.log('🔍 Query too short, need at least 2 characters');
+      console.log('🔍 Query too short, need at least 1 character');
     }
   };
 
@@ -115,18 +122,36 @@ export const VisitanteForm = ({
             </Button>
           </div>
           
-          {showSearch && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 z-10 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
-              {searchResults.map((visitor, index) => (
-                <div
-                  key={index}
-                  className="p-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => selectVisitor(visitor)}
-                >
-                  <div className="font-medium">{visitor.nombre} {visitor.apellido}</div>
-                  <div className="text-sm text-gray-600">{visitor.cedula}</div>
+          {showSearch && (
+            <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-300 rounded-md shadow-xl max-h-60 overflow-y-auto mt-1">
+              {searchResults.length > 0 ? (
+                searchResults.map((visitor, index) => (
+                  <div
+                    key={index}
+                    className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                    onClick={() => selectVisitor(visitor)}
+                  >
+                    <div className="font-medium text-gray-900">{visitor.nombre} {visitor.apellido}</div>
+                    <div className="text-sm text-gray-600">Cédula: {visitor.cedula}</div>
+                    {visitor.matricula && (
+                      <div className="text-sm text-gray-500">Matrícula: {visitor.matricula}</div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="p-3 text-gray-500 text-center">
+                  <div className="text-sm">No se encontraron visitantes</div>
+                  <div className="text-xs mt-1">con "{cedula}"</div>
                 </div>
-              ))}
+              )}
+              <div className="p-2 bg-gray-50 border-t">
+                <button 
+                  onClick={() => setShowSearch(false)}
+                  className="text-xs text-gray-500 hover:text-gray-700 w-full text-center"
+                >
+                  Cerrar búsqueda
+                </button>
+              </div>
             </div>
           )}
         </div>
