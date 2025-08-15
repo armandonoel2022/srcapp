@@ -24,7 +24,8 @@ export const LandingSidebar = () => {
     preventScrollOnSwipe: true,
     trackMouse: false,
     trackTouch: true,
-    delta: 50
+    delta: 50,
+    touchEventOptions: { passive: false }
   });
 
   const handleNavigation = (path: string, hash?: string) => {
@@ -46,12 +47,25 @@ export const LandingSidebar = () => {
       <div 
         {...handlers}
         className="fixed inset-0 z-0 pointer-events-none md:hidden"
-        style={{ pointerEvents: isOpen ? 'none' : 'auto' }}
+        style={{ 
+          pointerEvents: isOpen ? 'none' : 'auto',
+          touchAction: 'pan-x'
+        }}
       />
       
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="relative z-50 touch-manipulation"
+            onTouchStart={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsOpen(true);
+            }}
+          >
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
