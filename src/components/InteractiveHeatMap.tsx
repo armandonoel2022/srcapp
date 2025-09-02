@@ -3,12 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';  
 import { Input } from '@/components/ui/input';  
 import { Badge } from '@/components/ui/badge';  
-import { MapPin, Search, Navigation, AlertTriangle, CheckCircle, AlertCircle, Maximize2 } from 'lucide-react';  
+import { MapPin, Search, Navigation, AlertTriangle, CheckCircle, AlertCircle, Maximize2, Loader2 } from 'lucide-react';  
 import { useToast } from '@/hooks/use-toast';  
 import { useSettings } from '@/contexts/SettingsContext';  
 import { FullScreenMap } from '@/components/FullScreenMap';  
 import L from 'leaflet';  
 import 'leaflet/dist/leaflet.css';  
+
+// Fix for default markers in Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
   
 // Zonas del Distrito Nacional - Listado completo  
 const heatMapZones = [  
@@ -104,6 +112,8 @@ export const InteractiveHeatMap = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);  
   const [markers, setMarkers] = useState<L.Marker[]>([]);  
   const [highlightedMarker, setHighlightedMarker] = useState<L.Marker | null>(null);  
+  const [isSearching, setIsSearching] = useState(false);
+  const [customLocation, setCustomLocation] = useState<any>(null);
   const mapContainer = useRef<HTMLDivElement>(null);  
   const { toast } = useToast();  
   const { geolocationEnabled } = useSettings();  
@@ -266,8 +276,84 @@ export const InteractiveHeatMap = () => {
     });  
   };
   
+  // Función para buscar coordenadas usando Nominatim (OpenStreetMap)
+  const searchWithOpenStreetMap = async (query: string) => {
+    setIsSearching(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Distrito Nacional, República Dominicana')}`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const { lat, lon, display_name } = data[0];
+        const coordinates = [parseFloat(lat), parseFloat(lon)];
+        
+        // Actualizar mapa con la ubicación encontrada
+        if (map) {
+          map.setView(coordinates, 15);
+          
+          // Limpiar marcador de ubicación personalizada anterior
+          if (customLocation) {
+            map.removeLayer(customLocation);
+          }
+          
+          // Agregar marcador para la ubicación encontrada
+          const newCustomLocation = L.marker(coordinates, {
+            icon: L.divIcon({
+              className: 'custom-location-marker',
+              html: `<div style="
+                background-color: #3b82f6;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                border: 2px solid white;
+                box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
+              "></div>`,
+              iconSize: [20, 20],
+              iconAnchor: [10, 10]
+            })
+          }).addTo(map);
+          
+          newCustomLocation.bindPopup(`
+            <div class="p-2">
+              <h3 class="font-bold text-sm">Ubicación encontrada</h3>
+              <p class="text-xs text-gray-600">${display_name}</p>
+            </div>
+          `).openPopup();
+          
+          setCustomLocation(newCustomLocation);
+        }
+        
+        toast({
+          title: "Ubicación encontrada",
+          description: `Coordenadas: ${coordinates[0].toFixed(6)}, ${coordinates[1].toFixed(6)}`,
+        });
+        
+        return coordinates;
+      } else {
+        toast({
+          title: "Ubicación no encontrada",
+          description: "No se pudo encontrar la ubicación especificada",
+          variant: "destructive"
+        });
+        return null;
+      }
+    } catch (error) {
+      console.error("Error searching with OpenStreetMap:", error);
+      toast({
+        title: "Error de búsqueda",
+        description: "No se pudo completar la búsqueda",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
   // Función para manejar la búsqueda
-  const handleSearch = () => {  
+  const handleSearch = async () => {  
     if (!searchQuery.trim()) {  
       toast({  
         title: "Búsqueda vacía",  
@@ -277,6 +363,7 @@ export const InteractiveHeatMap = () => {
       return;  
     }  
   
+    // Primero buscar en nuestras zonas predefinidas
     const foundZone = heatMapZones.find(zone =>   
       zone.name.toLowerCase().includes(searchQuery.toLowerCase())  
     );  
@@ -296,12 +383,9 @@ export const InteractiveHeatMap = () => {
         title: "Zona encontrada",  
         description: `${foundZone.name} - ${getZoneTypeName(foundZone.type)}`,  
       });  
-    } else {  
-      toast({  
-        title: "Zona no encontrada",  
-        description: "No se encontró ninguna zona con ese nombre",  
-        variant: "destructive"  
-      });  
+    } else {
+      // Si no se encuentra en nuestras zonas, buscar en OpenStreetMap
+      await searchWithOpenStreetMap(searchQuery);
     }  
   };
 
@@ -316,6 +400,7 @@ export const InteractiveHeatMap = () => {
       return;
     }
 
+    setIsSearching(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -324,8 +409,13 @@ export const InteractiveHeatMap = () => {
         if (map) {
           map.setView([latitude, longitude], 15);
           
+          // Limpiar marcador de ubicación personalizada anterior
+          if (customLocation) {
+            map.removeLayer(customLocation);
+          }
+          
           // Agregar marcador de ubicación actual
-          L.marker([latitude, longitude], {
+          const newCustomLocation = L.marker([latitude, longitude], {
             icon: L.divIcon({
               className: 'current-location-marker',
               html: `<div style="
@@ -339,13 +429,17 @@ export const InteractiveHeatMap = () => {
               iconSize: [20, 20],
               iconAnchor: [10, 10]
             })
-          }).addTo(map).bindPopup('Tu ubicación actual').openPopup();
+          }).addTo(map);
+          
+          newCustomLocation.bindPopup('Tu ubicación actual').openPopup();
+          setCustomLocation(newCustomLocation);
         }
         
         toast({
           title: "Ubicación encontrada",
           description: "Se ha centrado el mapa en tu ubicación actual",
         });
+        setIsSearching(false);
       },
       (error) => {
         toast({
@@ -353,6 +447,7 @@ export const InteractiveHeatMap = () => {
           description: "No se pudo obtener tu ubicación",
           variant: "destructive"
         });
+        setIsSearching(false);
       }
     );
   };
@@ -376,16 +471,16 @@ export const InteractiveHeatMap = () => {
             {/* Barra de búsqueda */}  
             <div className="flex gap-2">  
               <Input  
-                placeholder="Buscar zona..."  
+                placeholder="Buscar zona o dirección..."  
                 value={searchQuery}  
                 onChange={(e) => setSearchQuery(e.target.value)}  
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}  
               />  
-              <Button onClick={handleSearch}>  
-                <Search className="h-4 w-4" />  
+              <Button onClick={handleSearch} disabled={isSearching}>  
+                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}  
               </Button>  
-              <Button variant="outline" onClick={getCurrentLocation} disabled={!geolocationEnabled}>  
-                <Navigation className="h-4 w-4" />  
+              <Button variant="outline" onClick={getCurrentLocation} disabled={!geolocationEnabled || isSearching}>  
+                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}  
               </Button>  
               <Button variant="outline" onClick={openFullScreenMap}>  
                 <Maximize2 className="h-4 w-4" />  
@@ -405,6 +500,10 @@ export const InteractiveHeatMap = () => {
               <div className="flex items-center gap-1">  
                 <div className="w-3 h-3 rounded-full bg-green-500"></div>  
                 <span>Zona Fría</span>  
+              </div>  
+              <div className="flex items-center gap-1">  
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>  
+                <span>Ubicación encontrada</span>  
               </div>  
             </div>  
   
