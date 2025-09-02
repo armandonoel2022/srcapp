@@ -1,170 +1,313 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { AuthLayout } from '@/components/ui/auth-layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-
-export const Auth = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [creatingUsers, setCreatingUsers] = useState(false);
+import { useState, useEffect } from 'react';  
+import { useNavigate } from 'react-router-dom';  
+import { useAuth } from '@/hooks/useAuth';  
+import { Button } from '@/components/ui/button';  
+import { Input } from '@/components/ui/input';  
+import { Label } from '@/components/ui/label';  
+import { useToast } from '@/hooks/use-toast';  
+import { supabase } from '@/integrations/supabase/client';  
+import { User, Lock } from 'lucide-react';  
   
-  const { signIn, signUp, user } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+export const Auth = () => {  
+  const [username, setUsername] = useState('');  
+  const [password, setPassword] = useState('');  
+  const [loading, setLoading] = useState(false);  
+  const [isActive, setIsActive] = useState(false);  
     
-    if (!username || !password) {
-      toast({
-        title: "Error",
-        description: "Por favor, completa todos los campos",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const { error } = isSignUp 
-        ? await signUp(username, password)
-        : await signIn(username, password);
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Éxito",
-          description: isSignUp 
-            ? "Usuario registrado exitosamente" 
-            : "Inicio de sesión exitoso"
-        });
-        navigate('/dashboard');
-      }
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error inesperado",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const createInitialUsers = async () => {
-    setCreatingUsers(true);
-    try {
-      const response = await supabase.functions.invoke('create-admin-users');
+  const { signIn, user } = useAuth();  
+  const navigate = useNavigate();  
+  const { toast } = useToast();  
+  
+  // Redirect if already authenticated  
+  useEffect(() => {  
+    if (user) {  
+      navigate('/dashboard');  
+    }  
+  }, [user, navigate]);  
+  
+  const handleSubmit = async (e: React.FormEvent) => {  
+    e.preventDefault();  
       
-      if (response.error) {
-        throw response.error;
-      }
-
-      toast({
-        title: "Usuarios creados",
-        description: "Los usuarios administrador y agente han sido creados exitosamente. Ya puedes iniciar sesión."
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `Error al crear usuarios: ${error.message}`,
-        variant: "destructive"
-      });
-    } finally {
-      setCreatingUsers(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4" 
-         style={{ background: "var(--gradient-blue-form)" }}>
-      {/* Home Button */}
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={() => navigate('/')}
-        className="absolute top-4 left-4 bg-white/90 hover:bg-white"
-      >
-        Inicio
-      </Button>
-      
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-lg p-8 space-y-6"
-             style={{ boxShadow: "var(--shadow-form)" }}>
-          
-          {/* Logo SRC */}
-          <div className="text-center space-y-4">
-            <img 
-              src="/lovable-uploads/6f1746d0-0b44-447b-a333-82019dfecd73.png" 
-              alt="SRC Logo" 
-              className="w-20 h-20 mx-auto object-contain"
-            />
-            <h1 className="text-2xl font-bold text-[hsl(var(--title-dark))]">
-              {isSignUp ? "Registrarse" : "Iniciar Sesión"}
-            </h1>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Usuario:</Label>
-              <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="w-full"
-              />
-            </div>
+    if (!username || !password) {  
+      toast({  
+        title: "Error",  
+        description: "Por favor, completa todos los campos",  
+        variant: "destructive"  
+      });  
+      return;  
+    }  
+  
+    setLoading(true);  
+  
+    try {  
+      const { error } = await signIn(username, password);  
+  
+      if (error) {  
+        toast({  
+          title: "Error",  
+          description: error.message,  
+          variant: "destructive"  
+        });  
+      } else {  
+        toast({  
+          title: "Éxito",  
+          description: "Inicio de sesión exitoso"  
+        });  
+        navigate('/dashboard');  
+      }  
+    } catch (err) {  
+      toast({  
+        title: "Error",  
+        description: "Ocurrió un error inesperado",  
+        variant: "destructive"  
+      });  
+    } finally {  
+      setLoading(false);  
+    }  
+  };  
+  
+  return (  
+    <div className="min-h-screen flex items-center justify-center p-4"   
+         style={{ background: "linear-gradient(90deg, #e2e2e2, #c9d6ff)" }}>  
+        
+      {/* Home Button */}  
+      <Button   
+        variant="outline"   
+        size="sm"  
+        onClick={() => navigate('/')}  
+        className="absolute top-4 left-4 bg-white/90 hover:bg-white z-50"  
+      >  
+        Inicio  
+      </Button>  
+        
+      <div className={`auth-container ${isActive ? 'active' : ''}`}>  
+        {/* Login Form */}  
+        <div className="form-box login">  
+          <form onSubmit={handleSubmit}>  
+            <div className="text-center mb-6">  
+              <img   
+                src="/src/assets/src-logo.png"   
+                alt="SRC Logo"   
+                className="w-16 h-16 mx-auto mb-4"  
+              />  
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Iniciar Sesión</h1>  
+            </div>  
+              
+            <div className="input-box">  
+              <Input  
+                type="text"  
+                placeholder="Usuario"  
+                value={username}  
+                onChange={(e) => setUsername(e.target.value)}  
+                required  
+                className="auth-input"  
+              />  
+              <User className="input-icon" />  
+            </div>  
+              
+            <div className="input-box">  
+              <Input  
+                type="password"  
+                placeholder="Contraseña"  
+                value={password}  
+                onChange={(e) => setPassword(e.target.value)}  
+                required  
+                className="auth-input"  
+              />  
+              <Lock className="input-icon" />  
+            </div>  
+  
+            <Button   
+              type="submit"   
+              className="auth-btn"  
+              disabled={loading}  
+            >  
+              {loading ? "Cargando..." : "Iniciar Sesión"}  
+            </Button>  
+          </form>  
+        </div>  
+  
+        {/* Info Panel */}  
+        <div className="form-box info">  
+          <div className="info-content">  
+            <h1 className="text-3xl font-bold text-white mb-4">¡Bienvenido!</h1>  
+            <p className="text-white/90 mb-6">  
+              Sistema de Control de Acceso SRC  
+            </p>  
+            <p className="text-white/80 text-sm">  
+              Accede con tus credenciales para gestionar el control de acceso  
+            </p>  
+          </div>  
+        </div>  
+  
+        {/* Toggle Background */}  
+        <div className="toggle-box">  
+          <div className="toggle-background"></div>  
+        </div>  
+      </div>  
+  
+      <style jsx>{`  
+        .auth-container {  
+          position: relative;  
+          width: 850px;  
+          height: 550px;  
+          background: #fff;  
+          border-radius: 30px;  
+          box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);  
+          margin: 20px;  
+          overflow: hidden;  
+          max-width: 90vw;  
+        }  
+  
+        .form-box {  
+          position: absolute;  
+          width: 50%;  
+          height: 100%;  
+          display: flex;  
+          align-items: center;  
+          justify-content: center;  
+          padding: 40px;  
+          transition: 0.6s ease-in-out;  
+        }  
+  
+        .form-box.login {  
+          left: 0;  
+          background: #fff;  
+          z-index: 2;  
+        }  
+  
+        .form-box.info {  
+          right: 0;  
+          background: transparent;  
+          color: #fff;  
+          z-index: 1;  
+        }  
+  
+        .form-box form {  
+          width: 100%;  
+          max-width: 300px;  
+        }  
+  
+        .input-box {  
+          position: relative;  
+          margin: 30px 0;  
+        }  
+  
+        .auth-input {  
+          width: 100%;  
+          padding: 13px 50px 13px 20px !important;  
+          background: #eee !important;  
+          border-radius: 8px !important;  
+          border: none !important;  
+          outline: none !important;  
+          font-size: 16px !important;  
+          color: #333 !important;  
+          font-weight: 500 !important;  
+        }  
+  
+        .auth-input::placeholder {  
+          color: #888 !important;  
+          font-weight: 400 !important;  
+        }  
+  
+        .input-icon {  
+          position: absolute;  
+          right: 20px;  
+          top: 50%;  
+          transform: translateY(-50%);  
+          width: 20px;  
+          height: 20px;  
+          color: #888;  
+          pointer-events: none;  
+        }  
+  
+        .auth-btn {  
+          width: 100%;  
+          height: 48px;  
+          background: #7494ec !important;  
+          border-radius: 8px !important;  
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;  
+          border: none !important;  
+          cursor: pointer !important;  
+          font-size: 16px !important;  
+          color: #fff !important;  
+          font-weight: 600 !important;  
+          margin-top: 20px;  
+        }  
+  
+        .auth-btn:hover {  
+          background: #6084dc !important;  
+        }  
+  
+        .info-content {  
+          text-align: center;  
+          z-index: 3;  
+          position: relative;  
+        }  
+  
+        .toggle-box {  
+          position: absolute;  
+          width: 100%;  
+          height: 100%;  
+          pointer-events: none;  
+        }  
+  
+        .toggle-background {  
+          content: '';  
+          position: absolute;  
+          right: 0;  
+          width: 50%;  
+          height: 100%;  
+          background: linear-gradient(135deg, #7494ec, #6084dc);  
+          z-index: 1;  
+          transition: 1.8s ease-in-out;  
+        }  
+  
+        /* Responsive Design */  
+        @media screen and (max-width: 768px) {  
+          .auth-container {  
+            width: 100%;  
+            height: 100vh;  
+            border-radius: 0;  
+            margin: 0;  
+          }  
+  
+          .form-box {  
+            width: 100%;  
+            padding: 20px;  
+          }  
+  
+          .form-box.login {  
+            position: relative;  
+            height: 70%;  
+            background: #fff;  
+          }  
+  
+          .form-box.info {  
+            position: relative;  
+            height: 30%;  
+            background: linear-gradient(135deg, #7494ec, #6084dc);  
+          }  
+  
+          .toggle-background {  
+            display: none;  
+          }  
+  
+          .input-box {  
+            margin: 20px 0;  
+          }  
+        }  
+  
+        @media screen and (max-width: 400px) {  
+          .form-box {  
+            padding: 15px;  
+          }  
             
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña:</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full"
-              />
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full"
-              style={{ 
-                background: "var(--gradient-blue-form)",
-                transition: "var(--transition-smooth)"
-              }}
-              disabled={loading}
-            >
-              {loading ? "Cargando..." : (isSignUp ? "Registrarse" : "Iniciar Sesión")}
-            </Button>
-            
-            {/* Remove signup option since all users are SRC employees */}
-          </form>
-        </div>
-      </div>
-    </div>
-  );
+          .info-content h1 {  
+            font-size: 24px;  
+          }  
+        }  
+      `}</style>  
+    </div>  
+  );  
 };
