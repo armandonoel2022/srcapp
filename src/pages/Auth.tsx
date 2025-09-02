@@ -176,12 +176,12 @@ export const Auth = () => {
           z-index: 2;  
         }  
   
-        .form-box.info {  
-          right: 0;  
-          background: transparent;  
-          color: #fff;  
-          z-index: 1;  
-        }  
+        .form-box.info {
+          right: 0;
+          background: transparent;
+          color: #fff;
+          z-index: 3;
+        }
   
         .form-box form {  
           width: 100%;  
@@ -240,11 +240,11 @@ export const Auth = () => {
           background: hsl(217 91% 55%) !important;
         }
   
-        .info-content {  
-          text-align: center;  
-          z-index: 3;  
-          position: relative;  
-        }  
+        .info-content {
+          text-align: center;
+          z-index: 5;
+          position: relative;
+        }
   
         .toggle-box {  
           position: absolute;  
@@ -260,7 +260,7 @@ export const Auth = () => {
           width: 50%;
           height: 100%;
           background: var(--gradient-blue-form);
-          z-index: 1;
+          z-index: 2;
           transition: 1.8s ease-in-out;
         }
   
