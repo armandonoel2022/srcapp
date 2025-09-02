@@ -2,22 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';  
 import { Button } from '@/components/ui/button';  
 import { Input } from '@/components/ui/input';  
-import { Badge } from '@/components/ui/badge';  
 import { MapPin, Search, Navigation, AlertTriangle, CheckCircle, AlertCircle, Maximize2, Loader2 } from 'lucide-react';  
 import { useToast } from '@/hooks/use-toast';  
 import { useSettings } from '@/contexts/SettingsContext';  
-import L from 'leaflet';  
-import 'leaflet/dist/leaflet.css';  
 
-// Fix for default markers in Leaflet
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-  
 // Zonas del Distrito Nacional - Listado completo  
 const heatMapZones = [  
   { name: "24 de Abril", type: "hot", color: "red", coords: [18.497878, -69.883417] },  
@@ -103,104 +91,68 @@ const getZoneTypeName = (type: string) => {
   }
 };
 
-// Componente FullScreenMap simplificado
-const FullScreenMap = ({ onClose, selectedZone, onZoneSelect }: { 
-  onClose: () => void, 
-  selectedZone: any, 
-  onZoneSelect: (zone: any) => void 
+// Función para convertir coordenadas a posición en el mapa
+const coordsToPosition = (lat: number, lng: number) => {
+  // Rango aproximado de coordenadas del Distrito Nacional
+  const minLat = 18.43;
+  const maxLat = 18.52;
+  const minLng = -69.95;
+  const maxLng = -69.87;
+  
+  // Convertir a porcentajes para posicionamiento relativo
+  const x = ((lng - minLng) / (maxLng - minLng)) * 100;
+  const y = 100 - (((lat - minLat) / (maxLat - minLat)) * 100);
+  
+  return { x, y };
+};
+
+// Componente de marcador para el mapa
+const MapMarker = ({ zone, isSelected, onClick }: { 
+  zone: any; 
+  isSelected: boolean; 
+  onClick: () => void; 
 }) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<L.Map | null>(null);
-
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    const mapInstance = L.map(mapContainer.current, {
-      center: [18.4655, -69.9156],
-      zoom: 11,
-      zoomControl: true
-    });
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(mapInstance);
-
-    // Agregar marcadores
-    heatMapZones.forEach(zone => {
-      const iconColor = zone.type === 'hot' ? '#ef4444' : 
-                       zone.type === 'intermediate' ? '#f59e0b' : '#10b981';
-        
-      const customIcon = L.divIcon({
-        className: 'custom-heat-marker',
-        html: `<div style="
-          background-color: ${iconColor};
-          width: 14px;
-          height: 14px;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 0 6px rgba(0,0,0,0.4);
-        "></div>`,
-        iconSize: [18, 18],
-        iconAnchor: [9, 9]
-      });
-
-      const marker = L.marker([zone.coords[0], zone.coords[1]], {
-        icon: customIcon
-      }).addTo(mapInstance);
-
-      marker.bindPopup(`
-        <div class="p-2">
-          <h3 class="font-bold text-sm">${zone.name}</h3>
-          <p class="text-xs text-gray-600">${getZoneTypeName(zone.type)}</p>
-        </div>
-      `);
-
-      marker.on('click', () => {
-        onZoneSelect(zone);
-        mapInstance.setView([zone.coords[0], zone.coords[1]], 15);
-      });
-    });
-
-    setMap(mapInstance);
-
-    return () => {
-      if (mapInstance) {
-        mapInstance.remove();
-      }
-    };
-  }, []);
-
+  const position = coordsToPosition(zone.coords[0], zone.coords[1]);
+  
+  const getMarkerColor = () => {
+    switch (zone.type) {
+      case 'hot': return 'bg-red-500';
+      case 'intermediate': return 'bg-yellow-500';
+      case 'cold': return 'bg-green-500';
+      default: return 'bg-gray-500';
+    }
+  };
+  
+  const getMarkerSize = () => {
+    return isSelected ? 'w-5 h-5' : 'w-3 h-3';
+  };
+  
+  const getPulseAnimation = () => {
+    return isSelected ? 'animate-pulse' : '';
+  };
+  
   return (
-    <div className="fixed inset-0 bg-background z-50 flex flex-col">
-      <div className="p-4 border-b flex justify-between items-center">
-        <h2 className="text-xl font-bold">Mapa en Pantalla Completa</h2>
-        <Button onClick={onClose}>Cerrar</Button>
-      </div>
-      <div ref={mapContainer} className="flex-1 w-full" />
-    </div>
+    <div 
+      className={`absolute rounded-full border-2 border-white ${getMarkerColor()} ${getMarkerSize()} ${getPulseAnimation()} cursor-pointer shadow-md`}
+      style={{ 
+        left: `${position.x}%`, 
+        top: `${position.y}%`,
+        transform: 'translate(-50%, -50%)'
+      }}
+      onClick={onClick}
+      title={zone.name}
+    />
   );
 };
 
 export const InteractiveHeatMap = () => {  
   const [searchQuery, setSearchQuery] = useState('');  
-  const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);  
   const [selectedZone, setSelectedZone] = useState<any>(null);  
   const [filteredZones, setFilteredZones] = useState(heatMapZones);  
-  const [map, setMap] = useState<L.Map | null>(null);  
-  const [isFullScreen, setIsFullScreen] = useState(false);  
-  const [markers, setMarkers] = useState<L.Marker[]>([]);  
-  const [highlightedMarker, setHighlightedMarker] = useState<L.Marker | null>(null);  
   const [isSearching, setIsSearching] = useState(false);
-  const [customLocation, setCustomLocation] = useState<any>(null);
-  const mapContainer = useRef<HTMLDivElement>(null);  
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const { toast } = useToast();  
   const { geolocationEnabled } = useSettings();  
-  
-  // Separar zonas por tipo  
-  const hotZones = heatMapZones.filter(zone => zone.type === 'hot');  
-  const intermediateZones = heatMapZones.filter(zone => zone.type === 'intermediate');  
-  const coldZones = heatMapZones.filter(zone => zone.type === 'cold');  
   
   // Filtrar zonas por búsqueda  
   useEffect(() => {  
@@ -214,146 +166,6 @@ export const InteractiveHeatMap = () => {
     }  
   }, [searchQuery]);  
   
-  // Inicializar mapa con Leaflet  
-  useEffect(() => {  
-    if (!mapContainer.current) return;  
-  
-    const initializeMap = () => {  
-      try {  
-        const mapInstance = L.map(mapContainer.current!, {  
-          center: [18.4655, -69.9156],  
-          zoom: 11,  
-          zoomControl: true  
-        });  
-  
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {  
-          attribution: '© OpenStreetMap contributors',  
-          maxZoom: 19  
-        }).addTo(mapInstance);  
-  
-        addHeatMapMarkers(mapInstance);  
-        setMap(mapInstance);  
-        console.log('Mapa de OpenStreetMap cargado correctamente');  
-      } catch (error) {  
-        console.error('Error loading OpenStreetMap:', error);  
-        toast({  
-          title: "Error al cargar el mapa",  
-          description: "Error al inicializar OpenStreetMap",  
-          variant: "destructive"  
-        });  
-      }  
-    };  
-  
-    initializeMap();  
-  
-    return () => {  
-      if (map) {  
-        map.remove();  
-      }  
-    };  
-  }, []);  
-  
-  // Función para agregar marcadores de zonas de calor con iluminación  
-  const addHeatMapMarkers = (mapInstance: L.Map) => {  
-    const newMarkers: L.Marker[] = [];  
-  
-    heatMapZones.forEach(zone => {  
-      const iconColor = zone.type === 'hot' ? '#ef4444' :   
-                       zone.type === 'intermediate' ? '#f59e0b' : '#10b981';  
-        
-      const customIcon = L.divIcon({  
-        className: 'custom-heat-marker',  
-        html: `<div style="  
-          background-color: ${iconColor};  
-          width: 14px;  
-          height: 14px;  
-          border-radius: 50%;  
-          border: 2px solid white;  
-          box-shadow: 0 0 6px rgba(0,0,0,0.4);  
-        "></div>`,  
-        iconSize: [18, 18],  
-        iconAnchor: [9, 9]  
-      });  
-  
-      const marker = L.marker([zone.coords[0], zone.coords[1]], {  
-        icon: customIcon  
-      }).addTo(mapInstance);  
-  
-      // Agregar popup con información de la zona  
-      marker.bindPopup(`  
-        <div class="p-2">  
-          <h3 class="font-bold text-sm">${zone.name}</h3>  
-          <p class="text-xs text-gray-600">${getZoneTypeName(zone.type)}</p>  
-          <p class="text-xs mt-1">Coordenadas: ${zone.coords[0].toFixed(4)}, ${zone.coords[1].toFixed(4)}</p>  
-        </div>  
-      `);  
-  
-      // Evento click para seleccionar zona e iluminarla  
-      marker.on('click', () => {  
-        setSelectedZone(zone);  
-        highlightZone(marker, zone);  
-        mapInstance.setView([zone.coords[0], zone.coords[1]], 15);  
-      });  
-  
-      newMarkers.push(marker);  
-    });  
-  
-    setMarkers(newMarkers);  
-  };  
-  
-  // Función para iluminar zona seleccionada  
-  const highlightZone = (marker: L.Marker, zone: any) => {  
-    // Remover iluminación previa  
-    if (highlightedMarker) {  
-      highlightedMarker.setIcon(createNormalIcon(zone.type));  
-    }  
-      
-    // Crear icono iluminado  
-    const highlightIcon = createHighlightIcon(zone.type);  
-    marker.setIcon(highlightIcon);  
-    setHighlightedMarker(marker);  
-  };  
-  
-  // Función para crear icono normal  
-  const createNormalIcon = (type: string) => {  
-    const iconColor = type === 'hot' ? '#ef4444' :   
-                     type === 'intermediate' ? '#f59e0b' : '#10b981';  
-      
-    return L.divIcon({  
-      className: 'custom-heat-marker',  
-      html: `<div style="  
-        background-color: ${iconColor};  
-        width: 14px;  
-        height: 14px;  
-        border-radius: 50%;  
-        border: 2px solid white;  
-        box-shadow: 0 0 6px rgba(0,0,0,0.4);  
-      "></div>`,  
-      iconSize: [18, 18],  
-      iconAnchor: [9, 9]  
-    });  
-  };  
-  
-  // Función para crear icono iluminado  
-  const createHighlightIcon = (type: string) => {  
-    const iconColor = type === 'hot' ? '#ef4444' :   
-                     type === 'intermediate' ? '#f59e0b' : '#10b981';  
-      
-    return L.divIcon({  
-      className: 'custom-heat-marker-highlight',  
-      html: `<div style="  
-        background-color: ${iconColor};  
-        width: 20px;  
-        height: 20px;  
-        border-radius: 50%;  
-        border: 3px solid white;  
-        box-shadow: 0 0 15px ${iconColor}, 0 0 30px ${iconColor};  
-      "></div>`,  
-      iconSize: [26, 26],  
-      iconAnchor: [13, 13]  
-    });  
-  };
-  
   // Función para buscar coordenadas usando Nominatim (OpenStreetMap)
   const searchWithOpenStreetMap = async (query: string) => {
     setIsSearching(true);
@@ -366,42 +178,6 @@ export const InteractiveHeatMap = () => {
       if (data && data.length > 0) {
         const { lat, lon, display_name } = data[0];
         const coordinates = [parseFloat(lat), parseFloat(lon)];
-        
-        // Actualizar mapa con la ubicación encontrada
-        if (map) {
-          map.setView(coordinates, 15);
-          
-          // Limpiar marcador de ubicación personalizada anterior
-          if (customLocation) {
-            map.removeLayer(customLocation);
-          }
-          
-          // Agregar marcador para la ubicación encontrada
-          const newCustomLocation = L.marker(coordinates, {
-            icon: L.divIcon({
-              className: 'custom-location-marker',
-              html: `<div style="
-                background-color: #3b82f6;
-                width: 16px;
-                height: 16px;
-                border-radius: 50%;
-                border: 2px solid white;
-                box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
-              "></div>`,
-              iconSize: [20, 20],
-              iconAnchor: [10, 10]
-            })
-          }).addTo(map);
-          
-          newCustomLocation.bindPopup(`
-            <div class="p-2">
-              <h3 class="font-bold text-sm">Ubicación encontrada</h3>
-              <p class="text-xs text-gray-600">${display_name}</p>
-            </div>
-          `).openPopup();
-          
-          setCustomLocation(newCustomLocation);
-        }
         
         toast({
           title: "Ubicación encontrada",
@@ -448,15 +224,6 @@ export const InteractiveHeatMap = () => {
   
     if (foundZone) {  
       setSelectedZone(foundZone);  
-      if (map) {  
-        map.setView([foundZone.coords[0], foundZone.coords[1]], 15);  
-          
-        // Encontrar y iluminar el marcador correspondiente  
-        const markerIndex = heatMapZones.findIndex(z => z.name === foundZone.name);  
-        if (markers[markerIndex]) {  
-          highlightZone(markers[markerIndex], foundZone);  
-        }  
-      }  
       toast({  
         title: "Zona encontrada",  
         description: `${foundZone.name} - ${getZoneTypeName(foundZone.type)}`,  
@@ -482,40 +249,10 @@ export const InteractiveHeatMap = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setCurrentLocation({ lat: latitude, lng: longitude });
-        
-        if (map) {
-          map.setView([latitude, longitude], 15);
-          
-          // Limpiar marcador de ubicación personalizada anterior
-          if (customLocation) {
-            map.removeLayer(customLocation);
-          }
-          
-          // Agregar marcador de ubicación actual
-          const newCustomLocation = L.marker([latitude, longitude], {
-            icon: L.divIcon({
-              className: 'current-location-marker',
-              html: `<div style="
-                background-color: #3b82f6;
-                width: 16px;
-                height: 16px;
-                border-radius: 50%;
-                border: 2px solid white;
-                box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
-              "></div>`,
-              iconSize: [20, 20],
-              iconAnchor: [10, 10]
-            })
-          }).addTo(map);
-          
-          newCustomLocation.bindPopup('Tu ubicación actual').openPopup();
-          setCustomLocation(newCustomLocation);
-        }
         
         toast({
           title: "Ubicación encontrada",
-          description: "Se ha centrado el mapa en tu ubicación actual",
+          description: "Se ha obtenido tu ubicación actual",
         });
         setIsSearching(false);
       },
@@ -579,14 +316,32 @@ export const InteractiveHeatMap = () => {
                 <div className="w-3 h-3 rounded-full bg-green-500"></div>  
                 <span>Zona Fría</span>  
               </div>  
-              <div className="flex items-center gap-1">  
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>  
-                <span>Ubicación encontrada</span>  
-              </div>  
             </div>  
   
-            {/* Mapa */}  
-            <div ref={mapContainer} className="h-96 w-full rounded-md border" />  
+            {/* Mapa simplificado */}  
+            <div className="h-96 w-full rounded-md border relative bg-blue-50 overflow-hidden">
+              {/* Representación visual del mapa con marcadores */}
+              {heatMapZones.map(zone => (
+                <MapMarker 
+                  key={zone.name} 
+                  zone={zone} 
+                  isSelected={selectedZone?.name === zone.name}
+                  onClick={() => setSelectedZone(zone)}
+                />
+              ))}
+              
+              {/* Texto indicativo */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-center p-4 bg-white/80 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    Mapa simplificado de calor. Instala Leaflet para ver el mapa real.
+                  </p>
+                  <p className="text-xs mt-2">
+                    Ejecuta: <code className="bg-gray-100 p-1 rounded">npm install leaflet @types/leaflet</code>
+                  </p>
+                </div>
+              </div>
+            </div>  
   
             {/* Zona seleccionada */}  
             {selectedZone && (  
@@ -611,34 +366,23 @@ export const InteractiveHeatMap = () => {
   
       {/* Modal de mapa en pantalla completa */}  
       {isFullScreen && (  
-        <FullScreenMap  
-          selectedZone={selectedZone}  
-          onClose={() => setIsFullScreen(false)}  
-          onZoneSelect={setSelectedZone}  
-        />  
+        <div className="fixed inset-0 bg-background z-50 flex flex-col">
+          <div className="p-4 border-b flex justify-between items-center">
+            <h2 className="text-xl font-bold">Mapa en Pantalla Completa</h2>
+            <Button onClick={() => setIsFullScreen(false)}>Cerrar</Button>
+          </div>
+          <div className="flex-1 w-full relative bg-blue-50">
+            {heatMapZones.map(zone => (
+              <MapMarker 
+                key={zone.name} 
+                zone={zone} 
+                isSelected={selectedZone?.name === zone.name}
+                onClick={() => setSelectedZone(zone)}
+              />
+            ))}
+          </div>
+        </div>
       )}  
-
-      {/* Estilos para la animación de pulso */}
-      <style>{`  
-        .custom-heat-marker-highlight div {  
-          animation: pulse 2s infinite;  
-        }
-        
-        @keyframes pulse {  
-          0% {  
-            transform: scale(1);  
-            opacity: 1;  
-          }  
-          50% {  
-            transform: scale(1.1);  
-            opacity: 0.7;  
-          }  
-          100% {  
-            transform: scale(1);  
-            opacity: 1;  
-          }  
-        }  
-      `}</style>
     </div>  
   );  
 };
