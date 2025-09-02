@@ -10,7 +10,7 @@ import { FullScreenMap } from '@/components/FullScreenMap';
 import L from 'leaflet';  
 import 'leaflet/dist/leaflet.css';  
   
-// Zonas del Distrito Nacional - Listado completo (mantener igual)  
+// Zonas del Distrito Nacional - Listado completo  
 const heatMapZones = [  
   { name: "24 de Abril", type: "hot", color: "red", coords: [18.497878, -69.883417] },  
   { name: "Cristo Rey", type: "hot", color: "red", coords: [18.488505, -69.895349] },  
@@ -121,22 +121,18 @@ export const InteractiveHeatMap = () => {
   
     const initializeMap = () => {  
       try {  
-        // Crear mapa con Leaflet  
         const mapInstance = L.map(mapContainer.current!, {  
-          center: [18.4655, -69.9156], // Centro de Santo Domingo  
+          center: [18.4655, -69.9156],  
           zoom: 11,  
           zoomControl: true  
         });  
   
-        // Agregar tiles de OpenStreetMap  
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {  
           attribution: '© OpenStreetMap contributors',  
           maxZoom: 19  
         }).addTo(mapInstance);  
   
-        // Agregar marcadores de zonas de calor  
         addHeatMapMarkers(mapInstance);  
-  
         setMap(mapInstance);  
         console.log('Mapa de OpenStreetMap cargado correctamente');  
       } catch (error) {  
@@ -163,7 +159,6 @@ export const InteractiveHeatMap = () => {
     const newMarkers: L.Marker[] = [];  
   
     heatMapZones.forEach(zone => {  
-      // Crear icono personalizado según el tipo de zona  
       const iconColor = zone.type === 'hot' ? '#ef4444' :   
                        zone.type === 'intermediate' ? '#f59e0b' : '#10b981';  
         
@@ -178,4 +173,7 @@ export const InteractiveHeatMap = () => {
           box-shadow: 0 0 6px rgba(0,0,0,0.4);  
         "></div>`,  
         iconSize: [18, 18],  
-        iconA  
+        iconAnchor: [9, 9]  
+      });  
+  
+      const marker = L.marker([zone.coords[0], zone  
