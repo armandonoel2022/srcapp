@@ -67,8 +67,8 @@ export const Auth = () => {
   };  
   
   return (  
-    <div className="min-h-screen flex items-center justify-center p-4"   
-         style={{ background: "linear-gradient(90deg, #e2e2e2, #c9d6ff)" }}>  
+    <div className="min-h-screen flex items-center justify-center p-4" 
+         style={{ background: "var(--gradient-primary)" }}>
         
       {/* Home Button */}  
       <Button   
@@ -85,11 +85,11 @@ export const Auth = () => {
         <div className="form-box login">  
           <form onSubmit={handleSubmit}>  
             <div className="text-center mb-6">  
-              <img   
-                src="/src/assets/src-logo.png"   
-                alt="SRC Logo"   
-                className="w-16 h-16 mx-auto mb-4"  
-              />  
+              <img 
+                src="/lovable-uploads/6f1746d0-0b44-447b-a333-82019dfecd73.png" 
+                alt="SRC Logo" 
+                className="w-16 h-16 mx-auto mb-4 object-contain"
+              />
               <h1 className="text-3xl font-bold text-gray-800 mb-2">Iniciar Sesión</h1>  
             </div>  
               
@@ -146,7 +146,7 @@ export const Auth = () => {
         </div>  
       </div>  
   
-      <style jsx>{`  
+      <style>{`  
         .auth-container {  
           position: relative;  
           width: 850px;  
@@ -221,23 +221,24 @@ export const Auth = () => {
           pointer-events: none;  
         }  
   
-        .auth-btn {  
-          width: 100%;  
-          height: 48px;  
-          background: #7494ec !important;  
-          border-radius: 8px !important;  
-          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;  
-          border: none !important;  
-          cursor: pointer !important;  
-          font-size: 16px !important;  
-          color: #fff !important;  
-          font-weight: 600 !important;  
-          margin-top: 20px;  
-        }  
-  
-        .auth-btn:hover {  
-          background: #6084dc !important;  
-        }  
+        .auth-btn {
+          width: 100%;
+          height: 48px;
+          background: hsl(var(--primary)) !important;
+          border-radius: 8px !important;
+          box-shadow: var(--shadow-form) !important;
+          border: none !important;
+          cursor: pointer !important;
+          font-size: 16px !important;
+          color: hsl(var(--primary-foreground)) !important;
+          font-weight: 600 !important;
+          margin-top: 20px;
+          transition: var(--transition-smooth);
+        }
+
+        .auth-btn:hover {
+          background: hsl(217 91% 55%) !important;
+        }
   
         .info-content {  
           text-align: center;  
@@ -252,16 +253,16 @@ export const Auth = () => {
           pointer-events: none;  
         }  
   
-        .toggle-background {  
-          content: '';  
-          position: absolute;  
-          right: 0;  
-          width: 50%;  
-          height: 100%;  
-          background: linear-gradient(135deg, #7494ec, #6084dc);  
-          z-index: 1;  
-          transition: 1.8s ease-in-out;  
-        }  
+        .toggle-background {
+          content: '';
+          position: absolute;
+          right: 0;
+          width: 50%;
+          height: 100%;
+          background: var(--gradient-blue-form);
+          z-index: 1;
+          transition: 1.8s ease-in-out;
+        }
   
         /* Responsive Design */  
         @media screen and (max-width: 768px) {  
@@ -283,11 +284,11 @@ export const Auth = () => {
             background: #fff;  
           }  
   
-          .form-box.info {  
-            position: relative;  
-            height: 30%;  
-            background: linear-gradient(135deg, #7494ec, #6084dc);  
-          }  
+          .form-box.info {
+            position: relative;
+            height: 30%;
+            background: var(--gradient-blue-form);
+          }
   
           .toggle-background {  
             display: none;  
