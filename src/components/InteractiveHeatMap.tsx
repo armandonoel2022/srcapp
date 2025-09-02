@@ -6,12 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, Search, Navigation, AlertTriangle, CheckCircle, AlertCircle, Maximize2, Loader2 } from 'lucide-react';  
 import { useToast } from '@/hooks/use-toast';  
 import { useSettings } from '@/contexts/SettingsContext';  
-import { FullScreenMap } from '@/components/FullScreenMap';  
 import L from 'leaflet';  
 import 'leaflet/dist/leaflet.css';  
 
 // Fix for default markers in Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+// @ts-ignore
+delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -101,6 +101,85 @@ const getZoneTypeName = (type: string) => {
     case 'cold': return 'Zona Fría';
     default: return 'Tipo desconocido';
   }
+};
+
+// Componente FullScreenMap simplificado
+const FullScreenMap = ({ onClose, selectedZone, onZoneSelect }: { 
+  onClose: () => void, 
+  selectedZone: any, 
+  onZoneSelect: (zone: any) => void 
+}) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<L.Map | null>(null);
+
+  useEffect(() => {
+    if (!mapContainer.current) return;
+
+    const mapInstance = L.map(mapContainer.current, {
+      center: [18.4655, -69.9156],
+      zoom: 11,
+      zoomControl: true
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(mapInstance);
+
+    // Agregar marcadores
+    heatMapZones.forEach(zone => {
+      const iconColor = zone.type === 'hot' ? '#ef4444' : 
+                       zone.type === 'intermediate' ? '#f59e0b' : '#10b981';
+        
+      const customIcon = L.divIcon({
+        className: 'custom-heat-marker',
+        html: `<div style="
+          background-color: ${iconColor};
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 0 6px rgba(0,0,0,0.4);
+        "></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+
+      const marker = L.marker([zone.coords[0], zone.coords[1]], {
+        icon: customIcon
+      }).addTo(mapInstance);
+
+      marker.bindPopup(`
+        <div class="p-2">
+          <h3 class="font-bold text-sm">${zone.name}</h3>
+          <p class="text-xs text-gray-600">${getZoneTypeName(zone.type)}</p>
+        </div>
+      `);
+
+      marker.on('click', () => {
+        onZoneSelect(zone);
+        mapInstance.setView([zone.coords[0], zone.coords[1]], 15);
+      });
+    });
+
+    setMap(mapInstance);
+
+    return () => {
+      if (mapInstance) {
+        mapInstance.remove();
+      }
+    };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 bg-background z-50 flex flex-col">
+      <div className="p-4 border-b flex justify-between items-center">
+        <h2 className="text-xl font-bold">Mapa en Pantalla Completa</h2>
+        <Button onClick={onClose}>Cerrar</Button>
+      </div>
+      <div ref={mapContainer} className="flex-1 w-full" />
+    </div>
+  );
 };
 
 export const InteractiveHeatMap = () => {  
@@ -269,7 +348,6 @@ export const InteractiveHeatMap = () => {
         border-radius: 50%;  
         border: 3px solid white;  
         box-shadow: 0 0 15px ${iconColor}, 0 0 30px ${iconColor};  
-        animation: pulse 2s infinite;  
       "></div>`,  
       iconSize: [26, 26],  
       iconAnchor: [13, 13]  
@@ -534,7 +612,6 @@ export const InteractiveHeatMap = () => {
       {/* Modal de mapa en pantalla completa */}  
       {isFullScreen && (  
         <FullScreenMap  
-          zones={heatMapZones}  
           selectedZone={selectedZone}  
           onClose={() => setIsFullScreen(false)}  
           onZoneSelect={setSelectedZone}  
@@ -542,7 +619,11 @@ export const InteractiveHeatMap = () => {
       )}  
 
       {/* Estilos para la animación de pulso */}
-      <style jsx>{`  
+      <style>{`  
+        .custom-heat-marker-highlight div {  
+          animation: pulse 2s infinite;  
+        }
+        
         @keyframes pulse {  
           0% {  
             transform: scale(1);  
