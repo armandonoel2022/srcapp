@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Download, FileText, ArrowLeft } from 'lucide-react';
+import { Download, FileText, ArrowLeft, LogOut } from 'lucide-react';
 import { PrintLayout } from './PrintLayout';
 import { exportToCSV } from '@/utils/csvExport';
+import { useRegistros } from '@/hooks/useRegistros';
 
 
 interface ConsultaRegistrosProps {
@@ -21,6 +22,7 @@ interface Registro {
   fecha: string;
   hora: string;
   seguridad: string;
+  agente: string;
   servicio: string;
   fin_servicio: string;
   nombre: string;
@@ -29,6 +31,7 @@ interface Registro {
   cedula: string;
   matricula: string;
   tipo: string;
+  tipo_persona: string;
 }
 
 export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) => {
@@ -40,6 +43,7 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
   const [formatoHora, setFormatoHora] = useState('12h');
   const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { guardarRegistro, obtenerUltimoAgente } = useRegistros();
 
   const cargarRegistros = async () => {
     setLoading(true);
@@ -138,6 +142,63 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
       title: "Exportación exitosa",
       description: "El archivo CSV se ha descargado correctamente",
     });
+  };
+
+  const handleRegistrarSalida = async (registro: Registro) => {
+    try {
+      // Obtener el último agente de seguridad
+      const ultimoAgente = await obtenerUltimoAgente();
+      
+      if (!ultimoAgente) {
+        toast({
+          title: "Error",
+          description: "No se pudo obtener la información del agente de seguridad",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const datosSalida = {
+        seguridad: ultimoAgente.seguridad,
+        agente: ultimoAgente.agente,
+        servicio: ultimoAgente.servicio,
+        fin_servicio: ultimoAgente.fin_servicio,
+        fecha: ultimoAgente.fecha,
+        tipo_persona: registro.tipo_persona as "empleado" | "visitante",
+        persona: {
+          nombre: registro.nombre,
+          apellido: registro.apellido,
+          cedula: registro.cedula,
+          matricula: registro.matricula,
+          funcion: registro.funcion,
+          tipo: registro.tipo_persona
+        }
+      };
+
+      const resultado = await guardarRegistro(datosSalida);
+      
+      if (resultado.success) {
+        toast({
+          title: "Salida registrada",
+          description: `${resultado.tipo} registrada exitosamente para ${registro.nombre} ${registro.apellido}`,
+        });
+        
+        // Recargar los registros para mostrar la nueva salida
+        cargarRegistros();
+      } else {
+        toast({
+          title: "Error",
+          description: resultado.error || "Error al registrar la salida",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `Error al registrar salida: ${error.message}`,
+        variant: "destructive"
+      });
+    }
   };
 
   const fechaActual = new Date();
@@ -255,6 +316,7 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
                   <TableHead className="text-white">Fecha</TableHead>
                   <TableHead className="text-white">Hora</TableHead>
                   <TableHead className="text-white">Tipo</TableHead>
+                  <TableHead className="text-white">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -274,6 +336,19 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
                     <TableCell>{formatearFecha(registro.fecha)}</TableCell>
                     <TableCell>{formatearHora(registro.hora)}</TableCell>
                     <TableCell>{registro.tipo}</TableCell>
+                    <TableCell>
+                      {registro.tipo === 'entrada' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRegistrarSalida(registro)}
+                          className="flex items-center gap-1 text-xs"
+                        >
+                          <LogOut className="w-3 h-3" />
+                          Registrar Salida
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
