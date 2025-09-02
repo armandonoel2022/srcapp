@@ -84,7 +84,17 @@ const heatMapZones = [
   { name: "San Geronimo", type: "cold", color: "green", coords: [18.448231, -69.900209] },  
   { name: "San Juan Bosco", type: "cold", color: "green", coords: [18.477594, -69.901184] }  
 ];  
-  
+
+// Función auxiliar para obtener el nombre del tipo de zona
+const getZoneTypeName = (type: string) => {
+  switch (type) {
+    case 'hot': return 'Zona Caliente';
+    case 'intermediate': return 'Zona Intermedia';
+    case 'cold': return 'Zona Fría';
+    default: return 'Tipo desconocido';
+  }
+};
+
 export const InteractiveHeatMap = () => {  
   const [searchQuery, setSearchQuery] = useState('');  
   const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);  
@@ -176,4 +186,279 @@ export const InteractiveHeatMap = () => {
         iconAnchor: [9, 9]  
       });  
   
-      const marker = L.marker([zone.coords[0], zone  
+      const marker = L.marker([zone.coords[0], zone.coords[1]], {  
+        icon: customIcon  
+      }).addTo(mapInstance);  
+  
+      // Agregar popup con información de la zona  
+      marker.bindPopup(`  
+        <div class="p-2">  
+          <h3 class="font-bold text-sm">${zone.name}</h3>  
+          <p class="text-xs text-gray-600">${getZoneTypeName(zone.type)}</p>  
+          <p class="text-xs mt-1">Coordenadas: ${zone.coords[0].toFixed(4)}, ${zone.coords[1].toFixed(4)}</p>  
+        </div>  
+      `);  
+  
+      // Evento click para seleccionar zona e iluminarla  
+      marker.on('click', () => {  
+        setSelectedZone(zone);  
+        highlightZone(marker, zone);  
+        mapInstance.setView([zone.coords[0], zone.coords[1]], 15);  
+      });  
+  
+      newMarkers.push(marker);  
+    });  
+  
+    setMarkers(newMarkers);  
+  };  
+  
+  // Función para iluminar zona seleccionada  
+  const highlightZone = (marker: L.Marker, zone: any) => {  
+    // Remover iluminación previa  
+    if (highlightedMarker) {  
+      highlightedMarker.setIcon(createNormalIcon(zone.type));  
+    }  
+      
+    // Crear icono iluminado  
+    const highlightIcon = createHighlightIcon(zone.type);  
+    marker.setIcon(highlightIcon);  
+    setHighlightedMarker(marker);  
+  };  
+  
+  // Función para crear icono normal  
+  const createNormalIcon = (type: string) => {  
+    const iconColor = type === 'hot' ? '#ef4444' :   
+                     type === 'intermediate' ? '#f59e0b' : '#10b981';  
+      
+    return L.divIcon({  
+      className: 'custom-heat-marker',  
+      html: `<div style="  
+        background-color: ${iconColor};  
+        width: 14px;  
+        height: 14px;  
+        border-radius: 50%;  
+        border: 2px solid white;  
+        box-shadow: 0 0 6px rgba(0,0,0,0.4);  
+      "></div>`,  
+      iconSize: [18, 18],  
+      iconAnchor: [9, 9]  
+    });  
+  };  
+  
+  // Función para crear icono iluminado  
+  const createHighlightIcon = (type: string) => {  
+    const iconColor = type === 'hot' ? '#ef4444' :   
+                     type === 'intermediate' ? '#f59e0b' : '#10b981';  
+      
+    return L.divIcon({  
+      className: 'custom-heat-marker-highlight',  
+      html: `<div style="  
+        background-color: ${iconColor};  
+        width: 20px;  
+        height: 20px;  
+        border-radius: 50%;  
+        border: 3px solid white;  
+        box-shadow: 0 0 15px ${iconColor}, 0 0 30px ${iconColor};  
+        animation: pulse 2s infinite;  
+      "></div>`,  
+      iconSize: [26, 26],  
+      iconAnchor: [13, 13]  
+    });  
+  };
+  
+  // Función para manejar la búsqueda
+  const handleSearch = () => {  
+    if (!searchQuery.trim()) {  
+      toast({  
+        title: "Búsqueda vacía",  
+        description: "Ingresa el nombre de una zona para buscar",  
+        variant: "destructive"  
+      });  
+      return;  
+    }  
+  
+    const foundZone = heatMapZones.find(zone =>   
+      zone.name.toLowerCase().includes(searchQuery.toLowerCase())  
+    );  
+  
+    if (foundZone) {  
+      setSelectedZone(foundZone);  
+      if (map) {  
+        map.setView([foundZone.coords[0], foundZone.coords[1]], 15);  
+          
+        // Encontrar y iluminar el marcador correspondiente  
+        const markerIndex = heatMapZones.findIndex(z => z.name === foundZone.name);  
+        if (markers[markerIndex]) {  
+          highlightZone(markers[markerIndex], foundZone);  
+        }  
+      }  
+      toast({  
+        title: "Zona encontrada",  
+        description: `${foundZone.name} - ${getZoneTypeName(foundZone.type)}`,  
+      });  
+    } else {  
+      toast({  
+        title: "Zona no encontrada",  
+        description: "No se encontró ninguna zona con ese nombre",  
+        variant: "destructive"  
+      });  
+    }  
+  };
+
+  // Función para obtener ubicación actual
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Geolocalización no soportada",
+        description: "Tu navegador no soporta geolocalización",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setCurrentLocation({ lat: latitude, lng: longitude });
+        
+        if (map) {
+          map.setView([latitude, longitude], 15);
+          
+          // Agregar marcador de ubicación actual
+          L.marker([latitude, longitude], {
+            icon: L.divIcon({
+              className: 'current-location-marker',
+              html: `<div style="
+                background-color: #3b82f6;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                border: 2px solid white;
+                box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
+              "></div>`,
+              iconSize: [20, 20],
+              iconAnchor: [10, 10]
+            })
+          }).addTo(map).bindPopup('Tu ubicación actual').openPopup();
+        }
+        
+        toast({
+          title: "Ubicación encontrada",
+          description: "Se ha centrado el mapa en tu ubicación actual",
+        });
+      },
+      (error) => {
+        toast({
+          title: "Error de geolocalización",
+          description: "No se pudo obtener tu ubicación",
+          variant: "destructive"
+        });
+      }
+    );
+  };
+
+  // Función para abrir mapa en pantalla completa
+  const openFullScreenMap = () => {
+    setIsFullScreen(true);
+  };
+
+  return (  
+    <div className="space-y-4">  
+      <Card>  
+        <CardHeader>  
+          <CardTitle className="flex items-center gap-2">  
+            <MapPin className="h-5 w-5" />  
+            Mapa de Calor - Distrito Nacional  
+          </CardTitle>  
+        </CardHeader>  
+        <CardContent>  
+          <div className="flex flex-col gap-4">  
+            {/* Barra de búsqueda */}  
+            <div className="flex gap-2">  
+              <Input  
+                placeholder="Buscar zona..."  
+                value={searchQuery}  
+                onChange={(e) => setSearchQuery(e.target.value)}  
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}  
+              />  
+              <Button onClick={handleSearch}>  
+                <Search className="h-4 w-4" />  
+              </Button>  
+              <Button variant="outline" onClick={getCurrentLocation} disabled={!geolocationEnabled}>  
+                <Navigation className="h-4 w-4" />  
+              </Button>  
+              <Button variant="outline" onClick={openFullScreenMap}>  
+                <Maximize2 className="h-4 w-4" />  
+              </Button>  
+            </div>  
+  
+            {/* Leyenda */}  
+            <div className="flex flex-wrap gap-4 text-sm">  
+              <div className="flex items-center gap-1">  
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>  
+                <span>Zona Caliente</span>  
+              </div>  
+              <div className="flex items-center gap-1">  
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>  
+                <span>Zona Intermedia</span>  
+              </div>  
+              <div className="flex items-center gap-1">  
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>  
+                <span>Zona Fría</span>  
+              </div>  
+            </div>  
+  
+            {/* Mapa */}  
+            <div ref={mapContainer} className="h-96 w-full rounded-md border" />  
+  
+            {/* Zona seleccionada */}  
+            {selectedZone && (  
+              <div className="p-4 border rounded-md">  
+                <h3 className="font-bold flex items-center gap-2">  
+                  {selectedZone.type === 'hot' && <AlertTriangle className="h-5 w-5 text-red-500" />}  
+                  {selectedZone.type === 'intermediate' && <AlertCircle className="h-5 w-5 text-yellow-500" />}  
+                  {selectedZone.type === 'cold' && <CheckCircle className="h-5 w-5 text-green-500" />}  
+                  {selectedZone.name}  
+                </h3>  
+                <p className="text-sm text-gray-600 mt-1">  
+                  Tipo: {getZoneTypeName(selectedZone.type)}  
+                </p>  
+                <p className="text-sm text-gray-600">  
+                  Coordenadas: {selectedZone.coords[0].toFixed(4)}, {selectedZone.coords[1].toFixed(4)}  
+                </p>  
+              </div>  
+            )}  
+          </div>  
+        </CardContent>  
+      </Card>  
+  
+      {/* Modal de mapa en pantalla completa */}  
+      {isFullScreen && (  
+        <FullScreenMap  
+          zones={heatMapZones}  
+          selectedZone={selectedZone}  
+          onClose={() => setIsFullScreen(false)}  
+          onZoneSelect={setSelectedZone}  
+        />  
+      )}  
+
+      {/* Estilos para la animación de pulso */}
+      <style jsx>{`  
+        @keyframes pulse {  
+          0% {  
+            transform: scale(1);  
+            opacity: 1;  
+          }  
+          50% {  
+            transform: scale(1.1);  
+            opacity: 0.7;  
+          }  
+          100% {  
+            transform: scale(1);  
+            opacity: 1;  
+          }  
+        }  
+      `}</style>
+    </div>  
+  );  
+};
