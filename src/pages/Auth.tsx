@@ -117,7 +117,7 @@ export const Auth = () => {
             <img 
               src="/src/assets/src-logo.png" 
               alt="SRC Logo" 
-              className="w-20 h-20 mx-auto"
+              className="w-20 h-20 mx-auto object-contain"
             />
             <h1 className="text-2xl font-bold text-[hsl(var(--title-dark))]">
               {isSignUp ? "Registrarse" : "Iniciar Sesión"}
