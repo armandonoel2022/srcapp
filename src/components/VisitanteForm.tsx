@@ -110,7 +110,7 @@ export const VisitanteForm = ({
               required
               placeholder="000-0000000-0"
             />
-            <Button
+            /*<Button
               type="button"
               variant="outline"
               size="sm"
@@ -125,7 +125,7 @@ export const VisitanteForm = ({
               title="Buscar visitante"
             >
               <Search className="w-4 h-4" />
-            </Button>
+            </Button>*/
           </div>
           
           {showSearch && (
