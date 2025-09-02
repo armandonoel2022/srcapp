@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, Users2 } from 'lucide-react';
-import srcLogo from '@/assets/src-logo.png';
+
 
 interface RegistrationTypeSelectorProps {
   onTypeSelect: (type: 'empleado' | 'visitante') => void;
@@ -16,9 +16,9 @@ export const RegistrationTypeSelector = ({ onTypeSelect }: RegistrationTypeSelec
         <CardHeader className="text-center">
           <div className="flex flex-col items-center mb-4">
             <img 
-              src={srcLogo} 
+              src="/lovable-uploads/6f1746d0-0b44-447b-a333-82019dfecd73.png" 
               alt="SRC Logo" 
-              className="w-24 h-24 mb-4"
+              className="w-24 h-24 mb-4 object-contain"
             />
             <CardTitle className="text-xl font-bold font-poppins mb-2" style={{ color: "hsl(var(--title-dark))" }}>
               CONTROL DE ACCESO DIARIO EN PUESTO

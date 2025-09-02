@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import srcLogo from '@/assets/src-logo.png';
 
 export const Auth = () => {
   const [username, setUsername] = useState('');
@@ -116,7 +115,7 @@ export const Auth = () => {
           {/* Logo SRC */}
           <div className="text-center space-y-4">
             <img 
-              src={srcLogo} 
+              src="/lovable-uploads/6f1746d0-0b44-447b-a333-82019dfecd73.png" 
               alt="SRC Logo" 
               className="w-20 h-20 mx-auto object-contain"
             />

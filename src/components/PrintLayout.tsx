@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import srcLogo from '@/assets/src-logo.png';
+
 
 interface Registro {
   id: string;
@@ -91,9 +91,9 @@ export const PrintLayout = forwardRef<HTMLDivElement, PrintLayoutProps>(
         <div className="print-document-header">
           <div className="flex flex-col items-center mb-8">
             <img 
-              src={srcLogo} 
+              src="/lovable-uploads/6f1746d0-0b44-447b-a333-82019dfecd73.png" 
               alt="SRC Logo" 
-              className="w-20 h-20 mb-4"
+              className="w-20 h-20 mb-4 object-contain"
             />
             <h1 className="text-2xl font-bold font-poppins text-center leading-tight" style={{ color: "hsl(var(--title-dark))" }}>
               CONTROL DE ACCESO DIARIO EN PUESTO<br />

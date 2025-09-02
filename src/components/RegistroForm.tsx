@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, User, Shield, ArrowLeft } from 'lucide-react';
-import srcLogo from '@/assets/src-logo.png';
+
 
 export const RegistroForm = () => {
   const { guardarRegistro, obtenerUltimoAgente, loading } = useRegistros();
@@ -153,9 +153,9 @@ export const RegistroForm = () => {
         </div>
         <div className="flex flex-col items-center mb-4">
           <img 
-            src={srcLogo} 
+            src="/lovable-uploads/6f1746d0-0b44-447b-a333-82019dfecd73.png" 
             alt="SRC Logo" 
-            className="w-24 h-24 mb-4"
+            className="w-24 h-24 mb-4 object-contain"
           />
           <CardTitle className="text-xl font-bold font-poppins mb-2" style={{ color: "hsl(var(--title-dark))" }}>
             CONTROL DE ACCESO DIARIO EN PUESTO

@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Download, FileText, ArrowLeft } from 'lucide-react';
 import { PrintLayout } from './PrintLayout';
 import { exportToCSV } from '@/utils/csvExport';
-import srcLogo from '@/assets/src-logo.png';
+
 
 interface ConsultaRegistrosProps {
   onNavigateToForm?: () => void;
@@ -151,9 +151,9 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
       <div className="flex justify-between items-start mb-6">
         <div className="text-center flex-1 space-y-4">
           <img 
-            src={srcLogo} 
+            src="/lovable-uploads/6f1746d0-0b44-447b-a333-82019dfecd73.png" 
             alt="SRC Logo" 
-            className="w-24 h-24 mx-auto"
+            className="w-24 h-24 mx-auto object-contain"
           />
           <h1 className="text-2xl font-bold">
             CONTROL DE ACCESO DIARIO EN PUESTO RESIDENCIA DE FRANCIA
