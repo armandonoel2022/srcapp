@@ -146,6 +146,8 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
 
   const handleRegistrarSalida = async (registro: Registro) => {
     try {
+      console.log('Registrando salida para:', registro);
+      
       // Obtener el último agente de seguridad
       const ultimoAgente = await obtenerUltimoAgente();
       
@@ -157,6 +159,8 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
         });
         return;
       }
+
+      console.log('Último agente:', ultimoAgente);
 
       const datosSalida = {
         seguridad: ultimoAgente.seguridad,
@@ -171,7 +175,11 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
         funcion: registro.funcion
       };
 
+      console.log('Datos de salida a enviar:', datosSalida);
+
       const resultado = await guardarRegistro(datosSalida);
+      
+      console.log('Resultado del registro:', resultado);
       
       if (resultado.success) {
         toast({
@@ -189,6 +197,7 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
         });
       }
     } catch (error: any) {
+      console.error('Error completo:', error);
       toast({
         title: "Error",
         description: `Error al registrar salida: ${error.message}`,

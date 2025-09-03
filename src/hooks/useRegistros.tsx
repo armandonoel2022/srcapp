@@ -49,6 +49,8 @@ export const useRegistros = () => {
       const identificador = data.cedula || data.nombre;
       const columna = data.cedula ? 'cedula' : 'nombre';
       
+      console.log('Buscando último registro para:', { identificador, columna, fecha });
+      
       if (identificador) {
         const { data: ultimoRegistro } = await supabase
           .from('registros')
@@ -59,10 +61,14 @@ export const useRegistros = () => {
           .limit(1)
           .maybeSingle();
 
+        console.log('Último registro encontrado:', ultimoRegistro);
+
         if (ultimoRegistro?.tipo === 'entrada') {
           tipo = 'salida';
         }
       }
+      
+      console.log('Tipo determinado:', tipo);
 
       // 3. Guardar en registros
       const { error: registroError } = await supabase

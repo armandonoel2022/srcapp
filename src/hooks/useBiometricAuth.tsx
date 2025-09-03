@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Device } from '@capacitor/device';
 import { useToast } from '@/hooks/use-toast';
+
+// Simple device detection without Capacitor for now
+interface DeviceInfo {
+  platform: string;
+  isNative: boolean;
+}
 
 interface BiometricCapabilities {
   isBiometricAvailable: boolean;
   supportedTypes: string[];
-  deviceInfo: any;
+  deviceInfo: DeviceInfo | null;
 }
 
 export const useBiometricAuth = () => {
@@ -24,7 +29,12 @@ export const useBiometricAuth = () => {
   const checkBiometricCapabilities = async () => {
     setIsChecking(true);
     try {
-      const deviceInfo = await Device.getInfo();
+      // Simple device detection
+      const deviceInfo: DeviceInfo = {
+        platform: /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'ios' : 
+                 /Android/.test(navigator.userAgent) ? 'android' : 'web',
+        isNative: false // For now, assume web
+      };
       
       // Detectar capacidades biométricas basadas en el dispositivo
       let supportedTypes: string[] = [];
@@ -43,6 +53,10 @@ export const useBiometricAuth = () => {
         if (window.PublicKeyCredential && 
             await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()) {
           supportedTypes = ['Autenticación Web', 'Biométrica del Dispositivo'];
+          isBiometricAvailable = true;
+        } else {
+          // Mostrar la opción aunque no esté disponible para demostración
+          supportedTypes = ['Rostro/Huella'];
           isBiometricAvailable = true;
         }
       }
