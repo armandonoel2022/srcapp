@@ -29,6 +29,9 @@ export const SettingsMenu = () => {
   } = useSettings();
   const { toast } = useToast();
   const { capabilities, authenticateWithBiometric, getBiometricDisplayName } = useBiometricAuth();
+  
+  console.log('Settings - Biometric capabilities:', capabilities);
+  console.log('Settings - Biometric display name:', getBiometricDisplayName());
 
   const handleMapboxTokenChange = (value: string) => {
     setMapboxToken(value);

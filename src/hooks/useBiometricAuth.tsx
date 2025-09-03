@@ -28,6 +28,7 @@ export const useBiometricAuth = () => {
 
   const checkBiometricCapabilities = async () => {
     setIsChecking(true);
+    console.log('Checking biometric capabilities...');
     try {
       // Simple device detection
       const deviceInfo: DeviceInfo = {
@@ -35,6 +36,7 @@ export const useBiometricAuth = () => {
                  /Android/.test(navigator.userAgent) ? 'android' : 'web',
         isNative: false // For now, assume web
       };
+      console.log('Device info:', deviceInfo);
       
       // Detectar capacidades biométricas basadas en el dispositivo
       let supportedTypes: string[] = [];
@@ -66,6 +68,8 @@ export const useBiometricAuth = () => {
         supportedTypes,
         deviceInfo
       });
+      
+      console.log('Biometric capabilities set:', { isBiometricAvailable, supportedTypes, deviceInfo });
 
     } catch (error) {
       console.error('Error checking biometric capabilities:', error);
