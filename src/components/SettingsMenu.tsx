@@ -6,15 +6,17 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Palette, MapPin, Shield, Eye, EyeOff } from 'lucide-react';
+import { Settings, Palette, MapPin, Shield, Eye, EyeOff, Fingerprint } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useToast } from '@/hooks/use-toast';
 import { TwoFactorSetup } from '@/components/TwoFactorSetup';
+import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 
 export const SettingsMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showMapboxToken, setShowMapboxToken] = useState(false);
   const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
   const { 
     theme, 
     setTheme, 
@@ -26,6 +28,7 @@ export const SettingsMenu = () => {
     setMapboxToken
   } = useSettings();
   const { toast } = useToast();
+  const { capabilities, authenticateWithBiometric, getBiometricDisplayName } = useBiometricAuth();
 
   const handleMapboxTokenChange = (value: string) => {
     setMapboxToken(value);
@@ -42,6 +45,34 @@ export const SettingsMenu = () => {
       title: "Función en desarrollo",
       description: `La autenticación con ${provider} estará disponible próximamente`,
     });
+  };
+
+  const handleBiometricToggle = async (enabled: boolean) => {
+    if (enabled) {
+      if (!capabilities.isBiometricAvailable) {
+        toast({
+          title: "Función no disponible",
+          description: "Tu dispositivo no soporta autenticación biométrica",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const success = await authenticateWithBiometric();
+      if (success) {
+        setBiometricEnabled(true);
+        toast({
+          title: "Autenticación biométrica activada",
+          description: "Podrás usar tu biometría para acceder a la aplicación",
+        });
+      }
+    } else {
+      setBiometricEnabled(false);
+      toast({
+        title: "Autenticación biométrica desactivada",
+        description: "Se ha deshabilitado el acceso biométrico",
+      });
+    }
   };
 
   return (
@@ -123,6 +154,23 @@ export const SettingsMenu = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Acceso con {getBiometricDisplayName()}</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {capabilities.isBiometricAvailable 
+                      ? `Usa ${getBiometricDisplayName().toLowerCase()} para acceder rápidamente`
+                      : 'Función no disponible en este dispositivo'
+                    }
+                  </p>
+                </div>
+                <Switch 
+                  checked={biometricEnabled && capabilities.isBiometricAvailable} 
+                  onCheckedChange={handleBiometricToggle}
+                  disabled={!capabilities.isBiometricAvailable}
+                />
+              </div>
+
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Verificación en dos pasos</Label>

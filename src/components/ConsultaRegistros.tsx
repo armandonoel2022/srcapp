@@ -163,16 +163,12 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
         agente: ultimoAgente.agente,
         servicio: ultimoAgente.servicio,
         fin_servicio: ultimoAgente.fin_servicio,
-        fecha: ultimoAgente.fecha,
         tipo_persona: registro.tipo_persona as "empleado" | "visitante",
-        persona: {
-          nombre: registro.nombre,
-          apellido: registro.apellido,
-          cedula: registro.cedula,
-          matricula: registro.matricula,
-          funcion: registro.funcion,
-          tipo: registro.tipo_persona
-        }
+        nombre: registro.nombre,
+        apellido: registro.apellido,
+        cedula: registro.cedula,
+        matricula: registro.matricula,
+        funcion: registro.funcion
       };
 
       const resultado = await guardarRegistro(datosSalida);
@@ -180,7 +176,7 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
       if (resultado.success) {
         toast({
           title: "Salida registrada",
-          description: `${resultado.tipo} registrada exitosamente para ${registro.nombre} ${registro.apellido}`,
+          description: `${resultado.tipo?.charAt(0).toUpperCase() + resultado.tipo?.slice(1)} registrada exitosamente para ${registro.nombre} ${registro.apellido}`,
         });
         
         // Recargar los registros para mostrar la nueva salida
