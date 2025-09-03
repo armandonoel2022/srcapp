@@ -1,12 +1,5 @@
 import { useState, useEffect } from 'react';  
 import { useToast } from '@/hooks/use-toast';  
-import { supabase } from '@/integrations/supabase/client';  
-
-declare global {  
-  interface AuthenticatorAttestationResponse extends AuthenticatorResponse {  
-    publicKey: ArrayBuffer;  
-  }  
-}
   
 // Simple device detection without Capacitor for now  
 interface DeviceInfo {  
@@ -18,13 +11,6 @@ interface BiometricCapabilities {
   isBiometricAvailable: boolean;  
   supportedTypes: string[];  
   deviceInfo: DeviceInfo | null;  
-}  
-  
-interface BiometricCredential {  
-  id: string;  
-  publicKey: string;  
-  userId: string;  
-  created_at: string;  
 }  
   
 export const useBiometricAuth = () => {  
@@ -103,25 +89,9 @@ export const useBiometricAuth = () => {
   
   const checkExistingCredentials = async () => {  
     try {  
-      const { data: { user } } = await supabase.auth.getUser();  
-      if (!user) return;  
-  
-      // Primero verificar en localStorage (para desarrollo/demo)
-      const hasLocalStorageCredential = localStorage.getItem('biometric_registered') === 'true';
-      
-      if (hasLocalStorageCredential) {
-        setIsRegistered(true);
-        return;
-      }
-  
-      // Luego verificar en la base de datos
-      const { data } = await supabase  
-        .from('biometric_credentials')  
-        .select('id')  
-        .eq('user_id', user.id)  
-        .maybeSingle();  
-        
-      setIsRegistered(!!data);  
+      // Usar localStorage temporalmente hasta crear la tabla  
+      const registered = localStorage.getItem('biometric_registered');  
+      setIsRegistered(registered === 'true');  
     } catch (error) {  
       console.error('Error checking existing credentials:', error);  
     }  
@@ -133,11 +103,6 @@ export const useBiometricAuth = () => {
     }  
   
     try {  
-      const { data: { user } } = await supabase.auth.getUser();  
-      if (!user) {  
-        return { success: false, error: 'Usuario no autenticado' };  
-      }  
-  
       const challenge = crypto.getRandomValues(new Uint8Array(32));  
         
       const credential = await navigator.credentials.create({  
@@ -148,9 +113,9 @@ export const useBiometricAuth = () => {
             id: window.location.hostname   
           },  
           user: {   
-            id: new TextEncoder().encode(user.id),  
-            name: user.email || '',  
-            displayName: user.email || ''  
+            id: new TextEncoder().encode('temp-user-id'),  
+            name: 'temp-user',  
+            displayName: 'Temporary User'  
           },  
           pubKeyCredParams: [{ alg: -7, type: "public-key" }],  
           authenticatorSelection: {   
@@ -174,20 +139,6 @@ export const useBiometricAuth = () => {
       // Ahora puedes acceder a publicKey sin errores  
       const publicKeyArray = new Uint8Array(response.publicKey);  
       const publicKeyString = btoa(String.fromCharCode(...publicKeyArray));  
-  
-      // Guardar credencial en la base de datos (comentado hasta que se cree la tabla)  
-      /*  
-      const { error } = await supabase  
-        .from('biometric_credentials')  
-        .insert({  
-          id: credential.id,  
-          user_id: user.id,  
-          public_key: publicKeyString,  
-          created_at: new Date().toISOString()  
-        });  
-  
-      if (error) throw error;  
-      */  
   
       // Usar localStorage temporalmente  
       localStorage.setItem('biometric_registered', 'true');  
@@ -260,49 +211,9 @@ export const useBiometricAuth = () => {
         throw new Error('WebAuthn no soportado');  
       }  
   
-      // Obtener credenciales existentes del usuario actual  
-      const { data: { user } } = await supabase.auth.getUser();  
-      if (!user) throw new Error('Usuario no autenticado');  
-  
-      // Primero verificar en localStorage (para desarrollo/demo)
-      const credentialId = localStorage.getItem('biometric_credential_id');
-      const publicKey = localStorage.getItem('biometric_public_key');
-      
-      if (credentialId && publicKey) {
-        // Usar credencial de localStorage para autenticación
-        const challenge = crypto.getRandomValues(new Uint8Array(32));
-        
-        const assertion = await navigator.credentials.get({
-          publicKey: {
-            challenge,
-            allowCredentials: [{
-              id: new TextEncoder().encode(credentialId),
-              type: "public-key" as const
-            }],
-            userVerification: "required",
-            timeout: 60000
-          }
-        }) as PublicKeyCredential;
-  
-        if (!assertion) {
-          throw new Error('Autenticación fallida');
-        }
-  
-        toast({  
-          title: "Autenticación exitosa",  
-          description: "Has sido autenticado correctamente",  
-        });  
-          
-        return { success: true, credentialId: assertion.id };
-      }
-  
-      // Si no hay en localStorage, verificar en base de datos
-      const { data: credentials } = await supabase  
-        .from('biometric_credentials')  
-        .select('id, public_key')  
-        .eq('user_id', user.id);  
-  
-      if (!credentials?.length) {  
+      // Obtener credencial guardada en localStorage  
+      const credentialId = localStorage.getItem('biometric_credential_id');  
+      if (!credentialId) {  
         throw new Error('No hay credenciales registradas');  
       }  
   
@@ -311,10 +222,10 @@ export const useBiometricAuth = () => {
       const assertion = await navigator.credentials.get({  
         publicKey: {  
           challenge,  
-          allowCredentials: credentials.map(cred => ({  
-            id: new TextEncoder().encode(cred.id),  
+          allowCredentials: [{  
+            id: new TextEncoder().encode(credentialId),  
             type: "public-key" as const  
-          })),  
+          }],  
           userVerification: "required",  
           timeout: 60000  
         }  
@@ -323,12 +234,6 @@ export const useBiometricAuth = () => {
       if (!assertion) {  
         throw new Error('Autenticación fallida');  
       }  
-  
-      // Actualizar última vez usado  
-      await supabase  
-        .from('biometric_credentials')  
-        .update({ last_used: new Date().toISOString() })  
-        .eq('id', assertion.id);  
   
       toast({  
         title: "Autenticación exitosa",  
