@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';  
 import { useToast } from '@/hooks/use-toast';  
 import { supabase } from '@/integrations/supabase/client';  
-import { User, Lock, Home } from 'lucide-react';  
+import { User, Lock } from 'lucide-react';  
   
 export const Auth = () => {  
   const [username, setUsername] = useState('');  
@@ -124,20 +124,6 @@ export const Auth = () => {
             >  
               {loading ? "Cargando..." : "Iniciar Sesión"}  
             </Button>  
-
-            {/* Botón para volver al inicio - estilo Dashboard */}  
-            <div className="flex gap-4 justify-center mt-4">  
-              <Button  
-                type="button"  
-                onClick={() => navigate('/')}  
-                variant="outline"  
-                size="lg"  
-                className="flex items-center gap-2"  
-              >  
-                <Home className="h-5 w-5" />  
-                Volver a la Pantalla Principal  
-              </Button>  
-            </div>
           </form>  
         </div>  
   
