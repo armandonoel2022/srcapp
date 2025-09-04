@@ -8,7 +8,7 @@ interface CustomUser extends User {
   type?: 'admin' | 'user' | 'client';  
   app_metadata: Record<string, any>;  
   user_metadata: Record<string, any>;  
-}
+}  
   
 interface AuthContextType {  
   user: CustomUser | null;  
@@ -46,7 +46,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             username: profile?.username,  
             role: profile?.role,  
             type: profile?.role === 'administrador' ? 'admin' :   
-                  profile?.role === 'cliente' ? 'client' : 'user'  
+                  profile?.role === 'cliente' ? 'client' : 'user',  
+            app_metadata: session.user.app_metadata || {},  
+            user_metadata: session.user.user_metadata || {}  
           };  
           setUser(userWithProfile);  
         } else {  
@@ -72,7 +74,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           username: profile?.username,  
           role: profile?.role,  
           type: profile?.role === 'administrador' ? 'admin' :   
-                profile?.role === 'cliente' ? 'client' : 'user'  
+                profile?.role === 'cliente' ? 'client' : 'user',  
+          app_metadata: session.user.app_metadata || {},  
+          user_metadata: session.user.user_metadata || {}  
         };  
         setUser(userWithProfile);  
       } else {  
@@ -148,7 +152,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: 'administrador',  
           type: 'admin',  
           aud: 'authenticated',  
-          created_at: new Date().toISOString()  
+          created_at: new Date().toISOString(),  
+          app_metadata: {},  
+          user_metadata: {},  
+          // Propiedades adicionales requeridas por User  
+          email_confirmed_at: new Date().toISOString(),  
+          phone_confirmed_at: null,  
+          confirmed_at: new Date().toISOString(),  
+          last_sign_in_at: new Date().toISOString(),  
+          updated_at: new Date().toISOString(),  
+          is_anonymous: false  
         };  
           
         setUser(demoUser);  
@@ -180,7 +193,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: 'administrador',  
         type: 'admin',  
         aud: 'authenticated',  
-        created_at: new Date().toISOString()  
+        created_at: new Date().toISOString(),  
+        app_metadata: {},  
+        user_metadata: {},  
+        // Propiedades adicionales requeridas por User  
+        email_confirmed_at: new Date().toISOString(),  
+        phone_confirmed_at: null,  
+        confirmed_at: new Date().toISOString(),  
+        last_sign_in_at: new Date().toISOString(),  
+        updated_at: new Date().toISOString(),  
+        is_anonymous: false  
       };  
         
       setUser(fallbackUser);  
