@@ -29,7 +29,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     const savedTheme = localStorage.getItem('app-theme') as Theme;  
     const savedGeolocation = localStorage.getItem('geolocation-enabled');  
     const savedTwoFactor = localStorage.getItem('two-factor-enabled');  
-    const savedBiometric = localStorage.getItem('biometric-enabled');  
+    const savedBiometric = localStorage.getItem('biometricEnabled');  
     const savedMapboxToken = localStorage.getItem('mapbox-token');  
   
     if (savedTheme) setThemeState(savedTheme);  
@@ -80,7 +80,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   
   const setBiometricEnabledWithStorage = (enabled: boolean) => {  
     setBiometricEnabled(enabled);  
-    localStorage.setItem('biometric-enabled', enabled.toString());  
+    localStorage.setItem('biometricEnabled', enabled.toString());  
   };  
   
   const setMapboxTokenWithStorage = (token: string) => {  
