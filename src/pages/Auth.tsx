@@ -18,7 +18,7 @@ export const Auth = () => {
     
   const { signIn, signInWithBiometric, user } = useAuth();  
   const {   
-    capabilities,   
+    isSupported,  
     isRegistered,   
     authenticateWithBiometric   
   } = useBiometricAuth();  
@@ -201,7 +201,7 @@ export const Auth = () => {
             </Button>  
   
             {/* Botón de autenticación biométrica */}  
-            {capabilities.isBiometricAvailable && isRegistered && (  
+            {isSupported && isRegistered && (  
               <Button  
                 type="button"  
                 onClick={handleBiometricLogin}  
@@ -209,7 +209,7 @@ export const Auth = () => {
                 disabled={loading}  
               >  
                 <Fingerprint className="h-5 w-5 mr-2" />  
-                Acceder con {capabilities.supportedTypes[0] || 'Biometría'}  
+                Acceder con Biometría  
               </Button>  
             )}  
   
