@@ -13,8 +13,7 @@ export const Auth = () => {
   const [username, setUsername] = useState('');  
   const [password, setPassword] = useState('');  
   const [loading, setLoading] = useState(false);  
-  const [isActive, setIsActive] = useState(false);  
-  const [creatingUsers, setCreatingUsers] = useState(false);  
+  const [isActive, setIsActive] = useState(false);
     
   const { signIn, signInWithBiometric, user } = useAuth();  
   const {   
@@ -64,7 +63,7 @@ export const Auth = () => {
           description: "Inicio de sesión exitoso"  
         });  
         navigate('/dashboard');  
-      }  
+      }
     } catch (err) {  
       toast({  
         title: "Error",  
@@ -97,8 +96,21 @@ export const Auth = () => {
             title: "Éxito",  
             description: "Autenticación biométrica exitosa"  
           });  
+          // Verificar si es cliente para redirigir al mapa de calor
+          const userId = localStorage.getItem('biometric_userId');
+          if (userId) {
+            const userProfileKey = `userProfile_${userId}`;
+            const savedProfile = localStorage.getItem(userProfileKey);
+            if (savedProfile) {
+              const profile = JSON.parse(savedProfile);
+              if (profile.role === 'cliente') {
+                navigate('/dashboard?section=mapa-calor');
+                return;
+              }
+            }
+          }
           navigate('/dashboard');  
-        }  
+        }
       } else {  
         toast({  
           title: "Error",  
@@ -117,29 +129,6 @@ export const Auth = () => {
     }  
   };  
   
-  const createInitialUsers = async () => {  
-    setCreatingUsers(true);  
-    try {  
-      const response = await supabase.functions.invoke('create-admin-users');  
-        
-      if (response.error) {  
-        throw response.error;  
-      }  
-  
-      toast({  
-        title: "Usuarios creados",  
-        description: "Los usuarios administrador y agente han sido creados exitosamente. Ya puedes iniciar sesión."  
-      });  
-    } catch (error: any) {  
-      toast({  
-        title: "Error",  
-        description: `Error al crear usuarios: ${error.message}`,  
-        variant: "destructive"  
-      });  
-    } finally {  
-      setCreatingUsers(false);  
-    }  
-  };  
   
   return (  
     <div className="min-h-screen flex items-center justify-center p-4"   
@@ -213,15 +202,6 @@ export const Auth = () => {
               </Button>  
             )}  
   
-            {/* Botón para crear usuarios iniciales */}  
-            <Button  
-              type="button"  
-              onClick={createInitialUsers}  
-              className="auth-btn-secondary"  
-              disabled={creatingUsers}  
-            >  
-              {creatingUsers ? "Creando..." : "Crear Usuarios Iniciales"}  
-            </Button>  
           </form>  
         </div>  
   

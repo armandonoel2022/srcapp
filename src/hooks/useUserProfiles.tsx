@@ -67,8 +67,13 @@ export const useUserProfiles = () => {
   const createUserProfile = async (email: string, password: string, username: string, role: UserRole) => {
     setLoading(true);
     try {
-      // Generate random password for agents
-      const finalPassword = role === 'agente_seguridad' ? Math.random().toString(36).slice(-8) + 'A1!' : password;
+      // Generate default passwords for different roles
+      let finalPassword = password;
+      if (role === 'cliente') {
+        finalPassword = 'SRC_Cliente2025';
+      } else if (role === 'agente_seguridad') {
+        finalPassword = 'SRC_Agente2025';
+      }
       
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -87,7 +92,7 @@ export const useUserProfiles = () => {
           user_id: authData.user.id,
           username,
           role,
-          requires_password_change: role === 'agente_seguridad'
+          requires_password_change: role === 'agente_seguridad' || role === 'cliente'
         });
 
       if (profileError) throw profileError;
@@ -96,12 +101,12 @@ export const useUserProfiles = () => {
       
       toast({
         title: "Usuario creado",
-        description: role === 'agente_seguridad' 
-          ? `Usuario creado. Contraseña temporal: ${finalPassword}` 
+        description: (role === 'agente_seguridad' || role === 'cliente') 
+          ? `Usuario creado. Contraseña: ${finalPassword}` 
           : `Usuario ${username} creado exitosamente`
       });
 
-      return { success: true, temporaryPassword: role === 'agente_seguridad' ? finalPassword : null };
+      return { success: true, temporaryPassword: (role === 'agente_seguridad' || role === 'cliente') ? finalPassword : null };
     } catch (error: any) {
       toast({
         title: "Error",
