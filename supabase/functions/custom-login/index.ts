@@ -92,7 +92,8 @@ serve(async (req) => {
           ...signInData.user,
           username: profileData.username,
           role: profileData.role,
-          type: profileData.role === 'administrador' ? 'admin' : 'user'
+          type: profileData.role === 'administrador' ? 'admin' :   
+            profileData.role === 'cliente' ? 'client' : 'user'
         }
       }),
       { 
