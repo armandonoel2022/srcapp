@@ -6,7 +6,9 @@ interface CustomUser extends User {
   username?: string;  
   role?: string;  
   type?: 'admin' | 'user' | 'client';  
-}  
+  app_metadata: Record<string, any>;  
+  user_metadata: Record<string, any>;  
+}
   
 interface AuthContextType {  
   user: CustomUser | null;  
