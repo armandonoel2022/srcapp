@@ -4,77 +4,50 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Label } from '@/components/ui/label';  
 import { Switch } from '@/components/ui/switch';  
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';  
-import { Input } from '@/components/ui/input';  
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';  
-import { Settings, Palette, MapPin, Shield, Eye, EyeOff, Fingerprint } from 'lucide-react';  
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';  
+import { Badge } from '@/components/ui/badge';  
+import { Settings, Palette, MapPin, Shield, Fingerprint } from 'lucide-react';  
 import { useSettings } from '@/contexts/SettingsContext';  
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';  
+import { use2FA } from '@/hooks/use2FA';  
 import { useToast } from '@/hooks/use-toast';  
 import { TwoFactorSetup } from '@/components/TwoFactorSetup';  
   
 export const SettingsMenu = () => {  
   const [isOpen, setIsOpen] = useState(false);  
-  const [showMapboxToken, setShowMapboxToken] = useState(false);  
-  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);  
+  const [show2FASetup, setShow2FASetup] = useState(false);  
   const {   
     theme,   
     setTheme,   
     geolocationEnabled,   
     setGeolocationEnabled,  
-    twoFactorEnabled,  
-    setTwoFactorEnabled,  
     biometricEnabled,  
-    setBiometricEnabled,  
-    mapboxToken,  
-    setMapboxToken  
+    setBiometricEnabled  
   } = useSettings();  
-  const {   
-    capabilities,   
-    isRegistered,   
-    registerBiometric   
-  } = useBiometricAuth();  
+  const { registerBiometric } = useBiometricAuth();  
+  const { config: twoFactorConfig } = use2FA();  
   const { toast } = useToast();  
   
-  const handleMapboxTokenChange = (value: string) => {  
-    setMapboxToken(value);  
-    if (value) {  
-      toast({  
-        title: "Token guardado",  
-        description: "El token de Mapbox ha sido guardado correctamente"  
-      });  
-    }  
-  };  
-  
-  const handleOAuthLogin = (provider: string) => {  
-    toast({  
-      title: "Función en desarrollo",  
-      description: `La autenticación con ${provider} estará disponible próximamente`,  
-    });  
-  };  
-  
-  const handleBiometricSetup = async () => {  
-    if (!capabilities.isBiometricAvailable) {  
-      toast({  
-        title: "No disponible",  
-        description: "Tu dispositivo no soporta autenticación biométrica",  
-        variant: "destructive"  
-      });  
-      return;  
-    }  
-  
-    const { success, error } = await registerBiometric();  
-      
-    if (success) {  
-      setBiometricEnabled(true);  
-      toast({  
-        title: "Éxito",  
-        description: "Autenticación biométrica configurada correctamente"  
-      });  
+  const handleBiometricToggle = async (enabled: boolean) => {  
+    if (enabled) {  
+      try {  
+        const result = await registerBiometric();  
+        if (result.success) {  
+          setBiometricEnabled(true);  
+        }  
+      } catch (error) {  
+        toast({  
+          title: "Error",  
+          description: "No se pudo activar la autenticación biométrica",  
+          variant: "destructive",  
+        });  
+      }  
     } else {  
+      setBiometricEnabled(false);  
+      localStorage.setItem('biometricEnabled', 'false');  
       toast({  
-        title: "Error",   
-        description: error || "Error al configurar biometría",  
-        variant: "destructive"  
+        title: "Autenticación biométrica desactivada",  
+        description: "Se ha desactivado el acceso biométrico",  
       });  
     }  
   };  
@@ -97,14 +70,21 @@ export const SettingsMenu = () => {
           
         <div className="space-y-6 mt-6">  
           {/* Theme Settings */}  
-          <Card>  
+          <Card className="border-none shadow-xl">  
             <CardHeader className="pb-3">  
-              <CardTitle className="text-base flex items-center gap-2">  
-                <Palette className="h-4 w-4" />  
-                Apariencia  
-              </CardTitle>  
+              <div className="flex items-center gap-3">  
+                <div className="p-2 bg-blue-100 rounded-lg">  
+                  <Palette className="h-5 w-5 text-blue-600" />  
+                </div>  
+                <div>  
+                  <CardTitle className="text-lg">Apariencia</CardTitle>  
+                  <CardDescription>  
+                    Personaliza el tema de la aplicación  
+                  </CardDescription>  
+                </div>  
+              </div>  
             </CardHeader>  
-            <CardContent className="space-y-4">  
+            <CardContent className="pt-0">  
               <div className="space-y-2">  
                 <Label htmlFor="theme-select">Tema</Label>  
                 <Select value={theme} onValueChange={(value: 'light' | 'dark' | 'system') => setTheme(value)}>  
@@ -117,28 +97,35 @@ export const SettingsMenu = () => {
                     <SelectItem value="system">Sistema</SelectItem>  
                   </SelectContent>  
                 </Select>  
-                <p className="text-xs text-muted-foreground">  
-                  Elige entre tema claro, oscuro o seguir la configuración del sistema  
-                </p>  
               </div>  
             </CardContent>  
           </Card>  
   
           {/* Location Settings */}  
-          <Card>  
+          <Card className="border-none shadow-xl">  
             <CardHeader className="pb-3">  
-              <CardTitle className="text-base flex items-center gap-2">  
-                <MapPin className="h-4 w-4" />  
-                Ubicación  
-              </CardTitle>  
+              <div className="flex items-center gap-3">  
+                <div className="p-2 bg-orange-100 rounded-lg">  
+                  <MapPin className="h-5 w-5 text-orange-600" />  
+                </div>  
+                <div>  
+                  <CardTitle className="text-lg">Ubicación</CardTitle>  
+                  <CardDescription>  
+                    Controla el acceso a tu ubicación  
+                  </CardDescription>  
+                </div>  
+              </div>  
             </CardHeader>  
-            <CardContent className="space-y-4">  
-              <div className="flex items-center justify-between">  
-                <div className="space-y-0.5">  
-                  <Label>Permitir geolocalización</Label>  
-                  <p className="text-xs text-muted-foreground">  
-                    Permite que la aplicación acceda a tu ubicación para el mapa de calor  
-                  </p>  
+            <CardContent className="pt-0">  
+              <div className="flex items-center justify-between p-3 rounded-lg bg-secondary">  
+                <div className="flex items-center gap-3">  
+                  <MapPin className="h-5 w-5 text-orange-600" />  
+                  <div>  
+                    <p className="font-medium text-sm">Geolocalización</p>  
+                    <p className="text-xs text-muted-foreground">  
+                      Para el mapa de calor  
+                    </p>  
+                  </div>  
                 </div>  
                 <Switch   
                   checked={geolocationEnabled}   
@@ -148,108 +135,102 @@ export const SettingsMenu = () => {
             </CardContent>  
           </Card>  
   
-          {/* Security Settings */}  
-          <Card>  
+          {/* Biometric Authentication */}  
+          <Card className="border-none shadow-xl">  
             <CardHeader className="pb-3">  
-              <CardTitle className="text-base flex items-center gap-2">  
-                <Shield className="h-4 w-4" />  
-                Seguridad  
-              </CardTitle>  
+              <div className="flex items-center gap-3">  
+                <div className="p-2 bg-green-100 rounded-lg">  
+                  <Fingerprint className="h-5 w-5 text-green-600" />  
+                </div>  
+                <div>  
+                  <CardTitle className="text-lg">Autenticación biométrica</CardTitle>  
+                  <CardDescription>  
+                    Usa tu huella dactilar o Face ID para acceder  
+                  </CardDescription>  
+                </div>  
+              </div>  
             </CardHeader>  
-            <CardContent className="space-y-4">  
-              {/* Autenticación Biométrica */}  
-              {capabilities.isBiometricAvailable && (  
-                <div className="flex items-center justify-between">  
-                  <div className="space-y-0.5">  
-                    <Label>Autenticación Biométrica</Label>  
+            <CardContent className="pt-0">  
+              <div className="flex items-center justify-between p-3 rounded-lg bg-secondary">  
+                <div className="flex items-center gap-3">  
+                  <Fingerprint className="h-5 w-5 text-green-600" />  
+                  <div>  
+                    <p className="font-medium text-sm">Acceso biométrico</p>  
                     <p className="text-xs text-muted-foreground">  
-                      Usa {capabilities.supportedTypes[0] || 'rostro o huella'} para acceder más rápido  
+                      Desbloquea con huella o Face ID  
                     </p>  
                   </div>  
-                  <Switch   
-                    checked={biometricEnabled && isRegistered}   
-                    onCheckedChange={(enabled) => {  
-                      if (enabled && !isRegistered) {  
-                        // Configurar biometría por primera vez  
-                        handleBiometricSetup();  
-                      } else {  
-                        setBiometricEnabled(enabled);  
-                      }  
-                    }}  
-                  />  
                 </div>  
-              )}  
-  
-              {/* Configuración manual de biometría */}  
-              {capabilities.isBiometricAvailable && !isRegistered && (  
-                <div className="space-y-3 pt-3 border-t">  
-                  <p className="text-sm font-medium">Configurar Biometría</p>  
-                  <Button   
-                    variant="outline"   
-                    className="w-full justify-start"  
-                    onClick={handleBiometricSetup}  
-                  >  
-                    <Fingerprint className="mr-2 h-4 w-4" />  
-                    Configurar {capabilities.supportedTypes[0] || 'Biometría'}  
-                  </Button>  
-                </div>  
-              )}  
-  
-              {/* Verificación en dos pasos */}  
-              <div className="flex items-center justify-between">  
-                <div className="space-y-0.5">  
-                  <Label>Verificación en dos pasos</Label>  
-                  <p className="text-xs text-muted-foreground">  
-                    Añade una capa extra de seguridad a tu cuenta  
-                  </p>  
-                </div>  
-                <Switch   
-                  checked={twoFactorEnabled}   
-                  onCheckedChange={(enabled) => {  
-                    if (enabled && !twoFactorEnabled) {  
-                      setShowTwoFactorSetup(true);  
-                    } else {  
-                      setTwoFactorEnabled(enabled);  
-                    }  
-                  }}  
+                <Switch  
+                  checked={biometricEnabled}  
+                  onCheckedChange={handleBiometricToggle}  
                 />  
               </div>  
-                
-              {twoFactorEnabled && (  
-                <div className="space-y-3 pt-3 border-t">  
-                  <p className="text-sm font-medium">Proveedores de autenticación</p>  
-                  <div className="space-y-2">  
-                    <Button   
-                      variant="outline"   
-                      className="w-full justify-start"  
-                      onClick={() => handleOAuthLogin('Google')}  
-                    >  
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">  
-                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>  
-                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>  
-                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>  
-                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>  
-                      </svg>  
-                      Autenticar con Google  
-                    </Button>  
-                    <Button   
-                      variant="outline"   
-                      className="w-full justify-start"  
-                      onClick={() => handleOAuthLogin('Microsoft')}  
-                    >  
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">  
-                        <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zM24 11.4H12.6V0H24v11.4z"/>  
-                      </svg>  
-                      Autenticar con Microsoft  
-                    </Button>  
+            </CardContent>  
+          </Card>  
+   
+          {/* Two-Factor Authentication */}  
+          <Card className="border-none shadow-xl">  
+            <CardHeader className="pb-3">  
+              <div className="flex items-center gap-3">  
+                <div className="p-2 bg-red-100 rounded-lg">  
+                  <Shield className="h-5 w-5 text-red-600" />  
+                </div>  
+                <div>  
+                  <CardTitle className="text-lg">Autenticación de Dos Factores</CardTitle>  
+                  <CardDescription>  
+                    Añade una capa extra de seguridad a tu cuenta  
+                  </CardDescription>  
+                </div>  
+              </div>  
+            </CardHeader>  
+            <CardContent className="pt-0">  
+              <div className="flex items-center justify-between p-3 rounded-lg bg-secondary">  
+                <div className="flex items-center gap-3">  
+                  <Shield className="h-5 w-5 text-red-600" />  
+                  <div>  
+                    <p className="font-medium text-sm">  
+                      {twoFactorConfig?.enabled ? "2FA Habilitado" : "2FA Deshabilitado"}  
+                    </p>  
+                    <p className="text-xs text-muted-foreground">  
+                      {twoFactorConfig?.enabled   
+                        ? "Tu cuenta está protegida con 2FA"   
+                        : "Habilita 2FA para mayor seguridad"  
+                      }  
+                    </p>  
                   </div>  
+                </div>  
+                <Badge variant={twoFactorConfig?.enabled ? "default" : "destructive"}>  
+                  {twoFactorConfig?.enabled ? "Activo" : "Inactivo"}  
+                </Badge>  
+              </div>  
+                
+              <div className="mt-3">  
+                <Button  
+                  onClick={() => setShow2FASetup(true)}  
+                  variant={twoFactorConfig?.enabled ? "outline" : "default"}  
+                  className="w-full"  
+                >  
+                  <Shield className="h-4 w-4 mr-2" />  
+                  {twoFactorConfig?.enabled ? "Administrar 2FA" : "Configurar 2FA"}  
+                </Button>  
+              </div>  
+  
+              {twoFactorConfig?.enabled && (  
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">  
+                  <p className="text-sm text-green-800">  
+                    ✅ 2FA está habilitado. Tu cuenta está protegida con autenticación de dos factores.  
+                  </p>  
+                  <p className="text-xs text-green-700 mt-1">  
+                    Configurado el: {new Date(twoFactorConfig.created_at).toLocaleDateString()}  
+                  </p>  
                 </div>  
               )}  
             </CardContent>  
           </Card>  
   
           {/* About */}  
-          <Card>  
+          <Card className="border-none shadow-xl">  
             <CardContent className="pt-6">  
               <div className="text-center space-y-2">  
                 <p className="text-sm text-muted-foreground">  
@@ -265,9 +246,8 @@ export const SettingsMenu = () => {
       </SheetContent>  
         
       <TwoFactorSetup  
-        isOpen={showTwoFactorSetup}  
-        onClose={() => setShowTwoFactorSetup(false)}  
-        onComplete={() => setTwoFactorEnabled(true)}  
+        open={show2FASetup}  
+        onOpenChange={setShow2FASetup}  
       />  
     </Sheet>  
   );  
