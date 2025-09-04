@@ -52,10 +52,17 @@ export const useBiometricAuth = () => {
     }  
   };  
   
-  return {  
-    isSupported,  
-    isRegistered,  
-    registerBiometric,  
-    authenticateWithBiometric,  
-  };  
+  const capabilities = {
+    isFaceIdAvailable: true, // Simulated for web
+    isFingerprintAvailable: true, // Simulated for web
+    isBiometricAvailable: true
+  };
+
+  return {
+    isSupported,
+    isRegistered,
+    registerBiometric,
+    authenticateWithBiometric,
+    capabilities,
+  };
 };

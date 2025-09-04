@@ -24,7 +24,7 @@ export const SettingsMenu = () => {
     biometricEnabled,  
     setBiometricEnabled  
   } = useSettings();  
-  const { registerBiometric } = useBiometricAuth();  
+  const { registerBiometric, capabilities } = useBiometricAuth();  
   const { config: twoFactorConfig } = use2FA();  
   const { toast } = useToast();  
   
@@ -143,10 +143,22 @@ export const SettingsMenu = () => {
                   <Fingerprint className="h-5 w-5 text-green-600" />  
                 </div>  
                 <div>  
-                  <CardTitle className="text-lg">Autenticación biométrica</CardTitle>  
-                  <CardDescription>  
-                    Usa tu huella dactilar o Face ID para acceder  
-                  </CardDescription>  
+                   <CardTitle className="text-lg">
+                     {capabilities?.isFaceIdAvailable && capabilities?.isFingerprintAvailable 
+                       ? "Autenticación Rostro/Huella" 
+                       : capabilities?.isFaceIdAvailable 
+                         ? "Autenticación Facial" 
+                         : "Autenticación Biométrica"
+                     }
+                   </CardTitle>
+                   <CardDescription>
+                     {capabilities?.isFaceIdAvailable && capabilities?.isFingerprintAvailable 
+                       ? "Usa tu rostro o huella dactilar para acceder" 
+                       : capabilities?.isFaceIdAvailable 
+                         ? "Usa tu rostro para acceder" 
+                         : "Usa tu huella dactilar para acceder"
+                     }
+                   </CardDescription>
                 </div>  
               </div>  
             </CardHeader>  
@@ -155,10 +167,22 @@ export const SettingsMenu = () => {
                 <div className="flex items-center gap-3">  
                   <Fingerprint className="h-5 w-5 text-green-600" />  
                   <div>  
-                    <p className="font-medium text-sm">Acceso biométrico</p>  
-                    <p className="text-xs text-muted-foreground">  
-                      Desbloquea con huella o Face ID  
-                    </p>  
+                     <p className="font-medium text-sm">
+                       {capabilities?.isFaceIdAvailable && capabilities?.isFingerprintAvailable 
+                         ? "Acceso Rostro/Huella" 
+                         : capabilities?.isFaceIdAvailable 
+                           ? "Acceso Facial" 
+                           : "Acceso Biométrico"
+                       }
+                     </p>
+                     <p className="text-xs text-muted-foreground">
+                       {capabilities?.isFaceIdAvailable && capabilities?.isFingerprintAvailable 
+                         ? "Desbloquea con rostro o huella" 
+                         : capabilities?.isFaceIdAvailable 
+                           ? "Desbloquea con tu rostro" 
+                           : "Desbloquea con huella dactilar"
+                       }
+                     </p>
                   </div>  
                 </div>  
                 <Switch  
@@ -245,10 +269,11 @@ export const SettingsMenu = () => {
         </div>  
       </SheetContent>  
         
-      <TwoFactorSetup  
-        open={show2FASetup}  
-        onOpenChange={setShow2FASetup}  
-      />  
+       <TwoFactorSetup 
+         isOpen={show2FASetup}
+         onClose={() => setShow2FASetup(false)}
+         onComplete={() => setShow2FASetup(false)}
+       />
     </Sheet>  
   );  
 };
