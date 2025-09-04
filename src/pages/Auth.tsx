@@ -1,20 +1,27 @@
 import { useState, useEffect } from 'react';  
 import { useNavigate } from 'react-router-dom';  
 import { useAuth } from '@/hooks/useAuth';  
+import { useBiometricAuth } from '@/hooks/useBiometricAuth';  
 import { Button } from '@/components/ui/button';  
 import { Input } from '@/components/ui/input';  
 import { Label } from '@/components/ui/label';  
 import { useToast } from '@/hooks/use-toast';  
 import { supabase } from '@/integrations/supabase/client';  
-import { User, Lock } from 'lucide-react';  
+import { User, Lock, Fingerprint } from 'lucide-react';  
   
 export const Auth = () => {  
   const [username, setUsername] = useState('');  
   const [password, setPassword] = useState('');  
   const [loading, setLoading] = useState(false);  
   const [isActive, setIsActive] = useState(false);  
+  const [creatingUsers, setCreatingUsers] = useState(false);  
     
-  const { signIn, user } = useAuth();  
+  const { signIn, signInWithBiometric, user } = useAuth();  
+  const {   
+    capabilities,   
+    isRegistered,   
+    authenticateWithBiometric   
+  } = useBiometricAuth();  
   const navigate = useNavigate();  
   const { toast } = useToast();  
   
@@ -49,6 +56,9 @@ export const Auth = () => {
           variant: "destructive"  
         });  
       } else {  
+        // Guardar username para autenticación biométrica futura  
+        localStorage.setItem('biometric_username', username);  
+          
         toast({  
           title: "Éxito",  
           description: "Inicio de sesión exitoso"  
@@ -66,10 +76,75 @@ export const Auth = () => {
     }  
   };  
   
-  return (  
-    <div className="min-h-screen flex items-center justify-center p-4" 
-         style={{ background: "var(--gradient-primary)" }}>
+  const handleBiometricLogin = async () => {  
+    setLoading(true);  
+      
+    try {  
+      const { success, error } = await authenticateWithBiometric();  
         
+      if (success) {  
+        // Usar el hook de auth para login biométrico  
+        const { error: authError } = await signInWithBiometric();  
+          
+        if (authError) {  
+          toast({  
+            title: "Error",  
+            description: authError || "Error en autenticación biométrica",  
+            variant: "destructive"  
+          });  
+        } else {  
+          toast({  
+            title: "Éxito",  
+            description: "Autenticación biométrica exitosa"  
+          });  
+          navigate('/dashboard');  
+        }  
+      } else {  
+        toast({  
+          title: "Error",  
+          description: error || "Error en autenticación biométrica",  
+          variant: "destructive"  
+        });  
+      }  
+    } catch (err) {  
+      toast({  
+        title: "Error",  
+        description: "Error inesperado en autenticación biométrica",  
+        variant: "destructive"  
+      });  
+    } finally {  
+      setLoading(false);  
+    }  
+  };  
+  
+  const createInitialUsers = async () => {  
+    setCreatingUsers(true);  
+    try {  
+      const response = await supabase.functions.invoke('create-admin-users');  
+        
+      if (response.error) {  
+        throw response.error;  
+      }  
+  
+      toast({  
+        title: "Usuarios creados",  
+        description: "Los usuarios administrador y agente han sido creados exitosamente. Ya puedes iniciar sesión."  
+      });  
+    } catch (error: any) {  
+      toast({  
+        title: "Error",  
+        description: `Error al crear usuarios: ${error.message}`,  
+        variant: "destructive"  
+      });  
+    } finally {  
+      setCreatingUsers(false);  
+    }  
+  };  
+  
+  return (  
+    <div className="min-h-screen flex items-center justify-center p-4"   
+         style={{ background: "var(--gradient-primary)" }}>  
+          
       {/* Home Button */}  
       <Button   
         variant="outline"   
@@ -79,17 +154,17 @@ export const Auth = () => {
       >  
         Inicio  
       </Button>  
-        
+          
       <div className={`auth-container ${isActive ? 'active' : ''}`}>  
         {/* Login Form */}  
         <div className="form-box login">  
           <form onSubmit={handleSubmit}>  
             <div className="text-center mb-6">  
-              <img 
-                src="/lovable-uploads/6f1746d0-0b44-447b-a333-82019dfecd73.png" 
-                alt="SRC Logo" 
-                className="w-16 h-16 mx-auto mb-4 object-contain"
-              />
+              <img   
+                src="/lovable-uploads/6f1746d0-0b44-447b-a333-82019dfecd73.png"   
+                alt="SRC Logo"   
+                className="w-16 h-16 mx-auto mb-4 object-contain"  
+              />  
               <h1 className="text-3xl font-bold text-gray-800 mb-2">Iniciar Sesión</h1>  
             </div>  
               
@@ -123,6 +198,29 @@ export const Auth = () => {
               disabled={loading}  
             >  
               {loading ? "Cargando..." : "Iniciar Sesión"}  
+            </Button>  
+  
+            {/* Botón de autenticación biométrica */}  
+            {capabilities.isBiometricAvailable && isRegistered && (  
+              <Button  
+                type="button"  
+                onClick={handleBiometricLogin}  
+                className="auth-btn-biometric"  
+                disabled={loading}  
+              >  
+                <Fingerprint className="h-5 w-5 mr-2" />  
+                Acceder con {capabilities.supportedTypes[0] || 'Biometría'}  
+              </Button>  
+            )}  
+  
+            {/* Botón para crear usuarios iniciales */}  
+            <Button  
+              type="button"  
+              onClick={createInitialUsers}  
+              className="auth-btn-secondary"  
+              disabled={creatingUsers}  
+            >  
+              {creatingUsers ? "Creando..." : "Crear Usuarios Iniciales"}  
             </Button>  
           </form>  
         </div>  
@@ -176,12 +274,12 @@ export const Auth = () => {
           z-index: 2;  
         }  
   
-        .form-box.info {
-          right: 0;
-          background: transparent;
-          color: #fff;
-          z-index: 3;
-        }
+        .form-box.info {  
+          right: 0;  
+          background: transparent;  
+          color: #fff;  
+          z-index: 3;  
+        }  
   
         .form-box form {  
           width: 100%;  
@@ -221,30 +319,70 @@ export const Auth = () => {
           pointer-events: none;  
         }  
   
-        .auth-btn {
-          width: 100%;
-          height: 48px;
-          background: hsl(var(--primary)) !important;
-          border-radius: 8px !important;
-          box-shadow: var(--shadow-form) !important;
-          border: none !important;
-          cursor: pointer !important;
-          font-size: 16px !important;
-          color: hsl(var(--primary-foreground)) !important;
-          font-weight: 600 !important;
-          margin-top: 20px;
-          transition: var(--transition-smooth);
-        }
-
-        .auth-btn:hover {
-          background: hsl(217 91% 55%) !important;
-        }
+        .auth-btn {  
+          width: 100%;  
+          height: 48px;  
+          background: hsl(var(--primary)) !important;  
+          border-radius: 8px !important;  
+          box-shadow: var(--shadow-form) !important;  
+          border: none !important;  
+          cursor: pointer !important;  
+          font-size: 16px !important;  
+          color: hsl(var(--primary-foreground)) !important;  
+          font-weight: 600 !important;  
+          margin-top: 20px;  
+          transition: var(--transition-smooth);  
+        }  
   
-        .info-content {
-          text-align: center;
-          z-index: 5;
-          position: relative;
-        }
+        .auth-btn:hover {  
+          background: hsl(217 91% 55%) !important;  
+        }  
+  
+        .auth-btn-biometric {  
+          width: 100%;  
+          height: 48px;  
+          background: hsl(var(--secondary)) !important;  
+          border-radius: 8px !important;  
+          box-shadow: var(--shadow-form) !important;  
+          border: none !important;  
+          cursor: pointer !important;  
+          font-size: 14px !important;  
+          color: hsl(var(--secondary-foreground)) !important;  
+          font-weight: 600 !important;  
+          margin-top: 15px;  
+          transition: var(--transition-smooth);  
+          display: flex;  
+          align-items: center;  
+          justify-content: center;  
+        }  
+  
+        .auth-btn-biometric:hover {  
+          background: hsl(var(--secondary)/0.8) !important;  
+        }  
+  
+        .auth-btn-secondary {  
+          width: 100%;  
+          height: 40px;  
+          background: transparent !important;  
+          border: 1px solid hsl(var(--border)) !important;  
+          border-radius: 8px !important;  
+          cursor: pointer !important;  
+          font-size: 12px !important;  
+          color: hsl(var(--muted-foreground)) !important;  
+          font-weight: 500 !important;  
+          margin-top: 15px;  
+          transition: var(--transition-smooth);  
+        }  
+  
+        .auth-btn-secondary:hover {  
+          background: hsl(var(--muted)/0.1) !important;  
+        }  
+  
+        .info-content {  
+          text-align: center;  
+          z-index: 5;  
+          position: relative;  
+        }  
   
         .toggle-box {  
           position: absolute;  
@@ -253,16 +391,16 @@ export const Auth = () => {
           pointer-events: none;  
         }  
   
-        .toggle-background {
-          content: '';
-          position: absolute;
-          right: 0;
-          width: 50%;
-          height: 100%;
-          background: var(--gradient-blue-form);
-          z-index: 2;
-          transition: 1.8s ease-in-out;
-        }
+        .toggle-background {  
+          content: '';  
+          position: absolute;  
+          right: 0;  
+          width: 50%;  
+          height: 100%;  
+          background: var(--gradient-blue-form);  
+          z-index: 2;  
+          transition: 1.8s ease-in-out;  
+        }  
   
         /* Responsive Design */  
         @media screen and (max-width: 768px) {  
@@ -284,11 +422,11 @@ export const Auth = () => {
             background: #fff;  
           }  
   
-          .form-box.info {
-            position: relative;
-            height: 30%;
-            background: var(--gradient-blue-form);
-          }
+          .form-box.info {  
+            position: relative;  
+            height: 30%;  
+            background: var(--gradient-blue-form);  
+          }  
   
           .toggle-background {  
             display: none;  
