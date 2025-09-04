@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';  
 import { useAuth } from '@/hooks/useAuth';  
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';  
-import { AuthLayout } from '@/components/ui/auth-layout';  
 import { Button } from '@/components/ui/button';  
 import { Input } from '@/components/ui/input';  
 import { Label } from '@/components/ui/label';  
@@ -240,6 +239,19 @@ export const Auth = () => {
               >  
                 <Home className="h-5 w-5" />  
                 Volver a la Pantalla Principal  
+              </Button>  
+            </div>  
+  
+            {/* Botón para crear usuarios iniciales - FUNCIONALIDAD RESTAURADA */}  
+            <div className="flex gap-4 justify-center mt-4 pt-4 border-t">  
+              <Button  
+                type="button"  
+                onClick={createInitialUsers}  
+                variant="secondary"  
+                size="sm"  
+                disabled={creatingUsers}  
+              >  
+                {creatingUsers ? "Creando..." : "Crear Usuarios Iniciales"}  
               </Button>  
             </div>  
               
