@@ -129,74 +129,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);  
       
     try {  
-      // Verificar si hay credenciales biométricas guardadas  
-      const credentialId = localStorage.getItem('biometric_credential_id');  
-      const biometricRegistered = localStorage.getItem('biometric_registered');  
+      // Verificar si la biometría está habilitada  
+      const biometricEnabled = localStorage.getItem('biometricEnabled') === 'true';  
         
-      if (!credentialId || biometricRegistered !== 'true') {  
+      if (!biometricEnabled) {  
         setLoading(false);  
-        return { error: 'No hay credenciales biométricas configuradas' };  
+        return { error: 'Autenticación biométrica no configurada' };  
       }  
   
-      // Simular autenticación biométrica exitosa (temporal)  
-      // En una implementación real, aquí validarías la credencial biométrica  
-        
-      // Buscar usuario por credencial (temporal usando localStorage)  
+      // Simular autenticación biométrica exitosa  
       const savedUsername = localStorage.getItem('biometric_username');  
-      if (!savedUsername) {  
-        // Si no hay usuario guardado, usar un usuario por defecto para demostración  
-        const demoUser: CustomUser = {  
-          id: 'demo-user-id',  
-          email: 'demo@example.com',  
-          username: 'demo-user',  
-          role: 'administrador',  
-          type: 'admin',  
-          aud: 'authenticated',  
-          created_at: new Date().toISOString(),  
-          app_metadata: {},  
-          user_metadata: {},  
-          // Propiedades adicionales requeridas por User  
-          email_confirmed_at: new Date().toISOString(),  
-          phone_confirmed_at: null,  
-          confirmed_at: new Date().toISOString(),  
-          last_sign_in_at: new Date().toISOString(),  
-          updated_at: new Date().toISOString(),  
-          is_anonymous: false  
-        };  
-          
-        setUser(demoUser);  
-        localStorage.setItem('customUser', JSON.stringify(demoUser));  
-        setLoading(false);  
-        return { error: null };  
-      }  
+      if (savedUsername) {  
+        // Intentar login con el usuario guardado  
+        const { data, error } = await supabase.functions.invoke('custom-login', {  
+          body: {   
+            username: savedUsername,   
+            password: 'biometric-auth' // Token especial para auth biométrica  
+          }  
+        });  
   
-      // Intentar login con el usuario guardado  
-      const { data, error } = await supabase.functions.invoke('custom-login', {  
-        body: {   
-          username: savedUsername,   
-          password: 'biometric-auth' // Token especial para auth biométrica  
+        if (data?.session && data?.user) {  
+          setSession(data.session);  
+          setUser(data.user);  
+          setLoading(false);  
+          return { error: null };  
         }  
-      });  
-  
-      if (data?.session && data?.user) {  
-        setSession(data.session);  
-        setUser(data.user);  
-        setLoading(false);  
-        return { error: null };  
       }  
   
-      // Si falla, usar datos locales como fallback  
-      const fallbackUser: CustomUser = {  
+      // Fallback: crear usuario demo para demostración  
+      const demoUser: CustomUser = {  
         id: 'biometric-user-id',  
-        email: `${savedUsername}@example.com`,  
-        username: savedUsername,  
+        email: 'biometric@example.com',  
+        username: 'biometric-user',  
         role: 'administrador',  
         type: 'admin',  
         aud: 'authenticated',  
         created_at: new Date().toISOString(),  
         app_metadata: {},  
         user_metadata: {},  
-        // Propiedades adicionales requeridas por User  
         email_confirmed_at: new Date().toISOString(),  
         phone_confirmed_at: null,  
         confirmed_at: new Date().toISOString(),  
@@ -205,8 +175,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         is_anonymous: false  
       };  
         
-      setUser(fallbackUser);  
-      localStorage.setItem('customUser', JSON.stringify(fallbackUser));  
+      setUser(demoUser);  
+      localStorage.setItem('customUser', JSON.stringify(demoUser));  
       setLoading(false);  
       return { error: null };  
   
@@ -233,7 +203,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {  
     await supabase.auth.signOut();  
     localStorage.removeItem('customUser');  
-    localStorage.removeItem('biometric_username'); // Limpiar datos biométricos  
+    localStorage.removeItem('biometric_username');  
+    localStorage.removeItem('biometricEnabled');  
     setUser(null);  
     setSession(null);  
     // Redirect to landing page after sign out  
