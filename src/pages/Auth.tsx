@@ -14,6 +14,8 @@ export const Auth = () => {
   const [password, setPassword] = useState('');  
   const [loading, setLoading] = useState(false);  
   const [isActive, setIsActive] = useState(false);
+  const [showSwipeMenu, setShowSwipeMenu] = useState(false);
+  const [startY, setStartY] = useState(0);
     
   const { signIn, signInWithBiometric, user } = useAuth();  
   const {   
@@ -22,7 +24,7 @@ export const Auth = () => {
     authenticateWithBiometric   
   } = useBiometricAuth();  
   const navigate = useNavigate();  
-  const { toast } = useToast();  
+  const { toast } = useToast();
   
   // Redirect if already authenticated  
   useEffect(() => {  
@@ -127,22 +129,75 @@ export const Auth = () => {
     } finally {  
       setLoading(false);  
     }  
-  };  
+  };
+
+  // Touch/swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const currentY = e.touches[0].clientY;
+    const diff = startY - currentY;
+    
+    // If swiping up (diff > 0) and moved at least 50px
+    if (diff > 50 && !showSwipeMenu) {
+      setShowSwipeMenu(true);
+    }
+    // If swiping down and menu is open
+    else if (diff < -20 && showSwipeMenu) {
+      setShowSwipeMenu(false);
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    // Show menu when mouse is near bottom of screen
+    const windowHeight = window.innerHeight;
+    const mouseY = e.clientY;
+    
+    if (mouseY > windowHeight - 100 && !showSwipeMenu) {
+      setShowSwipeMenu(true);
+    }
+    // Hide when mouse moves away from bottom
+    else if (mouseY < windowHeight - 150 && showSwipeMenu) {
+      setShowSwipeMenu(false);
+    }
+  };
   
   
   return (  
-    <div className="min-h-screen flex items-center justify-center p-4"   
-         style={{ background: "var(--gradient-primary)" }}>  
-          
-      {/* Home Button */}  
-      <Button   
-        variant="outline"   
-        size="sm"  
-        onClick={() => navigate('/')}  
-        className="absolute top-4 left-4 bg-white/90 hover:bg-white z-50"  
-      >  
-        Inicio  
-      </Button>  
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative"   
+      style={{ background: "var(--gradient-primary)" }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onMouseMove={handleMouseMove}
+    >  
+           
+      {/* Swipe Menu */}
+      <div 
+        className={`fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm rounded-t-3xl p-6 transform transition-transform duration-300 z-50 ${
+          showSwipeMenu ? 'translate-y-0' : 'translate-y-full'
+        }`}
+        style={{ boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.2)" }}
+      >
+        <div className="flex justify-center mb-4">
+          <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
+        </div>
+        <div className="flex justify-center">
+          <Button   
+            variant="outline"   
+            size="lg"
+            onClick={() => {
+              navigate('/');
+              setShowSwipeMenu(false);
+            }}
+            className="bg-white hover:bg-gray-50 shadow-md"  
+          >  
+            Volver a la Pantalla Principal  
+          </Button>  
+        </div>
+      </div>
           
       <div className={`auth-container ${isActive ? 'active' : ''}`}>  
         {/* Login Form */}  
@@ -424,9 +479,26 @@ export const Auth = () => {
             
           .info-content h1 {  
             font-size: 24px;  
-          }  
-        }  
-      `}</style>  
+          }
+        }
+
+        /* Swipe indicator animation */
+        @keyframes bounce-up {
+          0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+          }
+          40% {
+            transform: translateY(-10px);
+          }
+          60% {
+            transform: translateY(-5px);
+          }
+        }
+
+        .bounce-up {
+          animation: bounce-up 2s infinite;
+        }
+      `}</style>
     </div>  
   );  
 };
