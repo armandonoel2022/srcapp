@@ -125,66 +125,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }  
   };  
   
-  const signInWithBiometric = async () => {  
+  const signInWithBiometric = async (userId?: string) => {  
     setLoading(true);  
       
     try {  
-      // Verificar si la biometría está habilitada  
-      const biometricEnabled = localStorage.getItem('biometricEnabled') === 'true';  
+      // Si no se proporciona userId, no se puede autenticar
+      if (!userId) {
+        setLoading(false);
+        return { error: 'ID de usuario requerido para autenticación biométrica' };
+      }
+
+      // Verificar si la biometría está habilitada para este usuario específico
+      const biometricKey = `biometricEnabled_${userId}`;
+      const biometricEnabled = localStorage.getItem(biometricKey) === 'true';  
         
       if (!biometricEnabled) {  
         setLoading(false);  
-        return { error: 'Autenticación biométrica no configurada' };  
+        return { error: 'Autenticación biométrica no configurada para este usuario' };  
       }  
   
-      // Simular autenticación biométrica exitosa  
-      const savedUsername = localStorage.getItem('biometric_username');  
-      if (savedUsername) {  
-        // Intentar login con el usuario guardado  
-        const { data, error } = await supabase.functions.invoke('custom-login', {  
-          body: {   
-            username: savedUsername,   
-            password: 'biometric-auth' // Token especial para auth biométrica  
-          }  
-        });  
-  
-        if (data?.session && data?.user) {  
-          setSession(data.session);  
-          setUser(data.user);  
-          setLoading(false);  
-          return { error: null };  
+      // Obtener username guardado para este usuario
+      const usernameKey = `biometric_username_${userId}`;
+      const savedUsername = localStorage.getItem(usernameKey);  
+      if (!savedUsername) {
+        setLoading(false);
+        return { error: 'Datos de usuario biométrico no encontrados' };
+      }
+
+      // Intentar login con el usuario guardado  
+      const { data, error } = await supabase.functions.invoke('custom-login', {  
+        body: {   
+          username: savedUsername,   
+          password: 'biometric-auth' // Token especial para auth biométrica  
         }  
-      }  
-  
-      // Fallback: crear usuario demo para demostración  
-      const demoUser: CustomUser = {  
-        id: 'biometric-user-id',  
-        email: 'biometric@example.com',  
-        username: 'biometric-user',  
-        role: 'administrador',  
-        type: 'admin',  
-        aud: 'authenticated',  
-        created_at: new Date().toISOString(),  
-        app_metadata: {},  
-        user_metadata: {},  
-        email_confirmed_at: new Date().toISOString(),  
-        phone_confirmed_at: null,  
-        confirmed_at: new Date().toISOString(),  
-        last_sign_in_at: new Date().toISOString(),  
-        updated_at: new Date().toISOString(),  
-        is_anonymous: false  
-      };  
-        
-      setUser(demoUser);  
-      localStorage.setItem('customUser', JSON.stringify(demoUser));  
-      setLoading(false);  
-      return { error: null };  
+      });  
+
+      if (data?.session && data?.user) {  
+        setSession(data.session);  
+        setUser(data.user);  
+        setLoading(false);  
+        return { error: null };  
+      }
+
+      setLoading(false);
+      return { error: data?.error || error || 'Error en autenticación biométrica' };
   
     } catch (err) {  
       setLoading(false);  
       return { error: 'Error en autenticación biométrica' };  
     }  
-  };  
+  };
   
   const signUp = async (username: string, password: string) => {  
     const redirectUrl = `${window.location.origin}/`;  
@@ -203,13 +193,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {  
     await supabase.auth.signOut();  
     localStorage.removeItem('customUser');  
-    localStorage.removeItem('biometric_username');  
-    localStorage.removeItem('biometricEnabled');  
+    // NO eliminar configuraciones biométricas - deben persistir por usuario
     setUser(null);  
     setSession(null);  
     // Redirect to landing page after sign out  
     window.location.href = '/';  
-  };  
+  };
   
   const isAdmin = user?.type === 'admin' || user?.role === 'administrador';  
     
