@@ -71,6 +71,30 @@ export type Database = {
         }
         Relationships: []
       }
+      biometric_credentials: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_used: string | null
+          public_key: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          last_used?: string | null
+          public_key: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_used?: string | null
+          public_key?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       empleados: {
         Row: {
           created_at: string
@@ -149,6 +173,86 @@ export type Database = {
           tipo?: string
           tipo_persona?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      turnos_empleados: {
+        Row: {
+          created_at: string | null
+          empleado_id: string | null
+          fecha: string
+          foto_entrada: string | null
+          foto_salida: string | null
+          hora_entrada: string | null
+          hora_salida: string | null
+          id: string
+          tipo_registro: string | null
+          ubicacion_entrada: unknown | null
+          ubicacion_salida: unknown | null
+        }
+        Insert: {
+          created_at?: string | null
+          empleado_id?: string | null
+          fecha: string
+          foto_entrada?: string | null
+          foto_salida?: string | null
+          hora_entrada?: string | null
+          hora_salida?: string | null
+          id?: string
+          tipo_registro?: string | null
+          ubicacion_entrada?: unknown | null
+          ubicacion_salida?: unknown | null
+        }
+        Update: {
+          created_at?: string | null
+          empleado_id?: string | null
+          fecha?: string
+          foto_entrada?: string | null
+          foto_salida?: string | null
+          hora_entrada?: string | null
+          hora_salida?: string | null
+          id?: string
+          tipo_registro?: string | null
+          ubicacion_entrada?: unknown | null
+          ubicacion_salida?: unknown | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turnos_empleados_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_2fa: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          last_used_at: string | null
+          secret: string
+          user_id: string | null
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_used_at?: string | null
+          secret: string
+          user_id?: string | null
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_used_at?: string | null
+          secret?: string
+          user_id?: string | null
         }
         Relationships: []
       }
