@@ -166,6 +166,7 @@ export const InteractiveHeatMap = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [customLocation, setCustomLocation] = useState<any>(null);
   const [searchResult, setSearchResult] = useState<any>(null);
+  const [highlightedZone, setHighlightedZone] = useState<L.Circle | null>(null);
   const mapContainer = useRef<HTMLDivElement>(null);  
   const { toast } = useToast();  
   const { geolocationEnabled } = useSettings();  
@@ -269,6 +270,43 @@ export const InteractiveHeatMap = () => {
 
     return marker;
   };
+
+  // Función para crear área destacada de zona
+  const createZoneHighlight = (coordinates: [number, number], zone: any) => {
+    if (!map) return null;
+
+    // Definir colores y radio según el tipo de zona
+    const zoneColors = {
+      hot: { color: '#ef4444', fillColor: '#fee2e2', radius: 800 },
+      intermediate: { color: '#f59e0b', fillColor: '#fef3c7', radius: 600 },
+      cold: { color: '#10b981', fillColor: '#dcfce7', radius: 500 }
+    };
+
+    const zoneStyle = zoneColors[zone.type as keyof typeof zoneColors] || 
+                     { color: '#3b82f6', fillColor: '#dbeafe', radius: 500 };
+
+    // Crear círculo de área
+    const circle = L.circle(coordinates, {
+      color: zoneStyle.color,
+      fillColor: zoneStyle.fillColor,
+      fillOpacity: 0.3,
+      radius: zoneStyle.radius,
+      weight: 3,
+      opacity: 0.8
+    }).addTo(map);
+
+    // Popup para el área
+    circle.bindPopup(`
+      <div class="p-3">
+        <h3 class="font-bold text-sm">${zone.name}</h3>
+        <p class="text-xs text-gray-600">${getZoneTypeName(zone.type)}</p>
+        <p class="text-xs mt-1">Área aproximada de influencia</p>
+        <p class="text-xs">Radio: ${zoneStyle.radius}m</p>
+      </div>
+    `);
+
+    return circle;
+  };
   
   // Función para buscar y centrar en una ubicación
   const searchAndCenterLocation = async (query: string) => {
@@ -283,10 +321,14 @@ export const InteractiveHeatMap = () => {
       const coordinates = await searchWithOpenStreetMap(query);
       
       if (coordinates && map) {
-        // Limpiar marcadores anteriores
+        // Limpiar marcadores y áreas anteriores
         markers.forEach(marker => map.removeLayer(marker));
         if (customLocation) {
           map.removeLayer(customLocation);
+        }
+        if (highlightedZone) {
+          map.removeLayer(highlightedZone);
+          setHighlightedZone(null);
         }
         
         // Centrar el mapa
@@ -303,6 +345,13 @@ export const InteractiveHeatMap = () => {
           true,
           foundZone
         );
+
+        // Si es una zona predefinida, crear área de influencia
+        let newHighlight = null;
+        if (foundZone) {
+          newHighlight = createZoneHighlight(coordinates, foundZone);
+          setHighlightedZone(newHighlight);
+        }
         
         if (newMarker) {
           setMarkers([newMarker]);
@@ -386,10 +435,14 @@ export const InteractiveHeatMap = () => {
         if (map) {
           const coordinates: [number, number] = [latitude, longitude];
           
-          // Limpiar marcadores anteriores
+          // Limpiar marcadores y áreas anteriores
           markers.forEach(marker => map.removeLayer(marker));
           if (customLocation) {
             map.removeLayer(customLocation);
+          }
+          if (highlightedZone) {
+            map.removeLayer(highlightedZone);
+            setHighlightedZone(null);
           }
           
           // Centrar el mapa
