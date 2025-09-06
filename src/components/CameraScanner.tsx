@@ -5,15 +5,16 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Camera, X, Scan, Edit, RefreshCw, Check } from 'lucide-react';
 import { useIDScanner } from '@/hooks/useIDScanner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface CameraScannerProps {
   isOpen: boolean;
   onClose: () => void;
-  onDataScanned: (data: { cedula: string; nombre: string; apellido: string }) => void;
+  onDataScanned?: (data: { cedula: string; nombre: string; apellido: string }) => void;
+  onPhotoCapture?: (photo: string) => void;
 }
 
-export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerProps) => {
+export const CameraScanner = ({ isOpen, onClose, onDataScanned, onPhotoCapture }: CameraScannerProps) => {
   console.log('🔍 CameraScanner render - isOpen:', isOpen);
   
   const {
@@ -38,6 +39,14 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerP
     apellido: ''
   });
 
+  // Efecto para manejar la captura de foto para turnos
+  useEffect(() => {
+    if (capturedImage && onPhotoCapture && previewMode) {
+      onPhotoCapture(capturedImage);
+      handleClose();
+    }
+  }, [capturedImage, onPhotoCapture, previewMode]);
+
   const handleClose = () => {
     console.log('🔍 CameraScanner handleClose called');
     stopCamera();
@@ -46,12 +55,19 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned }: CameraScannerP
   };
 
   const handleCapture = () => {
-    capturePhoto();
+    if (onPhotoCapture) {
+      // Para captura de turnos, capturar foto y enviarlo directamente
+      capturePhoto();
+      // El onPhotoCapture se llamará desde el useEffect cuando cambie capturedImage
+    } else {
+      // Para escaneo de IDs, usar el flujo normal
+      capturePhoto();
+    }
   };
 
   const handleScan = async () => {
     const data = await scanCapturedImage();
-    if (data) {
+    if (data && onDataScanned) {
       onDataScanned(data);
       handleClose();
     }

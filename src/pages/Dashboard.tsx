@@ -20,6 +20,7 @@ import { InteractiveHeatMap } from '@/components/InteractiveHeatMap';
 import { AutoGeocodingUpdater } from '@/components/AutoGeocodingUpdater';
 import { TurnosForm } from '@/components/TurnosForm';
 import { ConsultaTurnos } from '@/components/ConsultaTurnos';
+import { BiometricAuthSetup } from '@/components/BiometricAuthSetup';
 
 export const Dashboard = () => {
   const { user, signOut, isAdmin } = useAuth();
@@ -139,6 +140,8 @@ export const Dashboard = () => {
         return <TurnosForm />;
       case 'consulta-turnos':
         return <ConsultaTurnos />;
+      case 'configuracion':
+        return <BiometricAuthSetup />;
       case 'mapa-calor':
         return <InteractiveHeatMap />;
       default:

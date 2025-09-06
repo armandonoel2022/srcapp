@@ -16,13 +16,15 @@ interface Turno {
   hora_salida?: string;
   foto_entrada?: string;
   foto_salida?: string;
-  ubicacion_entrada?: string;
-  ubicacion_salida?: string;
+  ubicacion_entrada?: unknown;
+  ubicacion_salida?: unknown;
   empleados?: {
     nombre: string;
     funcion: string;
   };
   created_at: string;
+  empleado_id: string;
+  tipo_registro: string;
 }
 
 export const ConsultaTurnos = () => {
@@ -95,8 +97,8 @@ export const ConsultaTurnos = () => {
     return `${horas}h ${minutos}m`;
   };
 
-  const parseUbicacion = (ubicacionStr?: string) => {
-    if (!ubicacionStr) return null;
+  const parseUbicacion = (ubicacionStr?: unknown) => {
+    if (!ubicacionStr || typeof ubicacionStr !== 'string') return null;
     const match = ubicacionStr.match(/\(([^,]+),([^)]+)\)/);
     if (match) {
       return {
@@ -107,7 +109,7 @@ export const ConsultaTurnos = () => {
     return null;
   };
 
-  const openGoogleMaps = (ubicacion?: string) => {
+  const openGoogleMaps = (ubicacion?: unknown) => {
     const coords = parseUbicacion(ubicacion);
     if (coords) {
       const url = `https://maps.google.com/?q=${coords.lat},${coords.lng}`;

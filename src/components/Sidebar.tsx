@@ -49,7 +49,11 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
     { id: 'eliminar-empleados', label: 'Eliminar Empleados', icon: Trash }
   ];
 
-  const menuItems = isClient ? clientItems : (authIsAdmin ? [...basicItems, ...adminItems] : basicItems);
+  const configItems = [
+    { id: 'configuracion', label: 'Configuración de Seguridad', icon: SettingsIcon }
+  ];
+
+  const menuItems = isClient ? [...clientItems, ...configItems] : (authIsAdmin ? [...basicItems, ...adminItems, ...configItems] : [...basicItems, ...configItems]);
   
   console.log('Sidebar Debug - menuItems length:', menuItems.length);
   console.log('Sidebar Debug - showing admin items:', authIsAdmin);
@@ -127,6 +131,22 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
             </>
           )}
           
+          {/* Configuration section for all users */}
+          <div className="pt-4 border-t">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Configuración</h3>
+            {configItems.map((item) => (
+              <Button
+                key={item.id}
+                variant={currentSection === item.id ? "default" : "ghost"}
+                className="justify-start"
+                onClick={() => handleNavigation(item.id)}
+              >
+                <item.icon className="mr-2 h-4 w-4" />
+                {item.label}
+              </Button>
+            ))}
+          </div>
+           
           <div className="pt-4 border-t space-y-2">
             <div className="px-2">
               <SettingsMenu />

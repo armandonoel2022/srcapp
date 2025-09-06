@@ -56,6 +56,16 @@ export const useBiometricAuth = () => {
     }  
   
     try {  
+      // Simular prompt de autenticación biométrica real
+      const userConfirmed = await new Promise<boolean>((resolve) => {
+        const confirmed = window.confirm('Toque el sensor de huella dactilar o use Face ID para autenticarse');
+        resolve(confirmed);
+      });
+
+      if (!userConfirmed) {
+        return { success: false, error: 'Autenticación cancelada por el usuario' };
+      }
+
       // Verificar que hay un usuario registrado para biometría
       if (!user?.id) {
         return { success: false, error: 'No hay usuario para autenticar' };
@@ -68,7 +78,7 @@ export const useBiometricAuth = () => {
         return { success: false, error: 'Datos biométricos no encontrados' };
       }
 
-      // Solo simular verificación biométrica, no autenticar automáticamente
+      // Simular validación biométrica exitosa
       toast({  
         title: "Verificación biométrica exitosa",  
         description: "Identidad verificada correctamente",  
