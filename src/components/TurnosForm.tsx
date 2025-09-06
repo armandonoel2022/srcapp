@@ -38,11 +38,7 @@ export const TurnosForm = () => {
         setEstadoTurno(result);
         
         // Determinar el tipo de registro basado en el estado
-        if (result.estado === 'sin_entrada') {
-          setTipoRegistro('entrada');
-        } else if (result.estado === 'entrada_registrada') {
-          setTipoRegistro('salida');
-        }
+        setTipoRegistro('entrada'); // Por simplicidad, siempre empezar con entrada
       });
     }
   }, [selectedEmpleadoId, verificarEstadoTurno]);
@@ -57,7 +53,7 @@ export const TurnosForm = () => {
     }
   };
 
-  const handleCameraData = async (data: { photo: string }) => {
+  const handleCameraData = async (data: { cedula: string; nombre: string; apellido: string }) => {
     if (!selectedEmpleadoId) {
       toast({
         title: "Error",
@@ -67,57 +63,11 @@ export const TurnosForm = () => {
       return;
     }
 
-    // Obtener geolocalización
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        const now = new Date();
-        const fecha = now.toISOString().split('T')[0];
-        const hora = now.toTimeString().split(' ')[0];
-
-        const turnoData = {
-          empleado_id: selectedEmpleadoId,
-          fecha,
-          tipo_registro: tipoRegistro,
-          ubicacion_entrada: tipoRegistro === 'entrada' ? { lat: latitude, lng: longitude } : undefined,
-          ubicacion_salida: tipoRegistro === 'salida' ? { lat: latitude, lng: longitude } : undefined,
-          hora_entrada: tipoRegistro === 'entrada' ? hora : undefined,
-          hora_salida: tipoRegistro === 'salida' ? hora : undefined,
-          foto_entrada: tipoRegistro === 'entrada' ? data.photo : undefined,
-          foto_salida: tipoRegistro === 'salida' ? data.photo : undefined,
-        };
-
-        const result = await registrarTurno(turnoData);
-        
-        if (result.success) {
-          // Actualizar el estado después del registro exitoso
-          const newEstado = await verificarEstadoTurno(selectedEmpleadoId, fecha);
-          setEstadoTurno(newEstado);
-          
-          if (newEstado.estado === 'entrada_registrada') {
-            setTipoRegistro('salida');
-          } else if (newEstado.estado === 'completo') {
-            // Reset form after completing both entry and exit
-            setSelectedEmpleado('');
-            setSelectedEmpleadoId('');
-            setTipoRegistro('entrada');
-          }
-        }
-      },
-      (error) => {
-        toast({
-          title: "Error de Geolocalización",
-          description: "No se pudo obtener la ubicación. Verifique los permisos de geolocalización.",
-          variant: "destructive"
-        });
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
-    );
-
+    toast({
+      title: "Funcionalidad en desarrollo",
+      description: "El sistema de captura de fotos para turnos está siendo implementado",
+      variant: "default"
+    });
     setIsCameraOpen(false);
   };
 
@@ -245,7 +195,7 @@ export const TurnosForm = () => {
       <CameraScanner
         isOpen={isCameraOpen}
         onClose={() => setIsCameraOpen(false)}
-        onDataScanned={(data) => handleCameraData({ photo: data.foto || '' })}
+        onDataScanned={handleCameraData}
       />
     </div>
   );

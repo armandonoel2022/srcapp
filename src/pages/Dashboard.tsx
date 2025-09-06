@@ -18,6 +18,8 @@ import { useUserProfiles } from '@/hooks/useUserProfiles';
 import { HeatMap } from '@/components/HeatMap';
 import { InteractiveHeatMap } from '@/components/InteractiveHeatMap';
 import { AutoGeocodingUpdater } from '@/components/AutoGeocodingUpdater';
+import { TurnosForm } from '@/components/TurnosForm';
+import { ConsultaTurnos } from '@/components/ConsultaTurnos';
 
 export const Dashboard = () => {
   const { user, signOut, isAdmin } = useAuth();
@@ -133,6 +135,10 @@ export const Dashboard = () => {
         return <EditarRegistros />;
       case 'eliminar-empleados':
         return <EliminarEmpleados />;
+      case 'turnos':
+        return <TurnosForm />;
+      case 'consulta-turnos':
+        return <ConsultaTurnos />;
       case 'mapa-calor':
         return <InteractiveHeatMap />;
       default:
