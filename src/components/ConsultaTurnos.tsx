@@ -19,7 +19,8 @@ interface Turno {
   ubicacion_entrada?: unknown;
   ubicacion_salida?: unknown;
   empleados?: {
-    nombre: string;
+    nombres: string;
+    apellidos: string;
     funcion: string;
   };
   created_at: string;
@@ -53,7 +54,8 @@ export const ConsultaTurnos = () => {
 
     if (searchEmpleado) {
       filtered = filtered.filter(turno => 
-        turno.empleados?.nombre.toLowerCase().includes(searchEmpleado.toLowerCase()) ||
+        turno.empleados?.nombres.toLowerCase().includes(searchEmpleado.toLowerCase()) ||
+        turno.empleados?.apellidos.toLowerCase().includes(searchEmpleado.toLowerCase()) ||
         turno.empleados?.funcion.toLowerCase().includes(searchEmpleado.toLowerCase())
       );
     }
@@ -63,8 +65,13 @@ export const ConsultaTurnos = () => {
 
   const cargarTurnos = async () => {
     const result = await obtenerTurnos();
-    if (result.success) {
-      setTurnos(result.data || []);
+    if (result.success && result.data) {
+      // Asegurar que los datos tienen la estructura correcta
+      const turnosFormatted = result.data.map((turno: any) => ({
+        ...turno,
+        empleados: turno.empleados || null
+      }));
+      setTurnos(turnosFormatted);
     }
   };
 
@@ -131,7 +138,7 @@ export const ConsultaTurnos = () => {
 
   const exportarCSV = () => {
     const csvData = filteredTurnos.map(turno => ({
-      'Empleado': turno.empleados?.nombre || 'N/A',
+      'Empleado': turno.empleados ? `${turno.empleados.nombres} ${turno.empleados.apellidos}` : 'N/A',
       'Función': turno.empleados?.funcion || 'N/A',
       'Fecha': turno.fecha,
       'Hora Entrada': turno.hora_entrada || 'N/A',
@@ -224,7 +231,7 @@ export const ConsultaTurnos = () => {
                   filteredTurnos.map((turno) => (
                     <TableRow key={turno.id}>
                       <TableCell className="font-medium">
-                        {turno.empleados?.nombre || 'N/A'}
+                        {turno.empleados ? `${turno.empleados.nombres} ${turno.empleados.apellidos}` : 'N/A'}
                       </TableCell>
                       <TableCell>{turno.empleados?.funcion || 'N/A'}</TableCell>
                       <TableCell>{turno.fecha}</TableCell>
@@ -321,7 +328,7 @@ export const ConsultaTurnos = () => {
           <DialogContent className="max-w-4xl">
             <DialogHeader>
               <DialogTitle>
-                Detalles del Turno - {selectedTurno.empleados?.nombre}
+                Detalles del Turno - {selectedTurno.empleados ? `${selectedTurno.empleados.nombres} ${selectedTurno.empleados.apellidos}` : 'N/A'}
               </DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -329,7 +336,7 @@ export const ConsultaTurnos = () => {
               <div className="space-y-4">
                 <h3 className="font-medium">Información General</h3>
                 <div className="space-y-2 text-sm">
-                  <p><strong>Empleado:</strong> {selectedTurno.empleados?.nombre}</p>
+                  <p><strong>Empleado:</strong> {selectedTurno.empleados ? `${selectedTurno.empleados.nombres} ${selectedTurno.empleados.apellidos}` : 'N/A'}</p>
                   <p><strong>Función:</strong> {selectedTurno.empleados?.funcion}</p>
                   <p><strong>Fecha:</strong> {selectedTurno.fecha}</p>
                   <p><strong>Horas trabajadas:</strong> {calcularHorasTrabajadas(selectedTurno.hora_entrada, selectedTurno.hora_salida)}</p>

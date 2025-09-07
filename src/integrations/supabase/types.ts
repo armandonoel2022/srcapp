@@ -434,6 +434,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      authenticate_empleado: {
+        Args: { p_cedula: string; p_password: string }
+        Returns: {
+          apellidos: string
+          empleado_id: string
+          funcion: string
+          nombres: string
+          requires_password_change: boolean
+          ubicacion_designada: string
+        }[]
+      }
+      change_empleado_password: {
+        Args: { p_empleado_id: string; p_new_password: string }
+        Returns: boolean
+      }
+      create_empleado_with_password: {
+        Args: {
+          p_apellidos: string
+          p_cedula?: string
+          p_funcion: string
+          p_nombres: string
+          p_password?: string
+          p_ubicacion?: string
+        }
+        Returns: string
+      }
       exec_sql: {
         Args: { params?: string[]; query: string }
         Returns: {

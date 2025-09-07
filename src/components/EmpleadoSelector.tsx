@@ -8,40 +8,46 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus } from 'lucide-react';
 
 interface EmpleadoSelectorProps {
-  onEmpleadoSelect: (nombre: string, funcion: string) => void;
+  onEmpleadoSelect: (nombres: string, apellidos: string, funcion: string) => void;
   selectedEmpleado?: string;
 }
 
 export const EmpleadoSelector = ({ onEmpleadoSelect, selectedEmpleado }: EmpleadoSelectorProps) => {
   const { empleados, loading, agregarEmpleado } = useEmpleados();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [nuevoNombre, setNuevoNombre] = useState('');
+  const [nuevoNombres, setNuevoNombres] = useState('');
+  const [nuevosApellidos, setNuevosApellidos] = useState('');
   const [nuevaFuncion, setNuevaFuncion] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleEmpleadoChange = (nombre: string) => {
-    const empleado = empleados.find(e => e.nombre === nombre);
+  const handleEmpleadoChange = (empleadoId: string) => {
+    const empleado = empleados.find(e => e.id === empleadoId);
     if (empleado) {
-      onEmpleadoSelect(empleado.nombre, empleado.funcion);
+      onEmpleadoSelect(empleado.nombres, empleado.apellidos, empleado.funcion);
     }
   };
 
   const handleAgregarEmpleado = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!nuevoNombre.trim() || !nuevaFuncion.trim()) {
+    if (!nuevoNombres.trim() || !nuevosApellidos.trim()) {
       return;
     }
 
     setSubmitting(true);
-    const result = await agregarEmpleado(nuevoNombre.trim(), nuevaFuncion.trim());
+    const result = await agregarEmpleado({
+      nombres: nuevoNombres.trim(),
+      apellidos: nuevosApellidos.trim(),
+      funcion: nuevaFuncion.trim() || 'Sin especificar'
+    });
     
     if (result.success) {
-      setNuevoNombre('');
+      setNuevoNombres('');
+      setNuevosApellidos('');
       setNuevaFuncion('');
       setIsModalOpen(false);
       // Auto-seleccionar el empleado recién agregado
-      onEmpleadoSelect(nuevoNombre.trim(), nuevaFuncion.trim());
+      onEmpleadoSelect(nuevoNombres.trim(), nuevosApellidos.trim(), nuevaFuncion.trim());
     }
     
     setSubmitting(false);
@@ -57,8 +63,8 @@ export const EmpleadoSelector = ({ onEmpleadoSelect, selectedEmpleado }: Emplead
             </SelectTrigger>
             <SelectContent>
               {empleados.map((empleado) => (
-                <SelectItem key={empleado.id} value={empleado.nombre}>
-                  {empleado.nombre}
+                <SelectItem key={empleado.id} value={empleado.id}>
+                  {empleado.nombres} {empleado.apellidos}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -76,15 +82,27 @@ export const EmpleadoSelector = ({ onEmpleadoSelect, selectedEmpleado }: Emplead
               <DialogTitle>Agregar Nuevo Empleado</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAgregarEmpleado} className="space-y-4">
-              <div>
-                <Label htmlFor="nuevo-nombre">Nombre:</Label>
-                <Input
-                  id="nuevo-nombre"
-                  value={nuevoNombre}
-                  onChange={(e) => setNuevoNombre(e.target.value)}
-                  required
-                  disabled={submitting}
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="nuevo-nombres">Nombres:</Label>
+                  <Input
+                    id="nuevo-nombres"
+                    value={nuevoNombres}
+                    onChange={(e) => setNuevoNombres(e.target.value)}
+                    required
+                    disabled={submitting}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="nuevos-apellidos">Apellidos:</Label>
+                  <Input
+                    id="nuevos-apellidos"
+                    value={nuevosApellidos}
+                    onChange={(e) => setNuevosApellidos(e.target.value)}
+                    required
+                    disabled={submitting}
+                  />
+                </div>
               </div>
               
               <div>
@@ -93,7 +111,6 @@ export const EmpleadoSelector = ({ onEmpleadoSelect, selectedEmpleado }: Emplead
                   id="nueva-funcion"
                   value={nuevaFuncion}
                   onChange={(e) => setNuevaFuncion(e.target.value)}
-                  required
                   disabled={submitting}
                 />
               </div>

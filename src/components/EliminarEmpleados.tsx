@@ -10,9 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Empleado {
   id: string;
-  nombre: string;
+  nombres: string;
+  apellidos: string;
   funcion: string;
   created_at: string;
+  active: boolean;
 }
 
 export const EliminarEmpleados = () => {
@@ -32,7 +34,8 @@ export const EliminarEmpleados = () => {
   useEffect(() => {
     // Filtrar empleados basado en el término de búsqueda
     const filtered = empleados.filter(empleado =>
-      empleado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      empleado.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      empleado.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
       empleado.funcion.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredEmpleados(filtered);
@@ -44,7 +47,8 @@ export const EliminarEmpleados = () => {
       const { data, error } = await supabase
         .from('empleados')
         .select('*')
-        .order('nombre', { ascending: true });
+        .eq('active', true)
+        .order('nombres', { ascending: true });
 
       if (error) throw error;
       setEmpleados(data || []);
@@ -66,14 +70,14 @@ export const EliminarEmpleados = () => {
     try {
       const { error } = await supabase
         .from('empleados')
-        .delete()
+        .update({ active: false })
         .eq('id', selectedEmpleado.id);
 
       if (error) throw error;
 
       toast({
-        title: "Empleado eliminado",
-        description: `${selectedEmpleado.nombre} ha sido eliminado exitosamente.`
+        title: "Empleado desactivado",
+        description: `${selectedEmpleado.nombres} ${selectedEmpleado.apellidos} ha sido desactivado exitosamente.`
       });
 
       // Recargar la lista de empleados
@@ -148,7 +152,7 @@ export const EliminarEmpleados = () => {
                 ) : (
                   filteredEmpleados.map((empleado) => (
                     <TableRow key={empleado.id}>
-                      <TableCell className="font-medium">{empleado.nombre}</TableCell>
+                      <TableCell className="font-medium">{empleado.nombres} {empleado.apellidos}</TableCell>
                       <TableCell>{empleado.funcion}</TableCell>
                       <TableCell>
                         {new Date(empleado.created_at).toLocaleDateString()}
@@ -190,7 +194,7 @@ export const EliminarEmpleados = () => {
                   ¿Estás seguro de que deseas eliminar al empleado?
                 </p>
                 <div className="mt-2 text-sm text-red-700">
-                  <p><strong>Nombre:</strong> {selectedEmpleado.nombre}</p>
+                  <p><strong>Nombre:</strong> {selectedEmpleado.nombres} {selectedEmpleado.apellidos}</p>
                   <p><strong>Función:</strong> {selectedEmpleado.funcion}</p>
                 </div>
                 <p className="mt-2 text-sm text-red-600 font-medium">

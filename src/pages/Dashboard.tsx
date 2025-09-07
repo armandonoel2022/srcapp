@@ -13,6 +13,8 @@ import { ConsultaRegistros } from '@/components/ConsultaRegistros';
 import { GestionUsuarios } from '@/components/GestionUsuarios';
 import { EditarRegistros } from '@/components/EditarRegistros';
 import { EliminarEmpleados } from '@/components/EliminarEmpleados';
+import { EditarEmpleados } from '@/components/EditarEmpleados';
+import { DashboardCumplimiento } from '@/components/DashboardCumplimiento';
 import { PasswordChangeModal } from '@/components/PasswordChangeModal';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
 import { HeatMap } from '@/components/HeatMap';
@@ -136,6 +138,10 @@ export const Dashboard = () => {
         return <EditarRegistros />;
       case 'eliminar-empleados':
         return <EliminarEmpleados />;
+      case 'editar-empleados':
+        return <EditarEmpleados />;
+      case 'dashboard-cumplimiento':
+        return <DashboardCumplimiento />;
       case 'turnos':
         return <TurnosForm />;
       case 'consulta-turnos':

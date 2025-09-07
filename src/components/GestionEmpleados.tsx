@@ -11,7 +11,8 @@ import { Users, Plus, Search } from 'lucide-react';
 export const GestionEmpleados = () => {
   const { empleados, loading, agregarEmpleado } = useEmpleados();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [nuevoNombre, setNuevoNombre] = useState('');
+  const [nuevoNombres, setNuevoNombres] = useState('');
+  const [nuevosApellidos, setNuevosApellidos] = useState('');
   const [nuevaFuncion, setNuevaFuncion] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [filtro, setFiltro] = useState('');
@@ -19,15 +20,20 @@ export const GestionEmpleados = () => {
   const handleAgregarEmpleado = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!nuevoNombre.trim() || !nuevaFuncion.trim()) {
+    if (!nuevoNombres.trim() || !nuevosApellidos.trim()) {
       return;
     }
 
     setSubmitting(true);
-    const result = await agregarEmpleado(nuevoNombre.trim(), nuevaFuncion.trim());
+    const result = await agregarEmpleado({
+      nombres: nuevoNombres.trim(),
+      apellidos: nuevosApellidos.trim(),
+      funcion: nuevaFuncion.trim() || 'Sin especificar'
+    });
     
     if (result.success) {
-      setNuevoNombre('');
+      setNuevoNombres('');
+      setNuevosApellidos('');
       setNuevaFuncion('');
       setIsModalOpen(false);
     }
@@ -36,7 +42,8 @@ export const GestionEmpleados = () => {
   };
 
   const empleadosFiltrados = empleados.filter(empleado =>
-    empleado.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+    empleado.nombres.toLowerCase().includes(filtro.toLowerCase()) ||
+    empleado.apellidos.toLowerCase().includes(filtro.toLowerCase()) ||
     empleado.funcion.toLowerCase().includes(filtro.toLowerCase())
   );
 
@@ -61,16 +68,29 @@ export const GestionEmpleados = () => {
                 <DialogTitle>Agregar Nuevo Empleado</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleAgregarEmpleado} className="space-y-4">
-                <div>
-                  <Label htmlFor="nuevo-nombre">Nombre:</Label>
-                  <Input
-                    id="nuevo-nombre"
-                    value={nuevoNombre}
-                    onChange={(e) => setNuevoNombre(e.target.value)}
-                    required
-                    disabled={submitting}
-                    placeholder="Ingresa el nombre completo"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="nuevo-nombres">Nombres*:</Label>
+                    <Input
+                      id="nuevo-nombres"
+                      value={nuevoNombres}
+                      onChange={(e) => setNuevoNombres(e.target.value)}
+                      required
+                      disabled={submitting}
+                      placeholder="Nombres"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="nuevos-apellidos">Apellidos*:</Label>
+                    <Input
+                      id="nuevos-apellidos"
+                      value={nuevosApellidos}
+                      onChange={(e) => setNuevosApellidos(e.target.value)}
+                      required
+                      disabled={submitting}
+                      placeholder="Apellidos"
+                    />
+                  </div>
                 </div>
                 
                 <div>
@@ -79,7 +99,6 @@ export const GestionEmpleados = () => {
                     id="nueva-funcion"
                     value={nuevaFuncion}
                     onChange={(e) => setNuevaFuncion(e.target.value)}
-                    required
                     disabled={submitting}
                     placeholder="Ej: Administrador, Seguridad, Mantenimiento"
                   />
@@ -159,7 +178,7 @@ export const GestionEmpleados = () => {
               ) : (
                 empleadosFiltrados.map((empleado) => (
                   <TableRow key={empleado.id}>
-                    <TableCell className="font-medium">{empleado.nombre}</TableCell>
+                    <TableCell className="font-medium">{empleado.nombres} {empleado.apellidos}</TableCell>
                     <TableCell>{empleado.funcion}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date().toLocaleDateString('es-ES')}

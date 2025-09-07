@@ -47,11 +47,11 @@ export const TurnosForm = () => {
     }
   }, [selectedEmpleadoId, verificarEstadoTurno]);
 
-  const handleEmpleadoSelect = (nombre: string, funcion: string) => {
-    setSelectedEmpleado(`${nombre} - ${funcion}`);
+  const handleEmpleadoSelect = (nombres: string, apellidos: string, funcion: string) => {
+    setSelectedEmpleado(`${nombres} ${apellidos} - ${funcion}`);
     
     // Encontrar el ID del empleado
-    const empleado = empleados.find(e => e.nombre === nombre && e.funcion === funcion);
+    const empleado = empleados.find(e => e.nombres === nombres && e.apellidos === apellidos && e.funcion === funcion);
     if (empleado) {
       setSelectedEmpleadoId(empleado.id);
     }
