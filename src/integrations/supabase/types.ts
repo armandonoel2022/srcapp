@@ -95,26 +95,109 @@ export type Database = {
         }
         Relationships: []
       }
-      empleados: {
+      cumplimiento_turnos: {
         Row: {
           created_at: string
-          funcion: string
+          cumplimiento_porcentaje: number | null
+          empleado_id: string
+          entrada_real: string | null
+          fecha: string
           id: string
-          nombre: string
+          minutos_retraso_entrada: number | null
+          minutos_retraso_salida: number | null
+          observaciones: string | null
+          salida_real: string | null
+          turno_programado_entrada: string | null
+          turno_programado_salida: string | null
+          ubicacion: string
           updated_at: string
         }
         Insert: {
           created_at?: string
-          funcion: string
+          cumplimiento_porcentaje?: number | null
+          empleado_id: string
+          entrada_real?: string | null
+          fecha: string
           id?: string
-          nombre: string
+          minutos_retraso_entrada?: number | null
+          minutos_retraso_salida?: number | null
+          observaciones?: string | null
+          salida_real?: string | null
+          turno_programado_entrada?: string | null
+          turno_programado_salida?: string | null
+          ubicacion: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          cumplimiento_porcentaje?: number | null
+          empleado_id?: string
+          entrada_real?: string | null
+          fecha?: string
+          id?: string
+          minutos_retraso_entrada?: number | null
+          minutos_retraso_salida?: number | null
+          observaciones?: string | null
+          salida_real?: string | null
+          turno_programado_entrada?: string | null
+          turno_programado_salida?: string | null
+          ubicacion?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cumplimiento_turnos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empleados: {
+        Row: {
+          active: boolean | null
+          apellidos: string
+          cedula: string | null
+          created_at: string
+          foto: string | null
+          funcion: string
+          id: string
+          last_login: string | null
+          nombres: string
+          password_hash: string | null
+          requires_password_change: boolean | null
+          ubicacion_designada: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          apellidos: string
+          cedula?: string | null
+          created_at?: string
+          foto?: string | null
+          funcion: string
+          id?: string
+          last_login?: string | null
+          nombres: string
+          password_hash?: string | null
+          requires_password_change?: boolean | null
+          ubicacion_designada?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          apellidos?: string
+          cedula?: string | null
+          created_at?: string
+          foto?: string | null
           funcion?: string
           id?: string
-          nombre?: string
+          last_login?: string | null
+          nombres?: string
+          password_hash?: string | null
+          requires_password_change?: boolean | null
+          ubicacion_designada?: string | null
           updated_at?: string
         }
         Relationships: []
