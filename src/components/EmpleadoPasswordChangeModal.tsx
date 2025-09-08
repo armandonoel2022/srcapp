@@ -28,50 +28,27 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
   }, [empleado, checkAuth]);
 
   const handlePasswordChange = async () => {
-    console.log('🚀 BOTÓN CLICKEADO - handlePasswordChange ejecutado');
-    alert('BOTÓN CLICKEADO - Función iniciada');
-    
-    // Verificar el estado del empleado ANTES de llamar changePassword
-    console.log('🔍 Verificando empleado desde el hook:', empleado);
-    
-    // Verificar también localStorage directamente
-    const storedEmpleado = localStorage.getItem('empleado_auth');
-    console.log('🔍 Empleado en localStorage:', storedEmpleado);
-    alert('Empleado en hook: ' + JSON.stringify(empleado) + '\n\nLocalStorage: ' + storedEmpleado);
-    
     if (newPassword !== confirmPassword) {
-      console.log('❌ Contraseñas no coinciden');
       alert('Las contraseñas no coinciden');
       return;
     }
 
     if (newPassword.length < 6) {
-      console.log('❌ Contraseña muy corta');
       alert('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
-    console.log('✅ Validaciones pasadas, llamando changePassword...');
-    alert('Validaciones OK, llamando changePassword...');
-    
     try {
-      console.log('🔄 Antes de llamar changePassword');
       const result = await changePassword(newPassword);
-      console.log('📤 Resultado después de changePassword:', result);
-      alert('Resultado: ' + JSON.stringify(result));
       
       if (result && result.success) {
-        console.log('✅ Contraseña cambiada exitosamente');
-        alert('¡Contraseña cambiada exitosamente!');
         setNewPassword('');
         setConfirmPassword('');
         onClose();
       } else {
-        console.log('❌ Error al cambiar contraseña');
-        alert('Error al cambiar la contraseña: ' + JSON.stringify(result));
+        alert('Error al cambiar la contraseña');
       }
     } catch (error) {
-      console.error('💥 Error:', error);
       alert('Error inesperado: ' + error);
     }
   };

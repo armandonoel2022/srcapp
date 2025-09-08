@@ -64,39 +64,18 @@ export const useEmpleadoAuth = () => {
   };
 
   const changePassword = async (newPassword: string) => {
-    console.log('🔧 changePassword - Iniciando función');
-    console.log('🔧 empleado actual:', empleado);
+    if (!empleado) return { success: false };
     
-    if (!empleado) {
-      console.log('❌ No hay empleado logueado');
-      return { success: false };
-    }
-    
-    console.log('🔧 Empleado ID:', empleado.id);
-    console.log('🔧 Setting loading to true');
     setLoading(true);
-    
     try {
-      console.log('🔧 Llamando supabase.rpc con:', {
-        function_name: 'change_empleado_turno_password',
-        p_empleado_id: empleado.id,
-        p_new_password: newPassword.length + ' caracteres'
-      });
-      
       const { data, error } = await supabase.rpc('change_empleado_turno_password', {
         p_empleado_id: empleado.id,
         p_new_password: newPassword
       });
 
-      console.log('🔧 Respuesta de supabase:', { data, error });
-
-      if (error) {
-        console.log('❌ Error en la respuesta:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (data) {
-        console.log('✅ Contraseña cambiada, actualizando empleado');
         const updatedEmpleado = { ...empleado, requires_password_change: false };
         setEmpleado(updatedEmpleado);
         localStorage.setItem('empleado_auth', JSON.stringify(updatedEmpleado));
@@ -108,11 +87,9 @@ export const useEmpleadoAuth = () => {
         
         return { success: true };
       } else {
-        console.log('❌ Data es falsy:', data);
         throw new Error('Error al cambiar la contraseña');
       }
     } catch (error: any) {
-      console.log('💥 Error capturado:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -120,7 +97,6 @@ export const useEmpleadoAuth = () => {
       });
       return { success: false };
     } finally {
-      console.log('🔧 Setting loading to false');
       setLoading(false);
     }
   };
