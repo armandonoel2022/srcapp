@@ -32,8 +32,8 @@ export const GestionEmpleados = () => {
     setSubmitting(true);
     const result = await agregarEmpleado({
       nombres: nuevoNombres.trim(),
-      apellidos: nuevosApellidos.trim() || 'Sin especificar',
-      funcion: nuevaFuncion.trim() || 'Sin especificar',
+      apellidos: nuevosApellidos.trim() || undefined,
+      funcion: nuevaFuncion.trim() || undefined,
       cedula: nuevaCedula.trim() || undefined,
       ubicacion_designada: nuevaUbicacion.trim() || undefined
     });
@@ -72,8 +72,8 @@ export const GestionEmpleados = () => {
     setSubmitting(true);
     const result = await actualizarEmpleado(selectedEmpleado.id, {
       nombres: nuevoNombres.trim(),
-      apellidos: nuevosApellidos.trim() || 'Sin especificar',
-      funcion: nuevaFuncion.trim() || 'Sin especificar',
+      apellidos: nuevosApellidos.trim() || undefined,
+      funcion: nuevaFuncion.trim() || undefined,
       cedula: nuevaCedula.trim() || null,
       ubicacion_designada: nuevaUbicacion.trim() || null,
       fecha_nacimiento: nuevaFechaNacimiento || null
@@ -363,9 +363,9 @@ export const GestionEmpleados = () => {
                     <TableCell className="font-medium">
                       {empleado.nombres} {empleado.apellidos}
                     </TableCell>
-                    <TableCell>{empleado.cedula || 'Sin especificar'}</TableCell>
-                    <TableCell>{empleado.funcion}</TableCell>
-                    <TableCell>{empleado.ubicacion_designada || 'Sin especificar'}</TableCell>
+                    <TableCell>{empleado.cedula || '-'}</TableCell>
+                    <TableCell>{empleado.funcion || '-'}</TableCell>
+                    <TableCell>{empleado.ubicacion_designada || '-'}</TableCell>
                     <TableCell>
                       <Button
                         variant="outline"

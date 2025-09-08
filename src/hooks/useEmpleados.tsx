@@ -93,10 +93,9 @@ export const useEmpleados = () => {
   const actualizarEmpleado = async (id: string, empleadoData: Partial<Empleado>) => {
     setLoading(true);
     try {
-      // Asegurar que si los apellidos están vacíos, se establezcan como "Sin especificar"
+      // No asignar valores por defecto, dejar campos vacíos como null/undefined
       const dataToUpdate = {
         ...empleadoData,
-        apellidos: empleadoData.apellidos?.trim() || 'Sin especificar',
         updated_at: new Date().toISOString()
       };
 
