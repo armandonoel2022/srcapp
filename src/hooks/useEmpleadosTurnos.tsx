@@ -28,14 +28,13 @@ export const useEmpleadosTurnos = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('empleados_turnos')
-        .select('*')
-        .eq('active', true)
-        .order('nombres');
+        .rpc('exec_sql', {
+          query: 'SELECT * FROM empleados_turnos WHERE active = true ORDER BY nombres'
+        });
 
       if (error) throw error;
       
-      setEmpleados(data || []);
+      setEmpleados(data?.map((item: any) => item.result).flat() || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -51,12 +50,9 @@ export const useEmpleadosTurnos = () => {
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('empleados_turnos')
-        .insert({
-          nombres: empleado.nombres,
-          apellidos: empleado.apellidos,
-          funcion: empleado.funcion,
-          cedula: empleado.cedula
+        .rpc('exec_sql', {
+          query: `INSERT INTO empleados_turnos (nombres, apellidos, funcion, cedula) 
+                  VALUES ('${empleado.nombres}', '${empleado.apellidos}', '${empleado.funcion}', ${empleado.cedula ? `'${empleado.cedula}'` : 'NULL'})`
         });
 
       if (error) throw error;

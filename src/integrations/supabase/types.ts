@@ -202,6 +202,39 @@ export type Database = {
         }
         Relationships: []
       }
+      empleados_turnos: {
+        Row: {
+          active: boolean
+          apellidos: string
+          cedula: string | null
+          created_at: string
+          funcion: string
+          id: string
+          nombres: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          apellidos: string
+          cedula?: string | null
+          created_at?: string
+          funcion: string
+          id?: string
+          nombres: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          apellidos?: string
+          cedula?: string | null
+          created_at?: string
+          funcion?: string
+          id?: string
+          nombres?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       registros: {
         Row: {
           agente: string
