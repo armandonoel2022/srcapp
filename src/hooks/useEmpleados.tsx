@@ -92,12 +92,16 @@ export const useEmpleados = () => {
   const actualizarEmpleado = async (id: string, empleadoData: Partial<Empleado>) => {
     setLoading(true);
     try {
+      // Asegurar que si los apellidos están vacíos, se establezcan como "Sin especificar"
+      const dataToUpdate = {
+        ...empleadoData,
+        apellidos: empleadoData.apellidos?.trim() || 'Sin especificar',
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('empleados')
-        .update({
-          ...empleadoData,
-          updated_at: new Date().toISOString()
-        })
+        .update(dataToUpdate)
         .eq('id', id);
 
       if (error) {

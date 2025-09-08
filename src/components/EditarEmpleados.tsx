@@ -45,7 +45,7 @@ export const EditarEmpleados = () => {
   const handleGuardarCambios = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!editData.nombres.trim() || !editData.apellidos.trim()) {
+    if (!editData.nombres.trim()) {
       return;
     }
 
@@ -132,7 +132,9 @@ export const EditarEmpleados = () => {
                         </Avatar>
                         <div>
                           <div className="font-medium">
-                            {empleado.nombres} {empleado.apellidos}
+                            {empleado.apellidos === 'Sin especificar' 
+                              ? empleado.nombres 
+                              : `${empleado.nombres} ${empleado.apellidos}`}
                           </div>
                         </div>
                       </div>
@@ -185,13 +187,13 @@ export const EditarEmpleados = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="edit-apellidos">Apellidos*</Label>
+                  <Label htmlFor="edit-apellidos">Apellidos</Label>
                   <Input
                     id="edit-apellidos"
                     value={editData.apellidos}
                     onChange={(e) => setEditData({...editData, apellidos: e.target.value})}
-                    required
                     disabled={submitting}
+                    placeholder="Opcional - deja vacío si no aplica"
                   />
                 </div>
               </div>

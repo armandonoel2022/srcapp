@@ -74,11 +74,16 @@ export const EmpleadoTurnoSelector = ({ onEmpleadoSelect, selectedEmpleadoId }: 
               <SelectValue placeholder="Selecciona un empleado para turnos" />
             </SelectTrigger>
             <SelectContent>
-              {empleados.map((empleado) => (
-                <SelectItem key={empleado.id} value={empleado.id}>
-                  {empleado.nombres} {empleado.apellidos} - {empleado.funcion}
-                </SelectItem>
-              ))}
+              {empleados.map((empleado) => {
+                const displayName = empleado.apellidos === 'Sin especificar' 
+                  ? `${empleado.nombres} - ${empleado.funcion}`
+                  : `${empleado.nombres} ${empleado.apellidos} - ${empleado.funcion}`;
+                return (
+                  <SelectItem key={empleado.id} value={empleado.id}>
+                    {displayName}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>

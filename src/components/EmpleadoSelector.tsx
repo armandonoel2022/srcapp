@@ -62,11 +62,16 @@ export const EmpleadoSelector = ({ onEmpleadoSelect, selectedEmpleado }: Emplead
               <SelectValue placeholder="Selecciona un empleado" />
             </SelectTrigger>
             <SelectContent>
-              {empleados.map((empleado) => (
-                <SelectItem key={empleado.id} value={empleado.id}>
-                  {empleado.nombres} {empleado.apellidos}
-                </SelectItem>
-              ))}
+              {empleados.map((empleado) => {
+                const displayName = empleado.apellidos === 'Sin especificar' 
+                  ? empleado.nombres 
+                  : `${empleado.nombres} ${empleado.apellidos}`;
+                return (
+                  <SelectItem key={empleado.id} value={empleado.id}>
+                    {displayName}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
