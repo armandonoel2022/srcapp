@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Users, BarChart3, Settings } from 'lucide-react';
-import { TurnosForm } from './TurnosForm';
+import { TurnosAdminConsulta } from './TurnosAdminConsulta';
 import { EmpleadoTurnoForm } from './EmpleadoTurnoForm';
 import { DashboardAnalisisTurnos } from './DashboardAnalisisTurnos';
 
@@ -17,11 +17,11 @@ export const TurnosFormEnhanced = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="registro" className="w-full">
+            <Tabs defaultValue="consulta" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="registro" className="flex items-center gap-2">
+              <TabsTrigger value="consulta" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Registro de Turnos
+                Consulta de Turnos
               </TabsTrigger>
               <TabsTrigger value="empleados" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
@@ -33,8 +33,8 @@ export const TurnosFormEnhanced = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="registro" className="space-y-4">
-              <TurnosForm />
+            <TabsContent value="consulta" className="space-y-4">
+              <TurnosAdminConsulta />
             </TabsContent>
 
             <TabsContent value="empleados" className="space-y-4">

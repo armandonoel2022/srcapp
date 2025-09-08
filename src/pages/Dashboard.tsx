@@ -145,7 +145,7 @@ export const Dashboard = () => {
       case 'dashboard-cumplimiento':
         return <DashboardCumplimiento />;
       case 'turnos':
-        return user?.role === 'agente_seguridad' ? <TurnosAgentForm /> : <TurnosFormEnhanced />;
+        return <TurnosFormEnhanced />;
       case 'consulta-turnos':
         return <ConsultaTurnos />;
       case 'analisis-turnos':
