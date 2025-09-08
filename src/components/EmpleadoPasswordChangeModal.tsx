@@ -143,14 +143,30 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
               </Button>
             )}
             <Button 
-              type="submit" 
+              type="button"
               disabled={!isFormValid || loading}
               className={isRequired ? "w-full" : "flex-1"}
-              onClick={(e) => {
-                console.log('Button clicked, form valid:', isFormValid);
-                if (!isFormValid) {
-                  e.preventDefault();
+              onClick={async () => {
+                console.log('Button clicked directly');
+                
+                if (newPassword !== confirmPassword) {
+                  console.log('Passwords do not match');
                   return;
+                }
+
+                if (newPassword.length < 6) {
+                  console.log('Password too short');
+                  return;
+                }
+
+                console.log('Attempting to change password...');
+                const result = await changePassword(newPassword);
+                console.log('Change password result:', result);
+                
+                if (result.success) {
+                  setNewPassword('');
+                  setConfirmPassword('');
+                  onClose();
                 }
               }}
             >
