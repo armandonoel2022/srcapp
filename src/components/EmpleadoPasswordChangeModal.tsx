@@ -22,15 +22,22 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted', { newPassword, confirmPassword });
+    
     if (newPassword !== confirmPassword) {
+      console.log('Passwords do not match');
       return;
     }
 
     if (newPassword.length < 6) {
+      console.log('Password too short');
       return;
     }
 
+    console.log('Attempting to change password...');
     const result = await changePassword(newPassword);
+    console.log('Change password result:', result);
+    
     if (result.success) {
       setNewPassword('');
       setConfirmPassword('');
@@ -44,6 +51,7 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
   };
 
   const isFormValid = newPassword === confirmPassword && newPassword.length >= 6;
+  console.log('Form validation:', { newPassword, confirmPassword, isFormValid, passwordsMatch: newPassword === confirmPassword, minLength: newPassword.length >= 6 });
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
