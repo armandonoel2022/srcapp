@@ -25,7 +25,11 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
     
     // Verificar el estado del empleado ANTES de llamar changePassword
     console.log('🔍 Verificando empleado desde el hook:', empleado);
-    alert('Empleado en hook: ' + JSON.stringify(empleado));
+    
+    // Verificar también localStorage directamente
+    const storedEmpleado = localStorage.getItem('empleado_auth');
+    console.log('🔍 Empleado en localStorage:', storedEmpleado);
+    alert('Empleado en hook: ' + JSON.stringify(empleado) + '\n\nLocalStorage: ' + storedEmpleado);
     
     if (newPassword !== confirmPassword) {
       console.log('❌ Contraseñas no coinciden');
