@@ -146,6 +146,13 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
               type="submit" 
               disabled={!isFormValid || loading}
               className={isRequired ? "w-full" : "flex-1"}
+              onClick={(e) => {
+                console.log('Button clicked, form valid:', isFormValid);
+                if (!isFormValid) {
+                  e.preventDefault();
+                  return;
+                }
+              }}
             >
               <Save className="mr-2 h-4 w-4" />
               {loading ? 'Guardando...' : 'Cambiar Contraseña'}
