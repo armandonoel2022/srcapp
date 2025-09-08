@@ -179,16 +179,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (username: string, password: string) => {  
     const redirectUrl = `${window.location.origin}/`;  
       
+    // Registro sin verificación de correo - el trigger automáticamente marca como verificado
     const { error } = await supabase.auth.signUp({  
       email: username, // Use the username directly as email  
       password,  
       options: {  
-        emailRedirectTo: redirectUrl  
+        emailRedirectTo: redirectUrl,
+        data: {
+          email_confirm: true
+        }
       }  
     });  
       
     return { error };  
-  };  
+  };
   
   const signOut = async () => {  
     await supabase.auth.signOut();  

@@ -3,9 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Camera, MapPin, CheckCircle, AlertTriangle } from 'lucide-react';
-import { useEmpleados } from '@/hooks/useEmpleados';
 import { useTurnos } from '@/hooks/useTurnos';
-import { EmpleadoSelector } from '@/components/EmpleadoSelector';
+import { EmpleadoTurnoSelector } from '@/components/EmpleadoTurnoSelector';
 import { CameraScanner } from '@/components/CameraScanner';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,7 +19,6 @@ export const TurnosForm = () => {
     turno: any;
   }>({ estado: 'sin_entrada', turno: null });
 
-  const { empleados } = useEmpleados();
   const { registrarTurno, verificarEstadoTurno, loading } = useTurnos();
   const { toast } = useToast();
 
@@ -47,14 +45,12 @@ export const TurnosForm = () => {
     }
   }, [selectedEmpleadoId, verificarEstadoTurno]);
 
-  const handleEmpleadoSelect = (nombres: string, apellidos: string, funcion: string) => {
-    setSelectedEmpleado(`${nombres} ${apellidos} - ${funcion}`);
-    
-    // Encontrar el ID del empleado
-    const empleado = empleados.find(e => e.nombres === nombres && e.apellidos === apellidos && e.funcion === funcion);
-    if (empleado) {
-      setSelectedEmpleadoId(empleado.id);
-    }
+  const handleEmpleadoSelect = (empleadoId: string, nombres: string, apellidos: string, funcion: string) => {
+    const displayName = apellidos === 'Sin especificar' 
+      ? `${nombres} - ${funcion}`
+      : `${nombres} ${apellidos} - ${funcion}`;
+    setSelectedEmpleado(displayName);
+    setSelectedEmpleadoId(empleadoId);
   };
 
   const handleCameraCapture = async (photo: string) => {
@@ -184,9 +180,9 @@ export const TurnosForm = () => {
             <label className="block text-sm font-medium mb-2">
               Seleccionar Empleado
             </label>
-            <EmpleadoSelector
+            <EmpleadoTurnoSelector
               onEmpleadoSelect={handleEmpleadoSelect}
-              selectedEmpleado={selectedEmpleado}
+              selectedEmpleadoId={selectedEmpleadoId}
             />
           </div>
 
