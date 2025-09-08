@@ -157,7 +157,7 @@ export type Database = {
       empleados: {
         Row: {
           active: boolean | null
-          apellidos: string
+          apellidos: string | null
           cedula: string | null
           created_at: string
           fecha_nacimiento: string | null
@@ -173,7 +173,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
-          apellidos: string
+          apellidos?: string | null
           cedula?: string | null
           created_at?: string
           fecha_nacimiento?: string | null
@@ -189,7 +189,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
-          apellidos?: string
+          apellidos?: string | null
           cedula?: string | null
           created_at?: string
           fecha_nacimiento?: string | null
