@@ -108,6 +108,8 @@ export const useEmpleadoAuth = () => {
       title: "Sesión cerrada",
       description: "Ha cerrado sesión correctamente"
     });
+    // Redirect to landing page
+    window.location.href = '/';
   };
 
   const checkAuth = () => {
