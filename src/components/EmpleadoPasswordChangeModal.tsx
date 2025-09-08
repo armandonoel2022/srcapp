@@ -17,11 +17,15 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { changePassword, loading } = useEmpleadoAuth();
+  const { changePassword, loading, empleado } = useEmpleadoAuth();
 
   const handlePasswordChange = async () => {
     console.log('🚀 BOTÓN CLICKEADO - handlePasswordChange ejecutado');
     alert('BOTÓN CLICKEADO - Función iniciada');
+    
+    // Verificar el estado del empleado ANTES de llamar changePassword
+    console.log('🔍 Verificando empleado desde el hook:', empleado);
+    alert('Empleado en hook: ' + JSON.stringify(empleado));
     
     if (newPassword !== confirmPassword) {
       console.log('❌ Contraseñas no coinciden');
