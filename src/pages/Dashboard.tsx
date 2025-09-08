@@ -146,8 +146,6 @@ export const Dashboard = () => {
         return <TurnosForm />;
       case 'consulta-turnos':
         return <ConsultaTurnos />;
-      case 'configuracion':
-        return <BiometricAuthSetup />;
       case 'mapa-calor':
         return <InteractiveHeatMap />;
       default:
