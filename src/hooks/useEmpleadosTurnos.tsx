@@ -13,6 +13,9 @@ export interface EmpleadoTurno {
   lugar_designado?: string;
   hora_entrada_programada?: string;
   hora_salida_programada?: string;
+  username?: string;
+  requires_password_change?: boolean;
+  last_login?: string;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +30,7 @@ interface NuevoEmpleadoTurno {
   lugar_designado?: string;
   hora_entrada_programada?: string;
   hora_salida_programada?: string;
+  username?: string;
 }
 
 export const useEmpleadosTurnos = () => {
@@ -60,7 +64,7 @@ export const useEmpleadosTurnos = () => {
   const agregarEmpleado = async (empleado: NuevoEmpleadoTurno) => {
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { data: insertedEmpleado, error } = await supabase
         .from('empleados_turnos')
         .insert({
           nombres: empleado.nombres,
@@ -71,14 +75,32 @@ export const useEmpleadosTurnos = () => {
           fecha_nacimiento: empleado.fecha_nacimiento || null,
           lugar_designado: empleado.lugar_designado || null,
           hora_entrada_programada: empleado.hora_entrada_programada || null,
-          hora_salida_programada: empleado.hora_salida_programada || null
-        });
+          hora_salida_programada: empleado.hora_salida_programada || null,
+          username: empleado.username || null
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
+      // Set default password if username provided
+      if (empleado.username && insertedEmpleado) {
+        const { error: passwordError } = await supabase.rpc('set_empleado_turno_password', {
+          p_empleado_id: insertedEmpleado.id,
+          p_username: empleado.username,
+          p_password: 'SRC_Agente2025'
+        });
+
+        if (passwordError) {
+          console.warn('Error setting password:', passwordError);
+        }
+      }
+
       toast({
         title: "Empleado agregado",
-        description: "El empleado ha sido agregado exitosamente"
+        description: empleado.username 
+          ? `El empleado ha sido agregado con usuario: ${empleado.username} y contraseña temporal: SRC_Agente2025`
+          : "El empleado ha sido agregado exitosamente"
       });
 
       await cargarEmpleados();

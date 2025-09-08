@@ -323,17 +323,35 @@ export const DashboardAnalisisTurnos = () => {
                               {turno.empleados_turnos?.nombres} {turno.empleados_turnos?.apellidos}
                             </TableCell>
                             <TableCell>{turno.fecha}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {turno.hora_entrada || 'N/A'}
-                                {turno.hora_programada && turno.hora_entrada && (
-                                  <span className="text-xs text-muted-foreground">
-                                    (Prog: {turno.hora_programada})
-                                  </span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>{turno.hora_salida || 'N/A'}</TableCell>
+            <TableCell>
+              <div className="flex items-center gap-2">
+                {turno.hora_entrada ? 
+                  new Date(`2000-01-01T${turno.hora_entrada}`).toLocaleTimeString('es-ES', { 
+                    hour: 'numeric', 
+                    minute: '2-digit', 
+                    hour12: true 
+                  }) : 'N/A'
+                }
+                {turno.hora_programada && turno.hora_entrada && (
+                  <span className="text-xs text-muted-foreground">
+                    (Prog: {new Date(`2000-01-01T${turno.hora_programada}`).toLocaleTimeString('es-ES', { 
+                      hour: 'numeric', 
+                      minute: '2-digit', 
+                      hour12: true 
+                    })})
+                  </span>
+                )}
+              </div>
+            </TableCell>
+            <TableCell>
+              {turno.hora_salida ? 
+                new Date(`2000-01-01T${turno.hora_salida}`).toLocaleTimeString('es-ES', { 
+                  hour: 'numeric', 
+                  minute: '2-digit', 
+                  hour12: true 
+                }) : 'N/A'
+              }
+            </TableCell>
                             <TableCell>{getEstadoBadge(turno)}</TableCell>
                             <TableCell>
                               <div className="max-w-32 truncate text-sm text-muted-foreground">

@@ -10,6 +10,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Landing } from "./pages/Landing";
 import { About } from "./pages/About";
 import { Customers } from "./pages/Customers";
+import { EmpleadoApp } from "./pages/EmpleadoApp";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/about" element={<About />} />
+              <Route path="/empleado" element={<EmpleadoApp />} />
               <Route path="/customers" element={<Customers />} />
               <Route path="/auth" element={<Auth />} />
               <Route

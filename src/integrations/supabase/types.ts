@@ -266,10 +266,14 @@ export type Database = {
           hora_entrada_programada: string | null
           hora_salida_programada: string | null
           id: string
+          last_login: string | null
           lugar_designado: string | null
           nombres: string
+          password_hash: string | null
+          requires_password_change: boolean | null
           sexo: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           active?: boolean
@@ -281,10 +285,14 @@ export type Database = {
           hora_entrada_programada?: string | null
           hora_salida_programada?: string | null
           id?: string
+          last_login?: string | null
           lugar_designado?: string | null
           nombres: string
+          password_hash?: string | null
+          requires_password_change?: boolean | null
           sexo?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           active?: boolean
@@ -296,10 +304,14 @@ export type Database = {
           hora_entrada_programada?: string | null
           hora_salida_programada?: string | null
           id?: string
+          last_login?: string | null
           lugar_designado?: string | null
           nombres?: string
+          password_hash?: string | null
+          requires_password_change?: boolean | null
           sexo?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -608,6 +620,17 @@ export type Database = {
           ubicacion_designada: string
         }[]
       }
+      authenticate_empleado_turno: {
+        Args: { p_password: string; p_username: string }
+        Returns: {
+          apellidos: string
+          empleado_id: string
+          funcion: string
+          lugar_designado: string
+          nombres: string
+          requires_password_change: boolean
+        }[]
+      }
       calcular_estado_cumplimiento: {
         Args: { hora_entrada: string; hora_programada: string }
         Returns: {
@@ -617,6 +640,10 @@ export type Database = {
         }[]
       }
       change_empleado_password: {
+        Args: { p_empleado_id: string; p_new_password: string }
+        Returns: boolean
+      }
+      change_empleado_turno_password: {
         Args: { p_empleado_id: string; p_new_password: string }
         Returns: boolean
       }
@@ -655,6 +682,10 @@ export type Database = {
           promedio_tardanza: number
           total_dias: number
         }[]
+      }
+      set_empleado_turno_password: {
+        Args: { p_empleado_id: string; p_password?: string; p_username: string }
+        Returns: boolean
       }
       setup_initial_users: {
         Args: Record<PropertyKey, never>

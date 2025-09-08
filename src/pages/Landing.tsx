@@ -144,6 +144,13 @@ export const Landing = () => {
               <LanguageToggle />
               <SettingsMenu />
               <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/empleado')}
+              >
+                Acceso Empleados
+              </Button>
+              <Button 
                 variant="secondary" 
                 size="sm"
                 onClick={() => navigate('/auth')}

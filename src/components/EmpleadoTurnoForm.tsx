@@ -18,7 +18,8 @@ export const EmpleadoTurnoForm = () => {
     fecha_nacimiento: '',
     lugar_designado: '',
     hora_entrada_programada: '',
-    hora_salida_programada: ''
+    hora_salida_programada: '',
+    username: ''
   });
 
   const { agregarEmpleado, loading } = useEmpleadosTurnos();
@@ -47,7 +48,8 @@ export const EmpleadoTurnoForm = () => {
         fecha_nacimiento: '',
         lugar_designado: '',
         hora_entrada_programada: '',
-        hora_salida_programada: ''
+        hora_salida_programada: '',
+        username: ''
       });
     }
   };
@@ -162,14 +164,38 @@ export const EmpleadoTurnoForm = () => {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="lugar_designado">Lugar Designado</Label>
+              <Input
+                id="lugar_designado"
+                value={formData.lugar_designado}
+                onChange={(e) => setFormData({ ...formData, lugar_designado: e.target.value })}
+                placeholder="Ubicación o localidad designada"
+              />
+            </div>
+            <div>
+              <Label htmlFor="username">Nombre de Usuario</Label>
+              <Input
+                id="username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                placeholder="Usuario para acceso al sistema"
+              />
+            </div>
+          </div>
+
           <div>
-            <Label htmlFor="lugar_designado">Lugar Designado</Label>
-            <Input
-              id="lugar_designado"
-              value={formData.lugar_designado}
-              onChange={(e) => setFormData({ ...formData, lugar_designado: e.target.value })}
-              placeholder="Ubicación o localidad designada"
-            />
+            <Label htmlFor="lugar_designado">Información de Acceso</Label>
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+              <p className="font-medium text-blue-900">Credenciales de acceso:</p>
+              <p className="text-blue-800">
+                • Si proporciona un nombre de usuario, se creará automáticamente con la contraseña temporal: <code className="bg-blue-100 px-1 rounded">SRC_Agente2025</code>
+              </p>
+              <p className="text-blue-800">
+                • El empleado deberá cambiar esta contraseña en su primer acceso
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
