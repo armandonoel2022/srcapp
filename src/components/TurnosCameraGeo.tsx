@@ -1,20 +1,15 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, MapPin, Check, X, RefreshCw, Loader2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-
-interface GeolocationData {
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
-}
+import { Camera, MapPin, Check, X, RotateCcw, AlertCircle, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useGeolocation } from '@/hooks/useGeolocation';
 
 interface TurnoData {
   photo: string;
-  location: GeolocationData;
+  location: { lat: number; lng: number };
   timestamp: Date;
 }
 
@@ -28,262 +23,203 @@ export const TurnosCameraGeo: React.FC<TurnosCameraGeoProps> = ({
   className = ""
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'camera' | 'location' | 'summary'>('camera');
-  const [isLoading, setIsLoading] = useState(false);
-  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
-  const [location, setLocation] = useState<GeolocationData | null>(null);
+  const [step, setStep] = useState<'camera' | 'location' | 'summary'>('camera');
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLoadingCamera, setIsLoadingCamera] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [error, setError] = useState<string>('');
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  
+  const { toast } = useToast();
+  const { getCurrentPosition, isLoading: isGeoLoading } = useGeolocation();
 
-  // Verificar compatibilidad de APIs
-  const checkCompatibility = useCallback(() => {
-    const hasCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-    const hasGeolocation = !!navigator.geolocation;
-    
-    if (!hasCamera) {
-      toast({
-        title: "Cámara no disponible",
-        description: "Tu dispositivo no soporta acceso a la cámara",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
-    if (!hasGeolocation) {
-      toast({
-        title: "Geolocalización no disponible", 
-        description: "Tu dispositivo no soporta geolocalización",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
-    return true;
-  }, []);
-
-  // Inicializar cámara con configuración específica para iPad
-  const startCamera = useCallback(async () => {
-    if (!checkCompatibility()) return;
-
-    setIsLoading(true);
-    setError(null);
-
+  // Iniciar cámara (usando la misma lógica que funcionaba)
+  const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      // Verificar compatibilidad
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('La cámara no es compatible con este dispositivo');
+      }
+
+      setIsLoadingCamera(true);
+      setError('');
+
+      const constraints = {
         video: {
           facingMode: 'environment',
           width: { ideal: 1920 },
           height: { ideal: 1080 }
-        },
-        audio: false
-      });
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-
-        // Esperar metadata antes de reproducir
+        
+        // Esperar que los metadatos se carguen antes de reproducir
         videoRef.current.onloadedmetadata = () => {
           if (videoRef.current) {
-            videoRef.current.play()
-              .then(() => {
-                setIsCameraActive(true);
-                setIsLoading(false);
-              })
-              .catch((err) => {
-                console.error('Error al reproducir video:', err);
-                setError('Error al iniciar la vista previa de la cámara');
-                setIsLoading(false);
-              });
+            videoRef.current.play();
+            setIsCameraActive(true);
           }
         };
       }
-    } catch (err: any) {
-      console.error('Error al acceder a la cámara:', err);
-      let errorMessage = 'No se pudo acceder a la cámara';
-      
-      if (err.name === 'NotAllowedError') {
-        errorMessage = 'Permisos de cámara denegados. Por favor, habilita el acceso a la cámara.';
-      } else if (err.name === 'NotFoundError') {
-        errorMessage = 'No se encontró una cámara en el dispositivo';
-      } else if (err.name === 'NotReadableError') {
-        errorMessage = 'La cámara está siendo usada por otra aplicación';
-      }
+
+      toast({
+        title: "Cámara activada",
+        description: "Posicione la imagen dentro del marco y capture la foto",
+      });
+
+    } catch (error: any) {
+      const errorMessage = error.name === 'NotAllowedError' 
+        ? 'Permiso de cámara denegado. Active los permisos en configuración.'
+        : error.message || 'Error al acceder a la cámara';
       
       setError(errorMessage);
-      setIsLoading(false);
       toast({
+        variant: "destructive",
         title: "Error de cámara",
         description: errorMessage,
-        variant: "destructive"
       });
+    } finally {
+      setIsLoadingCamera(false);
     }
-  }, [checkCompatibility]);
-
-  // Capturar foto usando canvas
-  const capturePhoto = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current) return;
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-
-    if (!context) return;
-
-    // Configurar canvas con dimensiones del video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    // Dibujar frame actual del video
-    context.drawImage(video, 0, 0);
-
-    // Convertir a base64
-    const photoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-    setCapturedPhoto(photoDataUrl);
-    
-    // Detener cámara después de capturar
-    stopCamera();
-    
-    // Proceder a obtener ubicación
-    setCurrentStep('location');
-    getCurrentLocation();
-
-    toast({
-      title: "Foto capturada",
-      description: "Ahora obteniendo tu ubicación...",
-    });
-  }, []);
-
-  // Obtener geolocalización
-  const getCurrentLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      setError('Geolocalización no disponible');
-      return;
-    }
-
-    setIsLoading(true);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const locationData: GeolocationData = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
-        };
-        
-        setLocation(locationData);
-        setCurrentStep('summary');
-        setIsLoading(false);
-
-        toast({
-          title: "Ubicación obtenida",
-          description: "Datos capturados correctamente",
-        });
-      },
-      (error) => {
-        console.error('Error de geolocalización:', error);
-        let errorMessage = 'Error al obtener ubicación';
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Permisos de ubicación denegados';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Ubicación no disponible';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'Tiempo de espera agotado al obtener ubicación';
-            break;
-        }
-        
-        setError(errorMessage);
-        setIsLoading(false);
-        toast({
-          title: "Error de ubicación",
-          description: errorMessage,
-          variant: "destructive"
-        });
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
-    );
-  }, []);
+  };
 
   // Detener cámara
-  const stopCamera = useCallback(() => {
+  const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setIsCameraActive(false);
-  }, []);
+  };
+
+  // Capturar foto
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+
+    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    setCapturedImage(imageDataUrl);
+    stopCamera();
+    setStep('location');
+
+    toast({
+      title: "Foto capturada",
+      description: "Ahora obteniendo su ubicación...",
+    });
+  };
+
+  // Obtener geolocalización
+  const getLocation = async () => {
+    try {
+      setIsLoadingLocation(true);
+      setError('');
+
+      const position = await getCurrentPosition();
+      
+      if (position) {
+        const coords = {
+          lat: position.latitude,
+          lng: position.longitude
+        };
+
+        setLocation(coords);
+        setStep('summary');
+
+        toast({
+          title: "Ubicación obtenida",
+          description: `Lat: ${coords.lat.toFixed(6)}, Lng: ${coords.lng.toFixed(6)}`,
+        });
+      }
+
+    } catch (error: any) {
+      setError(error.message || 'Error al obtener la ubicación');
+      toast({
+        variant: "destructive",
+        title: "Error de ubicación",
+        description: error.message || 'Error al obtener la ubicación',
+      });
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
 
   // Retomar foto
-  const retakePhoto = useCallback(() => {
-    setCapturedPhoto(null);
+  const retakePhoto = () => {
+    setCapturedImage(null);
     setLocation(null);
-    setCurrentStep('camera');
+    setStep('camera');
     startCamera();
-  }, [startCamera]);
+  };
 
   // Confirmar turno
-  const confirmTurno = useCallback(() => {
-    if (!capturedPhoto || !location) return;
+  const confirmTurno = () => {
+    if (!capturedImage || !location) return;
 
     const turnoData: TurnoData = {
-      photo: capturedPhoto,
+      photo: capturedImage,
       location,
       timestamp: new Date()
     };
 
     onTurnoConfirmed?.(turnoData);
-    
-    // Resetear estado
-    setCapturedPhoto(null);
-    setLocation(null);
-    setCurrentStep('camera');
-    setIsOpen(false);
+    handleClose();
 
     toast({
       title: "Turno registrado",
       description: "El turno se ha registrado exitosamente",
     });
-  }, [capturedPhoto, location, onTurnoConfirmed]);
+  };
 
-  // Cancelar proceso
-  const handleCancel = useCallback(() => {
+  // Manejar cierre
+  const handleClose = () => {
     stopCamera();
-    setCapturedPhoto(null);
+    setCapturedImage(null);
     setLocation(null);
-    setCurrentStep('camera');
-    setError(null);
+    setError('');
+    setStep('camera');
     setIsOpen(false);
-  }, [stopCamera]);
+  };
 
-  // Abrir modal e iniciar proceso
-  const handleOpenModal = useCallback(() => {
+  // Abrir modal
+  const handleOpen = () => {
     setIsOpen(true);
-    setCurrentStep('camera');
-    setError(null);
+    setStep('camera');
     startCamera();
-  }, [startCamera]);
+  };
 
-  // Cleanup al desmontar
-  useEffect(() => {
-    return () => stopCamera();
-  }, [stopCamera]);
+  // Auto-obtener ubicación cuando se captura la foto
+  React.useEffect(() => {
+    if (step === 'location' && capturedImage) {
+      getLocation();
+    }
+  }, [step, capturedImage]);
 
   return (
     <>
       <Button 
-        onClick={handleOpenModal}
+        onClick={handleOpen}
         className={`gap-2 ${className}`}
         size="lg"
       >
@@ -291,100 +227,134 @@ export const TurnosCameraGeo: React.FC<TurnosCameraGeoProps> = ({
         Registrar Turno
       </Button>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-md mx-auto">
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="max-w-lg mx-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Camera className="h-5 w-5" />
-              Registro de Turno
+              Registro de Turno - {step === 'camera' ? 'Fotografía' : step === 'location' ? 'Ubicación' : 'Confirmar'}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Paso 1: Cámara */}
-            {currentStep === 'camera' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Capturar Fotografía</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {error ? (
-                    <div className="text-center space-y-4">
-                      <div className="text-red-600 text-sm">{error}</div>
-                      <Button onClick={startCamera} variant="outline" size="sm">
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Reintentar
-                      </Button>
+            {step === 'camera' && (
+              <div className="space-y-4">
+                {error && (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-destructive" />
+                      <p className="text-destructive text-sm">{error}</p>
                     </div>
-                  ) : (
-                    <>
-                      {/* Vista previa de cámara */}
-                      <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                        <video
-                          ref={videoRef}
-                          className="w-full h-full object-cover"
-                          playsInline
-                          muted
-                        />
+                  </div>
+                )}
+
+                {!isCameraActive ? (
+                  <div className="text-center py-8">
+                    <Camera className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground mb-4">
+                      Active la cámara para registrar su turno con verificación de ubicación.
+                    </p>
+                    <Button onClick={startCamera} disabled={isLoadingCamera} className="gap-2">
+                      {isLoadingCamera ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Camera className="h-4 w-4" />
+                      )}
+                      {isLoadingCamera ? 'Activando...' : 'Activar Cámara'}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="relative rounded-lg overflow-hidden bg-black">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full h-80 object-cover"
+                      />
+                      
+                      {/* Overlay de guía visual */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="absolute inset-0 bg-black/60"></div>
                         
-                        {/* Overlay de guía visual */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="border-2 border-white border-dashed rounded-lg w-3/4 h-3/4 flex items-center justify-center">
-                            <span className="text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
-                              Posiciona tu rostro aquí
-                            </span>
+                        <div className="relative">
+                          <div 
+                            className="border-2 border-primary bg-transparent rounded-lg"
+                            style={{
+                              width: '280px',
+                              height: '177px',
+                              boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)'
+                            }}
+                          >
+                            <div className="absolute -top-1 -left-1 w-6 h-6 border-l-4 border-t-4 border-primary rounded-tl-lg"></div>
+                            <div className="absolute -top-1 -right-1 w-6 h-6 border-r-4 border-t-4 border-primary rounded-tr-lg"></div>
+                            <div className="absolute -bottom-1 -left-1 w-6 h-6 border-l-4 border-b-4 border-primary rounded-bl-lg"></div>
+                            <div className="absolute -bottom-1 -right-1 w-6 h-6 border-r-4 border-b-4 border-primary rounded-br-lg"></div>
+                            
+                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-center">
+                              <Badge className="text-xs">
+                                Posiciónese dentro del marco
+                              </Badge>
+                            </div>
                           </div>
                         </div>
-                        
-                        {isLoading && (
-                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                            <Loader2 className="h-8 w-8 text-white animate-spin" />
-                          </div>
-                        )}
                       </div>
+                    </div>
 
-                      {/* Canvas oculto para captura */}
-                      <canvas ref={canvasRef} className="hidden" />
-
-                      {/* Botones de acción */}
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={capturePhoto}
-                          disabled={!isCameraActive || isLoading}
-                          className="flex-1"
-                        >
-                          <Camera className="h-4 w-4 mr-2" />
-                          Capturar
-                        </Button>
-                        <Button onClick={handleCancel} variant="outline">
-                          <X className="h-4 w-4" />
-                        </Button>
+                    <div className="bg-primary/10 p-4 rounded-lg border border-primary/20">
+                      <div className="flex items-start gap-3">
+                        <div className="text-primary text-lg">💡</div>
+                        <div>
+                          <p className="text-sm font-medium text-primary mb-2">
+                            Consejos para el mejor resultado:
+                          </p>
+                          <ul className="text-xs text-primary/80 space-y-1">
+                            <li>• Colóquese completamente dentro del marco azul</li>
+                            <li>• Use buena iluminación, evite sombras</li>
+                            <li>• Manténgase quieto durante la captura</li>
+                          </ul>
+                        </div>
                       </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button onClick={capturePhoto} className="flex-1 gap-2">
+                        <Camera className="h-4 w-4" />
+                        Capturar Foto
+                      </Button>
+                      <Button variant="outline" onClick={handleClose} className="gap-2">
+                        <X className="h-4 w-4" />
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <canvas ref={canvasRef} className="hidden" />
+              </div>
             )}
 
-            {/* Paso 2: Geolocalización */}
-            {currentStep === 'location' && (
+            {step === 'location' && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">Obteniendo Ubicación</CardTitle>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Obteniendo Ubicación
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="text-center space-y-4">
-                  {isLoading ? (
+                  {isLoadingLocation || isGeoLoading ? (
                     <>
                       <Loader2 className="h-12 w-12 mx-auto animate-spin text-primary" />
                       <p className="text-sm text-muted-foreground">
-                        Obteniendo tu ubicación...
+                        Verificando su ubicación actual...
                       </p>
                     </>
                   ) : error ? (
                     <>
-                      <div className="text-red-600 text-sm">{error}</div>
-                      <Button onClick={getCurrentLocation} variant="outline" size="sm">
-                        <RefreshCw className="h-4 w-4 mr-2" />
+                      <div className="text-destructive text-sm">{error}</div>
+                      <Button onClick={getLocation} variant="outline" size="sm">
+                        <RotateCcw className="h-4 w-4 mr-2" />
                         Reintentar
                       </Button>
                     </>
@@ -393,18 +363,17 @@ export const TurnosCameraGeo: React.FC<TurnosCameraGeoProps> = ({
               </Card>
             )}
 
-            {/* Paso 3: Resumen */}
-            {currentStep === 'summary' && capturedPhoto && location && (
+            {step === 'summary' && capturedImage && location && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">Confirmar Registro</CardTitle>
+                  <CardTitle className="text-sm">Confirmar Registro de Turno</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Vista previa de foto */}
-                  <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="aspect-video bg-muted rounded-lg overflow-hidden">
                     <img 
-                      src={capturedPhoto} 
-                      alt="Foto capturada" 
+                      src={capturedImage} 
+                      alt="Foto del turno" 
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -413,26 +382,26 @@ export const TurnosCameraGeo: React.FC<TurnosCameraGeoProps> = ({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-green-600" />
-                      <Badge variant="secondary">Ubicación verificada</Badge>
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        Ubicación verificada
+                      </Badge>
                     </div>
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <div>Lat: {location.latitude.toFixed(6)}</div>
-                      <div>Lng: {location.longitude.toFixed(6)}</div>
-                      {location.accuracy && (
-                        <div>Precisión: {Math.round(location.accuracy)}m</div>
-                      )}
+                    <div className="text-xs text-muted-foreground space-y-1 bg-muted/50 p-2 rounded">
+                      <div>Latitud: {location.lat.toFixed(6)}</div>
+                      <div>Longitud: {location.lng.toFixed(6)}</div>
+                      <div>Tiempo: {new Date().toLocaleString()}</div>
                     </div>
                   </div>
 
                   {/* Botones de acción */}
                   <div className="flex gap-2">
                     <Button onClick={retakePhoto} variant="outline" className="flex-1">
-                      <RefreshCw className="h-4 w-4 mr-2" />
+                      <RotateCcw className="h-4 w-4 mr-2" />
                       Retomar
                     </Button>
                     <Button onClick={confirmTurno} className="flex-1">
                       <Check className="h-4 w-4 mr-2" />
-                      Confirmar
+                      Confirmar Turno
                     </Button>
                   </div>
                 </CardContent>
