@@ -361,7 +361,7 @@ export const GestionEmpleados = () => {
                 empleadosFiltrados.map((empleado) => (
                   <TableRow key={empleado.id}>
                     <TableCell className="font-medium">
-                      {empleado.nombres} {empleado.apellidos}
+                      {empleado.nombres} {empleado.apellidos && empleado.apellidos !== 'Sin especificar' ? empleado.apellidos : ''}
                     </TableCell>
                     <TableCell>{empleado.cedula || '-'}</TableCell>
                     <TableCell>{empleado.funcion || '-'}</TableCell>
