@@ -63,7 +63,7 @@ export const DashboardAnalisisTurnos = () => {
       const resumen = await obtenerResumenGeneral(fechaInicio, fechaFin);
       setResumenGeneral(resumen);
     } else if (selectedTab === 'detallado') {
-      const analisis = await obtenerAnalisisTurnos(fechaInicio, fechaFin, selectedEmpleado || undefined);
+      const analisis = await obtenerAnalisisTurnos(fechaInicio, fechaFin, selectedEmpleado === 'todos' ? undefined : selectedEmpleado || undefined);
       setAnalisisDetallado(analisis);
     }
   };
@@ -96,12 +96,34 @@ export const DashboardAnalisisTurnos = () => {
       return <Badge variant="destructive">Ausente</Badge>;
     }
 
-    if (turno.minutos_tardanza > 0) {
-      const color = turno.estado_justificacion === 'justificado' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800';
-      return <Badge className={color}>Tardanza ({turno.minutos_tardanza}min)</Badge>;
-    }
+    // Traffic light system based on compliance status
+    const estado = turno.estado_cumplimiento || 'a_tiempo';
+    const complianceColors = {
+      'a_tiempo': 'bg-green-100 text-green-800',
+      'alerta_temprana': 'bg-orange-100 text-orange-800', 
+      'amarillo': 'bg-yellow-100 text-yellow-800',
+      'rojo': 'bg-red-100 text-red-800'
+    };
 
-    return <Badge variant="secondary">Puntual</Badge>;
+    const complianceLabels = {
+      'a_tiempo': 'A Tiempo',
+      'alerta_temprana': `Alerta (${turno.minutos_tardanza}min)`,
+      'amarillo': `Tarde (${turno.minutos_tardanza}min)`,
+      'rojo': `Muy Tarde (${turno.minutos_tardanza}min)`
+    };
+
+    return (
+      <div className="flex flex-col gap-1">
+        <Badge className={complianceColors[estado] || 'bg-gray-100 text-gray-800'}>
+          {complianceLabels[estado] || estado}
+        </Badge>
+        {turno.alerta_temprana && (
+          <Badge variant="outline" className="text-xs">
+            ⚠️ Alerta
+          </Badge>
+        )}
+      </div>
+    );
   };
 
   const calcularPromedios = () => {
@@ -157,7 +179,7 @@ export const DashboardAnalisisTurnos = () => {
                   <SelectValue placeholder="Todos los empleados" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos los empleados</SelectItem>
+                  <SelectItem value="todos">Todos los empleados</SelectItem>
                   {empleados.map((empleado) => (
                     <SelectItem key={empleado.id} value={empleado.id}>
                       {empleado.nombres} {empleado.apellidos}

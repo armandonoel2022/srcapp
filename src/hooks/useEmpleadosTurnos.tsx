@@ -8,6 +8,11 @@ export interface EmpleadoTurno {
   apellidos: string;
   funcion: string;
   cedula?: string;
+  sexo?: string;
+  fecha_nacimiento?: string;
+  lugar_designado?: string;
+  hora_entrada_programada?: string;
+  hora_salida_programada?: string;
   created_at: string;
   updated_at: string;
 }
@@ -17,6 +22,11 @@ interface NuevoEmpleadoTurno {
   apellidos: string;
   funcion: string;
   cedula?: string;
+  sexo?: string;
+  fecha_nacimiento?: string;
+  lugar_designado?: string;
+  hora_entrada_programada?: string;
+  hora_salida_programada?: string;
 }
 
 export const useEmpleadosTurnos = () => {
@@ -56,7 +66,12 @@ export const useEmpleadosTurnos = () => {
           nombres: empleado.nombres,
           apellidos: empleado.apellidos,
           funcion: empleado.funcion,
-          cedula: empleado.cedula || null
+          cedula: empleado.cedula || null,
+          sexo: empleado.sexo || null,
+          fecha_nacimiento: empleado.fecha_nacimiento || null,
+          lugar_designado: empleado.lugar_designado || null,
+          hora_entrada_programada: empleado.hora_entrada_programada || null,
+          hora_salida_programada: empleado.hora_salida_programada || null
         });
 
       if (error) throw error;

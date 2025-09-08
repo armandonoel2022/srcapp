@@ -261,9 +261,14 @@ export type Database = {
           apellidos: string
           cedula: string | null
           created_at: string
+          fecha_nacimiento: string | null
           funcion: string
+          hora_entrada_programada: string | null
+          hora_salida_programada: string | null
           id: string
+          lugar_designado: string | null
           nombres: string
+          sexo: string | null
           updated_at: string
         }
         Insert: {
@@ -271,9 +276,14 @@ export type Database = {
           apellidos: string
           cedula?: string | null
           created_at?: string
+          fecha_nacimiento?: string | null
           funcion: string
+          hora_entrada_programada?: string | null
+          hora_salida_programada?: string | null
           id?: string
+          lugar_designado?: string | null
           nombres: string
+          sexo?: string | null
           updated_at?: string
         }
         Update: {
@@ -281,9 +291,14 @@ export type Database = {
           apellidos?: string
           cedula?: string | null
           created_at?: string
+          fecha_nacimiento?: string | null
           funcion?: string
+          hora_entrada_programada?: string | null
+          hora_salida_programada?: string | null
           id?: string
+          lugar_designado?: string | null
           nombres?: string
+          sexo?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -347,8 +362,10 @@ export type Database = {
       }
       turnos_empleados: {
         Row: {
+          alerta_temprana: boolean | null
           created_at: string | null
           empleado_id: string | null
+          estado_cumplimiento: string | null
           estado_justificacion: string | null
           fecha: string
           foto_entrada: string | null
@@ -364,8 +381,10 @@ export type Database = {
           ubicacion_salida: unknown | null
         }
         Insert: {
+          alerta_temprana?: boolean | null
           created_at?: string | null
           empleado_id?: string | null
+          estado_cumplimiento?: string | null
           estado_justificacion?: string | null
           fecha: string
           foto_entrada?: string | null
@@ -381,8 +400,10 @@ export type Database = {
           ubicacion_salida?: unknown | null
         }
         Update: {
+          alerta_temprana?: boolean | null
           created_at?: string | null
           empleado_id?: string | null
+          estado_cumplimiento?: string | null
           estado_justificacion?: string | null
           fecha?: string
           foto_entrada?: string | null
@@ -585,6 +606,14 @@ export type Database = {
           nombres: string
           requires_password_change: boolean
           ubicacion_designada: string
+        }[]
+      }
+      calcular_estado_cumplimiento: {
+        Args: { hora_entrada: string; hora_programada: string }
+        Returns: {
+          alerta_temprana: boolean
+          estado: string
+          minutos_diferencia: number
         }[]
       }
       change_empleado_password: {

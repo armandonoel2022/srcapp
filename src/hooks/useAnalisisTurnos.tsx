@@ -23,11 +23,14 @@ export interface AnalisisTurno {
   hora_salida?: string;
   minutos_tardanza: number;
   estado_justificacion: string;
+  estado_cumplimiento?: string;
+  alerta_temprana?: boolean;
   observaciones?: string;
   empleados_turnos?: {
     nombres: string;
     apellidos: string;
     funcion: string;
+    hora_entrada_programada?: string;
   };
   hora_programada?: string;
   estado_empleado?: {
@@ -106,7 +109,8 @@ export const useAnalisisTurnos = () => {
           empleados_turnos (
             nombres,
             apellidos,
-            funcion
+            funcion,
+            hora_entrada_programada
           )
         `)
         .order('fecha', { ascending: false });
@@ -135,9 +139,11 @@ export const useAnalisisTurnos = () => {
         hora_salida: turno.hora_salida,
         minutos_tardanza: turno.minutos_tardanza || 0,
         estado_justificacion: turno.estado_justificacion || 'sin_justificar',
+        estado_cumplimiento: turno.estado_cumplimiento || 'a_tiempo',
+        alerta_temprana: turno.alerta_temprana || false,
         observaciones: turno.observaciones,
-        empleados_turnos: turno.empleados_turnos || { nombres: '', apellidos: '', funcion: '' },
-        hora_programada: undefined,
+        empleados_turnos: turno.empleados_turnos || { nombres: '', apellidos: '', funcion: '', hora_entrada_programada: '' },
+        hora_programada: turno.empleados_turnos?.hora_entrada_programada,
         estado_empleado: undefined
       }));
 

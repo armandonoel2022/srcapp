@@ -20,7 +20,7 @@ import { useUserProfiles } from '@/hooks/useUserProfiles';
 import { HeatMap } from '@/components/HeatMap';
 import { InteractiveHeatMap } from '@/components/InteractiveHeatMap';
 import { AutoGeocodingUpdater } from '@/components/AutoGeocodingUpdater';
-import { TurnosForm } from '@/components/TurnosForm';
+import { TurnosFormEnhanced } from '@/components/TurnosFormEnhanced';
 import { TurnosAgentForm } from '@/components/TurnosAgentForm';
 import { ConsultaTurnos } from '@/components/ConsultaTurnos';
 import { DashboardAnalisisTurnos } from '@/components/DashboardAnalisisTurnos';
@@ -145,7 +145,7 @@ export const Dashboard = () => {
       case 'dashboard-cumplimiento':
         return <DashboardCumplimiento />;
       case 'turnos':
-        return user?.role === 'agente_seguridad' ? <TurnosAgentForm /> : <TurnosForm />;
+        return user?.role === 'agente_seguridad' ? <TurnosAgentForm /> : <TurnosFormEnhanced />;
       case 'consulta-turnos':
         return <ConsultaTurnos />;
       case 'analisis-turnos':

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, Camera, MapPin, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
 import { EmpleadoTurnoSelector } from '@/components/EmpleadoTurnoSelector';
+import { EmpleadoTurnoForm } from '@/components/EmpleadoTurnoForm';
 import { CameraScanner } from '@/components/CameraScanner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
