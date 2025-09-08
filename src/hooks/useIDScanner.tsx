@@ -29,9 +29,31 @@ export const useIDScanner = () => {
       if (Capacitor.isNativePlatform()) {
         console.log('📹 Using Capacitor Camera for mobile...');
         
-        // For mobile, we'll directly capture the photo instead of starting a preview
-        // This is more reliable on mobile devices
-        setIsCameraActive(true); // Set this to show we're ready
+        // Check permissions first before saying camera is active
+        try {
+          const permissions = await Camera.checkPermissions();
+          console.log('📹 Camera permissions status:', permissions);
+          
+          if (permissions.camera !== 'granted' && permissions.camera !== 'limited') {
+            console.log('📹 Requesting camera permissions...');
+            const requestResult = await Camera.requestPermissions();
+            console.log('📹 Permission request result:', requestResult);
+            
+            if (requestResult.camera !== 'granted' && requestResult.camera !== 'limited') {
+              setError('Se requieren permisos de cámara. Por favor, habilite la cámara en la configuración.');
+              return;
+            }
+          }
+          
+          // Only set camera as active if permissions are good
+          setIsCameraActive(true);
+          console.log('📹 Camera ready on native platform');
+          
+        } catch (permError) {
+          console.error('📹 Permission check error:', permError);
+          setError('Error verificando permisos de cámara. Intente nuevamente.');
+          return;
+        }
         return;
       }
       
@@ -99,31 +121,9 @@ export const useIDScanner = () => {
     // If running on mobile with Capacitor, use the Camera plugin
     if (Capacitor.isNativePlatform()) {
       try {
-        console.log('📹 Using Capacitor Camera for photo capture...');
+        console.log('📹 Attempting to take photo on native platform...');
         console.log('📹 Platform info:', Capacitor.getPlatform());
-        console.log('📹 Native platform:', Capacitor.isNativePlatform());
         
-        // Check camera permissions first
-        try {
-          const permissions = await Camera.checkPermissions();
-          console.log('📹 Camera permissions status:', permissions);
-          
-          if (permissions.camera !== 'granted' && permissions.camera !== 'limited') {
-            console.log('📹 Requesting camera permissions...');
-            const requestResult = await Camera.requestPermissions();
-            console.log('📹 Permission request result:', requestResult);
-            
-            if (requestResult.camera !== 'granted' && requestResult.camera !== 'limited') {
-              setError('Se requieren permisos de cámara. Por favor, habilite la cámara en la configuración de la aplicación.');
-              return;
-            }
-          }
-        } catch (permError) {
-          console.error('📹 Permission check error:', permError);
-          // Continue anyway, as some devices might not support permission checking
-        }
-        
-        console.log('📹 Attempting to take photo...');
         const image = await Camera.getPhoto({
           quality: 90,
           allowEditing: false,
@@ -135,7 +135,7 @@ export const useIDScanner = () => {
           height: 1080
         });
         
-        console.log('📹 Photo captured successfully, dataUrl length:', image.dataUrl?.length);
+        console.log('📹 Photo captured successfully, dataUrl available:', !!image.dataUrl);
         
         if (image.dataUrl) {
           setCapturedImage(image.dataUrl);
@@ -145,23 +145,29 @@ export const useIDScanner = () => {
           return;
         } else {
           console.error('📹 No dataUrl in image result');
-          setError('No se pudo obtener la imagen de la cámara');
+          setError('No se pudo obtener la imagen. Verifique que la cámara esté funcionando.');
         }
       } catch (err: any) {
-        console.error('📹 Mobile capture error details:', {
+        console.error('📹 Camera capture error:', {
           message: err.message,
           code: err.code,
           details: err
         });
         
-        let errorMessage = 'Error al capturar la imagen con la cámara móvil';
+        let errorMessage = 'Error al acceder a la cámara del dispositivo';
         
-        if (err.message && err.message.includes('permissions')) {
-          errorMessage = 'Permisos de cámara denegados. Habilite la cámara en configuración.';
-        } else if (err.message && err.message.includes('cancelled')) {
-          errorMessage = 'Captura de imagen cancelada';
+        if (err.message) {
+          if (err.message.includes('permission') || err.message.includes('Permission')) {
+            errorMessage = 'Permisos de cámara denegados. Active los permisos en Configuración > Privacidad > Cámara.';
+          } else if (err.message.includes('cancelled') || err.message.includes('canceled')) {
+            errorMessage = 'Captura de imagen cancelada por el usuario';
+          } else if (err.message.includes('not available') || err.message.includes('unavailable')) {
+            errorMessage = 'La cámara no está disponible en este momento. Verifique que no esté siendo usada por otra aplicación.';
+          } else {
+            errorMessage = `Error de cámara: ${err.message}`;
+          }
         } else if (err.code) {
-          errorMessage = `Error de cámara (${err.code}): ${err.message || 'Error desconocido'}`;
+          errorMessage = `Error de cámara (código ${err.code}). Reinicie la aplicación e intente nuevamente.`;
         }
         
         setError(errorMessage);
