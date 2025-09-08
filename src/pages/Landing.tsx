@@ -144,9 +144,10 @@ export const Landing = () => {
               <LanguageToggle />
               <SettingsMenu />
               <Button 
-                variant="outline" 
+                variant="default" 
                 size="sm"
                 onClick={() => navigate('/empleado')}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Acceso Empleados
               </Button>
