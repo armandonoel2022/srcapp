@@ -8,6 +8,14 @@ const config: CapacitorConfig = {
     url: 'https://cbbbc9dc-efa4-4810-98ee-fb052e77b636.lovableproject.com?forceHideBadge=true',
     cleartext: true
   },
+  ios: {
+    infoPlist: {
+      NSCameraUsageDescription: 'Esta aplicación necesita acceso a la cámara para escanear documentos de identidad.',
+      NSPhotoLibraryAddUsageDescription: 'Esta aplicación necesita acceso a la galería de fotos para guardar imágenes escaneadas.',
+      NSPhotoLibraryUsageDescription: 'Esta aplicación necesita acceso a la galería de fotos para seleccionar imágenes.',
+      NSLocationWhenInUseUsageDescription: 'Esta aplicación necesita acceso a la ubicación para registrar la posición durante el registro de turnos.'
+    }
+  },
   plugins: {
     CapacitorHttp: {
       enabled: true,
