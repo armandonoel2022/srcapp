@@ -22,6 +22,12 @@ export const useIDScanner = () => {
 
   const startCamera = async () => {
     console.log('📹 Starting camera function called');
+    console.log('📹 Platform info:', {
+      platform: Capacitor.getPlatform(),
+      isNative: Capacitor.isNativePlatform(),
+      userAgent: navigator.userAgent
+    });
+    
     try {
       setError(null);
       
@@ -97,10 +103,27 @@ export const useIDScanner = () => {
           setError('Error en el video de la cámara');
         };
       }
-    } catch (err) {
-      console.error('Camera error:', err);
-      setError('No se pudo acceder a la cámara. Verifique los permisos.');
-      console.error('Camera access error:', err);
+    } catch (err: any) {
+      console.error('📹 Camera error details:', {
+        message: err.message,
+        name: err.name,
+        code: err.code,
+        platform: Capacitor.getPlatform(),
+        isNative: Capacitor.isNativePlatform(),
+        error: err
+      });
+      
+      let errorMessage = 'No se pudo acceder a la cámara. Verifique los permisos.';
+      
+      if (err.message && err.message.includes('Permission')) {
+        errorMessage = 'Permisos de cámara denegados. Active los permisos en Configuración > Privacidad > Cámara.';
+      } else if (err.name === 'NotAllowedError') {
+        errorMessage = 'Acceso a la cámara denegado. Permita el acceso en la configuración del navegador.';
+      } else if (err.name === 'NotFoundError') {
+        errorMessage = 'No se encontró una cámara en este dispositivo.';
+      }
+      
+      setError(errorMessage);
     }
   };
 
