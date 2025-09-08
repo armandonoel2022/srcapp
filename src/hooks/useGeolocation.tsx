@@ -39,23 +39,30 @@ export const useGeolocation = () => {
           
           console.log('📍 Current permissions:', permissions);
 
-          if (permissions.location !== 'granted') {
+          if (permissions.location !== 'granted' && permissions.location !== 'prompt') {
+            throw new Error('Permisos de ubicación denegados');
+          }
+
+          if (permissions.location === 'prompt') {
             console.log('📍 Requesting location permissions...');
             
-            // Request permissions with timeout
-            const requestTimeout = new Promise<never>((_, reject) => {
-              setTimeout(() => reject(new Error('Permission request timeout')), 8000);
-            });
-            
-            const requestResult = await Promise.race([
-              Geolocation.requestPermissions(),
-              requestTimeout
-            ]);
-            
-            console.log('📍 Permission request result:', requestResult);
-            
-            if (requestResult.location !== 'granted') {
-              throw new Error('Permisos de ubicación denegados');
+            // Request permissions with timeout - but don't fail if timeout occurs
+            try {
+              const requestTimeout = new Promise<never>((_, reject) => {
+                setTimeout(() => reject(new Error('Permission request timeout')), 10000);
+              });
+              
+              const requestResult = await Promise.race([
+                Geolocation.requestPermissions(),
+                requestTimeout
+              ]);
+              
+              console.log('📍 Permission request result:', requestResult);
+              
+              // Continue regardless of permission result - iOS sometimes grants permission after user interaction
+            } catch (permError) {
+              console.log('📍 Permission request failed or timed out, trying to get position anyway:', permError);
+              // Continue anyway - sometimes iOS grants permission during getCurrentPosition
             }
           }
 
