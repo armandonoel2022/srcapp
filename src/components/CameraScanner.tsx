@@ -56,9 +56,12 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned, onPhotoCapture }
     if (capturedImage && onPhotoCapture && previewMode && !onPhotoCaptureCalled.current) {
       onPhotoCaptureCalled.current = true;
       onPhotoCapture(capturedImage);
-      handleClose();
+      stopCamera();
+      setManualData({ cedula: '', nombre: '', apellido: '' });
+      onPhotoCaptureCalled.current = false;
+      onClose();
     }
-  }, [capturedImage, onPhotoCapture, previewMode, handleClose]);
+  }, [capturedImage, onPhotoCapture, previewMode, stopCamera, onClose]);
 
   const handleCapture = async () => {
     if (onPhotoCapture) {
