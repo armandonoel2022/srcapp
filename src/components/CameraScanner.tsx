@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Camera, X, Scan, Edit, RefreshCw, Check } from 'lucide-react';
 import { useIDScanner } from '@/hooks/useIDScanner';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 
 interface CameraScannerProps {
@@ -40,20 +40,25 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned, onPhotoCapture }
     apellido: ''
   });
 
-  // Efecto para manejar la captura de foto para turnos
-  useEffect(() => {
-    if (capturedImage && onPhotoCapture && previewMode) {
-      onPhotoCapture(capturedImage);
-      handleClose();
-    }
-  }, [capturedImage, onPhotoCapture, previewMode]);
+  // Use ref to prevent infinite re-renders
+  const onPhotoCaptureCalled = useRef(false);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     console.log('🔍 CameraScanner handleClose called');
     stopCamera();
     setManualData({ cedula: '', nombre: '', apellido: '' });
+    onPhotoCaptureCalled.current = false;
     onClose();
-  };
+  }, [stopCamera, onClose]);
+
+  // Efecto para manejar la captura de foto para turnos
+  useEffect(() => {
+    if (capturedImage && onPhotoCapture && previewMode && !onPhotoCaptureCalled.current) {
+      onPhotoCaptureCalled.current = true;
+      onPhotoCapture(capturedImage);
+      handleClose();
+    }
+  }, [capturedImage, onPhotoCapture, previewMode, handleClose]);
 
   const handleCapture = async () => {
     if (onPhotoCapture) {
