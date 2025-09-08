@@ -24,7 +24,7 @@ export const EmpleadoApp = () => {
   }
 
   if (!empleado) {
-    return <EmpleadoLogin onSuccess={() => {}} />;
+    return <EmpleadoLogin onSuccess={() => window.location.reload()} />;
   }
 
   return <EmpleadoDashboard empleado={empleado} />;

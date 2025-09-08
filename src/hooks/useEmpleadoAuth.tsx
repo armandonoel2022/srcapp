@@ -43,7 +43,7 @@ export const useEmpleadoAuth = () => {
         localStorage.setItem('empleado_auth', JSON.stringify(empleadoAuth));
         
         toast({
-          title: "Bienvenido",
+          title: "Bienvenido/a",
           description: `Hola ${empleadoData.nombres}, has iniciado sesión correctamente`
         });
         

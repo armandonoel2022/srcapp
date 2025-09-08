@@ -168,7 +168,7 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-xl">
-                  Bienvenido, {empleado.nombres} {empleado.apellidos}
+                  Bienvenido/a, {empleado.nombres} {empleado.apellidos}
                 </CardTitle>
                 <p className="text-muted-foreground">{empleado.funcion}</p>
                 {empleado.lugar_designado && (
