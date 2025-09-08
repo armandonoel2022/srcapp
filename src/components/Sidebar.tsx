@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Users, FileText, Plus, LogOut, Settings as SettingsIcon, UserPlus, Edit, Trash, Search, Home, MapPin, CheckCircle } from 'lucide-react';
+import { Menu, Users, FileText, Plus, LogOut, Settings as SettingsIcon, UserPlus, Edit, Trash, Search, Home, MapPin, CheckCircle, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
 import { useNavigate } from 'react-router-dom';
@@ -45,6 +45,7 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
     { id: 'usuarios', label: 'Gestionar Usuarios', icon: UserPlus },
     { id: 'turnos', label: 'Control de Turnos', icon: CheckCircle },
     { id: 'consulta-turnos', label: 'Consultar Turnos', icon: Search },
+    { id: 'analisis-turnos', label: 'Análisis de Turnos', icon: BarChart3 },
     { id: 'editar-registros', label: 'Editar Entradas y Salidas', icon: Edit },
     { id: 'eliminar-empleados', label: 'Eliminar Empleados', icon: Trash }
   ];

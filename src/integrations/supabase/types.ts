@@ -202,6 +202,59 @@ export type Database = {
         }
         Relationships: []
       }
+      empleados_estados: {
+        Row: {
+          aprobado_por: string | null
+          comentarios_admin: string | null
+          created_at: string
+          documento_adjunto: string | null
+          empleado_id: string
+          estado_aprobacion: string
+          fecha_fin: string | null
+          fecha_inicio: string
+          id: string
+          motivo: string | null
+          tipo_estado: string
+          updated_at: string
+        }
+        Insert: {
+          aprobado_por?: string | null
+          comentarios_admin?: string | null
+          created_at?: string
+          documento_adjunto?: string | null
+          empleado_id: string
+          estado_aprobacion?: string
+          fecha_fin?: string | null
+          fecha_inicio: string
+          id?: string
+          motivo?: string | null
+          tipo_estado: string
+          updated_at?: string
+        }
+        Update: {
+          aprobado_por?: string | null
+          comentarios_admin?: string | null
+          created_at?: string
+          documento_adjunto?: string | null
+          empleado_id?: string
+          estado_aprobacion?: string
+          fecha_fin?: string | null
+          fecha_inicio?: string
+          id?: string
+          motivo?: string | null
+          tipo_estado?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empleados_estados_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados_turnos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empleados_turnos: {
         Row: {
           active: boolean
@@ -296,12 +349,16 @@ export type Database = {
         Row: {
           created_at: string | null
           empleado_id: string | null
+          estado_justificacion: string | null
           fecha: string
           foto_entrada: string | null
           foto_salida: string | null
           hora_entrada: string | null
           hora_salida: string | null
           id: string
+          minutos_tardanza: number | null
+          observaciones: string | null
+          registro_automatico: boolean | null
           tipo_registro: string | null
           ubicacion_entrada: unknown | null
           ubicacion_salida: unknown | null
@@ -309,12 +366,16 @@ export type Database = {
         Insert: {
           created_at?: string | null
           empleado_id?: string | null
+          estado_justificacion?: string | null
           fecha: string
           foto_entrada?: string | null
           foto_salida?: string | null
           hora_entrada?: string | null
           hora_salida?: string | null
           id?: string
+          minutos_tardanza?: number | null
+          observaciones?: string | null
+          registro_automatico?: boolean | null
           tipo_registro?: string | null
           ubicacion_entrada?: unknown | null
           ubicacion_salida?: unknown | null
@@ -322,12 +383,16 @@ export type Database = {
         Update: {
           created_at?: string | null
           empleado_id?: string | null
+          estado_justificacion?: string | null
           fecha?: string
           foto_entrada?: string | null
           foto_salida?: string | null
           hora_entrada?: string | null
           hora_salida?: string | null
           id?: string
+          minutos_tardanza?: number | null
+          observaciones?: string | null
+          registro_automatico?: boolean | null
           tipo_registro?: string | null
           ubicacion_entrada?: unknown | null
           ubicacion_salida?: unknown | null
@@ -338,6 +403,50 @@ export type Database = {
             columns: ["empleado_id"]
             isOneToOne: false
             referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      turnos_programados: {
+        Row: {
+          activo: boolean
+          created_at: string
+          dia_semana: number
+          empleado_id: string
+          hora_entrada_programada: string
+          hora_salida_programada: string
+          id: string
+          ubicacion_designada: string | null
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          created_at?: string
+          dia_semana: number
+          empleado_id: string
+          hora_entrada_programada: string
+          hora_salida_programada: string
+          id?: string
+          ubicacion_designada?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          created_at?: string
+          dia_semana?: number
+          empleado_id?: string
+          hora_entrada_programada?: string
+          hora_salida_programada?: string
+          id?: string
+          ubicacion_designada?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turnos_programados_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados_turnos"
             referencedColumns: ["id"]
           },
         ]
@@ -502,6 +611,21 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      obtener_estadisticas_empleado: {
+        Args: {
+          p_empleado_id: string
+          p_fecha_fin?: string
+          p_fecha_inicio?: string
+        }
+        Returns: {
+          ausencias: number
+          dias_justificados: number
+          dias_puntuales: number
+          dias_tardanza: number
+          promedio_tardanza: number
+          total_dias: number
+        }[]
       }
       setup_initial_users: {
         Args: Record<PropertyKey, never>

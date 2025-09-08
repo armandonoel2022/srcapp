@@ -2,17 +2,15 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Camera, MapPin, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Clock, Camera, MapPin, CheckCircle, AlertTriangle, User } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
-import { EmpleadoTurnoSelector } from '@/components/EmpleadoTurnoSelector';
+import { useAuth } from '@/hooks/useAuth';
 import { CameraScanner } from '@/components/CameraScanner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-export const TurnosForm = () => {
+export const TurnosAgentForm = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [selectedEmpleado, setSelectedEmpleado] = useState('');
-  const [selectedEmpleadoId, setSelectedEmpleadoId] = useState('');
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [tipoRegistro, setTipoRegistro] = useState<'entrada' | 'salida'>('entrada');
   const [estadoTurno, setEstadoTurno] = useState<{
@@ -21,6 +19,7 @@ export const TurnosForm = () => {
   }>({ estado: 'sin_entrada', turno: null });
 
   const { registrarTurno, verificarEstadoTurno, loading } = useTurnos();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,9 +30,30 @@ export const TurnosForm = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedEmpleadoId) {
+    if (user) {
+      // Verificar el estado del turno para el usuario autenticado
       const today = new Date().toISOString().split('T')[0];
-      verificarEstadoTurno(selectedEmpleadoId, today).then(result => {
+      verificarEstadoTurnoAgente(today);
+    }
+  }, [user]);
+
+  const verificarEstadoTurnoAgente = async (fecha: string) => {
+    if (!user?.username) return;
+    
+    try {
+      // Buscar el empleado por nombre de usuario
+      const { data: empleados, error } = await supabase
+        .from('empleados_turnos')
+        .select('id')
+        .or(`nombres.ilike.%${user.username}%,apellidos.ilike.%${user.username}%`)
+        .eq('active', true)
+        .limit(1);
+
+      if (error) throw error;
+
+      if (empleados && empleados.length > 0) {
+        const empleadoId = empleados[0].id;
+        const result = await verificarEstadoTurno(empleadoId, fecha);
         setEstadoTurno(result);
         
         // Determinar el tipo de registro basado en el estado
@@ -42,23 +62,27 @@ export const TurnosForm = () => {
         } else if (result.estado === 'entrada_registrada') {
           setTipoRegistro('salida');
         }
+      } else {
+        toast({
+          title: "Error",
+          description: "No se encontró un empleado asociado a este usuario",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `Error al verificar estado: ${error.message}`,
+        variant: "destructive"
       });
     }
-  }, [selectedEmpleadoId, verificarEstadoTurno]);
-
-  const handleEmpleadoSelect = (empleadoId: string, nombres: string, apellidos: string, funcion: string) => {
-    const displayName = apellidos === 'Sin especificar' 
-      ? `${nombres} - ${funcion}`
-      : `${nombres} ${apellidos} - ${funcion}`;
-    setSelectedEmpleado(displayName);
-    setSelectedEmpleadoId(empleadoId);
   };
 
   const handleCameraCapture = async (photo: string) => {
-    if (!selectedEmpleadoId) {
+    if (!user?.username) {
       toast({
         title: "Error",
-        description: "Debe seleccionar un empleado primero",
+        description: "Usuario no autenticado",
         variant: "destructive"
       });
       return;
@@ -79,12 +103,32 @@ export const TurnosForm = () => {
         lng: position.coords.longitude
       };
 
+      // Buscar el empleado por nombre de usuario
+      const { data: empleados, error: empleadosError } = await supabase
+        .from('empleados_turnos')
+        .select('id')
+        .or(`nombres.ilike.%${user.username}%,apellidos.ilike.%${user.username}%`)
+        .eq('active', true)
+        .limit(1);
+
+      if (empleadosError) throw empleadosError;
+
+      if (!empleados || empleados.length === 0) {
+        toast({
+          title: "Error",
+          description: "No se encontró un empleado asociado a este usuario",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const empleadoId = empleados[0].id;
       const now = new Date();
       const fecha = now.toISOString().split('T')[0];
       const hora = now.toTimeString().split(' ')[0];
 
       const turnoData = {
-        empleado_id: selectedEmpleadoId,
+        empleado_id: empleadoId,
         fecha,
         tipo_registro: tipoRegistro,
         ubicacion_entrada: tipoRegistro === 'entrada' ? ubicacion : undefined,
@@ -99,8 +143,7 @@ export const TurnosForm = () => {
       
       if (result.success) {
         // Actualizar estado del turno
-        const nuevoEstado = await verificarEstadoTurno(selectedEmpleadoId, fecha);
-        setEstadoTurno(nuevoEstado);
+        await verificarEstadoTurnoAgente(fecha);
         
         // Cambiar automáticamente a salida si se registró entrada
         if (tipoRegistro === 'entrada') {
@@ -154,14 +197,34 @@ export const TurnosForm = () => {
     );
   };
 
+  if (!user || user.role !== 'agente_seguridad') {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="text-center py-8">
+            <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Acceso Restringido</h3>
+            <p className="text-muted-foreground">
+              Esta sección solo está disponible para agentes de seguridad autenticados.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center gap-2">
             <Clock className="h-6 w-6" />
-            Control de Turnos de Empleados
+            Control de Turnos - Agente
           </CardTitle>
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <User className="h-4 w-4" />
+            <span>Conectado como: {user.username}</span>
+          </div>
           <div className="text-lg font-mono">
             {currentTime.toLocaleDateString('es-ES', {
               weekday: 'long',
@@ -176,31 +239,18 @@ export const TurnosForm = () => {
         </CardHeader>
         
         <CardContent className="space-y-6">
-          {/* Selector de Empleado */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Seleccionar Empleado
-            </label>
-            <EmpleadoTurnoSelector
-              onEmpleadoSelect={handleEmpleadoSelect}
-              selectedEmpleadoId={selectedEmpleadoId}
-            />
+          {/* Estado del Turno */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Estado del turno:</span>
+              {getEstadoBadge()}
+            </div>
+            
+            {getTurnoInfo()}
           </div>
 
-          {/* Estado del Turno */}
-          {selectedEmpleadoId && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Estado del turno:</span>
-                {getEstadoBadge()}
-              </div>
-              
-              {getTurnoInfo()}
-            </div>
-          )}
-
           {/* Tipo de Registro */}
-          {selectedEmpleadoId && estadoTurno.estado !== 'completo' && (
+          {estadoTurno.estado !== 'completo' && (
             <div className="space-y-4">
               <div className="text-center">
                 <h3 className="text-lg font-medium mb-2">
@@ -232,7 +282,7 @@ export const TurnosForm = () => {
                 <span className="font-medium">Turno completo registrado</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                El empleado ya tiene registradas tanto la entrada como la salida para hoy.
+                Ya has registrado tanto la entrada como la salida para hoy.
               </p>
             </div>
           )}

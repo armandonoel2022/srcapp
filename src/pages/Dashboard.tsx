@@ -21,7 +21,9 @@ import { HeatMap } from '@/components/HeatMap';
 import { InteractiveHeatMap } from '@/components/InteractiveHeatMap';
 import { AutoGeocodingUpdater } from '@/components/AutoGeocodingUpdater';
 import { TurnosForm } from '@/components/TurnosForm';
+import { TurnosAgentForm } from '@/components/TurnosAgentForm';
 import { ConsultaTurnos } from '@/components/ConsultaTurnos';
+import { DashboardAnalisisTurnos } from '@/components/DashboardAnalisisTurnos';
 import { BiometricAuthSetup } from '@/components/BiometricAuthSetup';
 
 export const Dashboard = () => {
@@ -143,9 +145,11 @@ export const Dashboard = () => {
       case 'dashboard-cumplimiento':
         return <DashboardCumplimiento />;
       case 'turnos':
-        return <TurnosForm />;
+        return user?.role === 'agente_seguridad' ? <TurnosAgentForm /> : <TurnosForm />;
       case 'consulta-turnos':
         return <ConsultaTurnos />;
+      case 'analisis-turnos':
+        return <DashboardAnalisisTurnos />;
       case 'mapa-calor':
         return <InteractiveHeatMap />;
       default:
