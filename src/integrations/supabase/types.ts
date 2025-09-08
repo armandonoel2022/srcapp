@@ -160,6 +160,7 @@ export type Database = {
           apellidos: string
           cedula: string | null
           created_at: string
+          fecha_nacimiento: string | null
           foto: string | null
           funcion: string
           id: string
@@ -175,6 +176,7 @@ export type Database = {
           apellidos: string
           cedula?: string | null
           created_at?: string
+          fecha_nacimiento?: string | null
           foto?: string | null
           funcion: string
           id?: string
@@ -190,6 +192,7 @@ export type Database = {
           apellidos?: string
           cedula?: string | null
           created_at?: string
+          fecha_nacimiento?: string | null
           foto?: string | null
           funcion?: string
           id?: string
