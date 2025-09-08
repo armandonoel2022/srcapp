@@ -10,6 +10,7 @@ interface Empleado {
   cedula?: string;
   foto?: string;
   ubicacion_designada?: string;
+  fecha_nacimiento?: string;
   active: boolean;
   requires_password_change: boolean;
   created_at: string;
