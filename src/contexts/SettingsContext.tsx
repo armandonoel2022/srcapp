@@ -7,37 +7,32 @@ interface SettingsContextType {
   setTheme: (theme: Theme) => void;  
   geolocationEnabled: boolean;  
   setGeolocationEnabled: (enabled: boolean) => void;  
-  twoFactorEnabled: boolean;  
-  setTwoFactorEnabled: (enabled: boolean) => void;  
   biometricEnabled: boolean;  
   setBiometricEnabled: (enabled: boolean) => void;  
   mapboxToken: string;  
   setMapboxToken: (token: string) => void;  
 }  
   
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);  
+const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
   
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {  
   const [theme, setThemeState] = useState<Theme>('system');  
   const [geolocationEnabled, setGeolocationEnabled] = useState(true);  
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);  
   const [biometricEnabled, setBiometricEnabled] = useState(false);  
-  const [mapboxToken, setMapboxToken] = useState('pk.eyJ1IjoiYXJtYW5kb25vZWwiLCJhIjoiY21jeGx1eDF5MDJ4YTJqbjdlamQ4aTRxNCJ9.6M0rLVxf5UTiE7EBw7qjTQ');  
+  const [mapboxToken, setMapboxToken] = useState('pk.eyJ1IjoiYXJtYW5kb25vZWwiLCJhIjoiY21jeGx1eDF5MDJ4YTJqbjdlamQ4aTRxNCJ9.6M0rLVxf5UTiE7EBw7qjTQ');
   
   // Load settings from localStorage on mount  
   useEffect(() => {  
     const savedTheme = localStorage.getItem('app-theme') as Theme;  
     const savedGeolocation = localStorage.getItem('geolocation-enabled');  
-    const savedTwoFactor = localStorage.getItem('two-factor-enabled');  
     const savedBiometric = localStorage.getItem('biometricEnabled');  
     const savedMapboxToken = localStorage.getItem('mapbox-token');  
   
     if (savedTheme) setThemeState(savedTheme);  
     if (savedGeolocation) setGeolocationEnabled(savedGeolocation === 'true');  
-    if (savedTwoFactor) setTwoFactorEnabled(savedTwoFactor === 'true');  
     if (savedBiometric) setBiometricEnabled(savedBiometric === 'true');  
     if (savedMapboxToken) setMapboxToken(savedMapboxToken);  
-  }, []);  
+  }, []);
   
   // Apply theme to document  
   useEffect(() => {  
@@ -71,12 +66,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const setGeolocationEnabledWithStorage = (enabled: boolean) => {  
     setGeolocationEnabled(enabled);  
     localStorage.setItem('geolocation-enabled', enabled.toString());  
-  };  
-  
-  const setTwoFactorEnabledWithStorage = (enabled: boolean) => {  
-    setTwoFactorEnabled(enabled);  
-    localStorage.setItem('two-factor-enabled', enabled.toString());  
-  };  
+  };
   
   const setBiometricEnabledWithStorage = (enabled: boolean) => {  
     setBiometricEnabled(enabled);  
@@ -94,8 +84,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       setTheme,  
       geolocationEnabled,  
       setGeolocationEnabled: setGeolocationEnabledWithStorage,  
-      twoFactorEnabled,  
-      setTwoFactorEnabled: setTwoFactorEnabledWithStorage,  
       biometricEnabled,  
       setBiometricEnabled: setBiometricEnabledWithStorage,  
       mapboxToken,  
@@ -103,7 +91,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     }}>  
       {children}  
     </SettingsContext.Provider>  
-  );  
+  );
 };  
   
 export const useSettings = () => {  
