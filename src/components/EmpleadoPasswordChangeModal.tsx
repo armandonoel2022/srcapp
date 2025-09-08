@@ -147,31 +147,44 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
               disabled={!isFormValid || loading}
               className={isRequired ? "w-full" : "flex-1"}
               onClick={async () => {
-                console.log('Button clicked directly');
-                
-                if (newPassword !== confirmPassword) {
-                  console.log('Passwords do not match');
-                  return;
-                }
+                try {
+                  console.log('🔄 Iniciando cambio de contraseña...');
+                  console.log('📋 Datos:', { 
+                    newPassword: newPassword.length + ' caracteres', 
+                    confirmPassword: confirmPassword.length + ' caracteres',
+                    passwordsMatch: newPassword === confirmPassword,
+                    minLength: newPassword.length >= 6
+                  });
+                  
+                  if (newPassword !== confirmPassword) {
+                    console.log('❌ Las contraseñas no coinciden');
+                    return;
+                  }
 
-                if (newPassword.length < 6) {
-                  console.log('Password too short');
-                  return;
-                }
+                  if (newPassword.length < 6) {
+                    console.log('❌ Contraseña muy corta');
+                    return;
+                  }
 
-                console.log('Attempting to change password...');
-                const result = await changePassword(newPassword);
-                console.log('Change password result:', result);
-                
-                if (result.success) {
-                  setNewPassword('');
-                  setConfirmPassword('');
-                  onClose();
+                  console.log('✅ Validaciones pasadas, llamando changePassword...');
+                  const result = await changePassword(newPassword);
+                  console.log('📤 Resultado del cambio:', result);
+                  
+                  if (result && result.success) {
+                    console.log('✅ Contraseña cambiada exitosamente');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                    onClose();
+                  } else {
+                    console.log('❌ Error al cambiar contraseña:', result);
+                  }
+                } catch (error) {
+                  console.error('💥 Error inesperado:', error);
                 }
               }}
             >
               <Save className="mr-2 h-4 w-4" />
-              {loading ? 'Guardando...' : 'Cambiar Contraseña'}
+              {loading ? 'Guardando...' : 'Guardar cambios'}
             </Button>
           </div>
         </form>
