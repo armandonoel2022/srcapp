@@ -9,6 +9,7 @@ import { EmpleadoTurnoForm } from '@/components/EmpleadoTurnoForm';
 import { CameraScanner } from '@/components/CameraScanner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useGeolocation } from '@/hooks/useGeolocation';
 
 export const TurnosForm = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -23,6 +24,7 @@ export const TurnosForm = () => {
 
   const { registrarTurno, verificarEstadoTurno, loading } = useTurnos();
   const { toast } = useToast();
+  const { getCurrentPosition } = useGeolocation();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -67,17 +69,21 @@ export const TurnosForm = () => {
 
     // Obtener ubicación actual
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000
+      // Usar el hook de geolocalización
+      const locationData = await getCurrentPosition();
+      
+      if (!locationData) {
+        toast({
+          title: "Error de geolocalización", 
+          description: "No se pudo obtener la ubicación. Verifique los permisos.",
+          variant: "destructive"
         });
-      });
+        return;
+      }
 
       const ubicacion = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
+        lat: locationData.latitude,
+        lng: locationData.longitude
       };
 
       const now = new Date();

@@ -8,6 +8,7 @@ import { CameraScanner } from '@/components/CameraScanner';
 import { EmpleadoPasswordChangeModal } from '@/components/EmpleadoPasswordChangeModal';
 import { useToast } from '@/hooks/use-toast';
 import { useEmpleadoAuth, EmpleadoAuth } from '@/hooks/useEmpleadoAuth';
+import { useGeolocation } from '@/hooks/useGeolocation';
 
 interface EmpleadoDashboardProps {
   empleado: EmpleadoAuth;
@@ -26,6 +27,7 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
   const { registrarTurno, verificarEstadoTurno, loading } = useTurnos();
   const { logout } = useEmpleadoAuth();
   const { toast } = useToast();
+  const { getCurrentPosition } = useGeolocation();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -73,17 +75,21 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
 
   const handleCameraCapture = async (photo: string) => {
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000
+      // Obtener geolocalización usando el hook
+      const locationData = await getCurrentPosition();
+      
+      if (!locationData) {
+        toast({
+          title: "Error de geolocalización",
+          description: "No se pudo obtener la ubicación. Verifique los permisos.",
+          variant: "destructive"
         });
-      });
+        return;
+      }
 
       const ubicacion = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
+        lat: locationData.latitude,
+        lng: locationData.longitude
       };
 
       const now = new Date();
@@ -115,8 +121,8 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
 
     } catch (error: any) {
       toast({
-        title: "Error de geolocalización",
-        description: "No se pudo obtener la ubicación. Verifique los permisos.",
+        title: "Error",
+        description: "Error al registrar el turno",
         variant: "destructive"
       });
     }
