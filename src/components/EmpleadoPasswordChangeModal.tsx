@@ -21,6 +21,7 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
 
   const handlePasswordChange = async () => {
     console.log('🚀 BOTÓN CLICKEADO - handlePasswordChange ejecutado');
+    alert('BOTÓN CLICKEADO - Función iniciada');
     
     if (newPassword !== confirmPassword) {
       console.log('❌ Contraseñas no coinciden');
@@ -35,18 +36,23 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
     }
 
     console.log('✅ Validaciones pasadas, llamando changePassword...');
+    alert('Validaciones OK, llamando changePassword...');
+    
     try {
+      console.log('🔄 Antes de llamar changePassword');
       const result = await changePassword(newPassword);
-      console.log('📤 Resultado:', result);
+      console.log('📤 Resultado después de changePassword:', result);
+      alert('Resultado: ' + JSON.stringify(result));
       
       if (result && result.success) {
         console.log('✅ Contraseña cambiada exitosamente');
+        alert('¡Contraseña cambiada exitosamente!');
         setNewPassword('');
         setConfirmPassword('');
         onClose();
       } else {
         console.log('❌ Error al cambiar contraseña');
-        alert('Error al cambiar la contraseña');
+        alert('Error al cambiar la contraseña: ' + JSON.stringify(result));
       }
     } catch (error) {
       console.error('💥 Error:', error);
