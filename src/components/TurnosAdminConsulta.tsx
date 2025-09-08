@@ -23,7 +23,7 @@ interface Turno {
   ubicacion_entrada?: unknown;
   ubicacion_salida?: unknown;
   observaciones?: string | null;
-  empleados: {
+  empleados_turnos: {
     nombres: string;
     apellidos?: string | null;
     funcion: string;
@@ -69,9 +69,9 @@ export const TurnosAdminConsulta = () => {
 
     if (searchEmpleado) {
       filtered = filtered.filter(turno => {
-        if (!turno.empleados) return false;
-        const nombreCompleto = `${turno.empleados.nombres} ${turno.empleados.apellidos || ''}`.toLowerCase();
-        const funcion = turno.empleados.funcion.toLowerCase();
+        if (!turno.empleados_turnos) return false;
+        const nombreCompleto = `${turno.empleados_turnos.nombres} ${turno.empleados_turnos.apellidos || ''}`.toLowerCase();
+        const funcion = turno.empleados_turnos.funcion.toLowerCase();
         const search = searchEmpleado.toLowerCase();
         return nombreCompleto.includes(search) || funcion.includes(search);
       });
@@ -249,11 +249,11 @@ export const TurnosAdminConsulta = () => {
                           <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span>
-                              {turno.empleados?.nombres} {turno.empleados?.apellidos || ''}
+                              {turno.empleados_turnos?.nombres} {turno.empleados_turnos?.apellidos || ''}
                             </span>
                           </div>
                         </td>
-                        <td className="p-3">{turno.empleados?.funcion}</td>
+                        <td className="p-3">{turno.empleados_turnos?.funcion}</td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -329,7 +329,7 @@ export const TurnosAdminConsulta = () => {
               <div>
                 <Label>Empleado</Label>
                 <p className="text-sm text-muted-foreground">
-                  {selectedTurno.empleados?.nombres} {selectedTurno.empleados?.apellidos || ''} - {selectedTurno.empleados?.funcion}
+                  {selectedTurno.empleados_turnos?.nombres} {selectedTurno.empleados_turnos?.apellidos || ''} - {selectedTurno.empleados_turnos?.funcion}
                 </p>
               </div>
 

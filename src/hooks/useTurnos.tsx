@@ -100,8 +100,9 @@ export const useTurnos = () => {
         .from('turnos_empleados')
         .select(`
           *,
-          empleados (
-            nombre,
+          empleados_turnos (
+            nombres,
+            apellidos,
             funcion
           )
         `)

@@ -146,10 +146,6 @@ export const Dashboard = () => {
         return <DashboardCumplimiento />;
       case 'turnos':
         return <TurnosFormEnhanced />;
-      case 'consulta-turnos':
-        return <ConsultaTurnos />;
-      case 'analisis-turnos':
-        return <DashboardAnalisisTurnos />;
       case 'mapa-calor':
         return <InteractiveHeatMap />;
       default:

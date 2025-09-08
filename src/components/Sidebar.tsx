@@ -44,8 +44,6 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
   const adminItems = [
     { id: 'usuarios', label: 'Gestionar Usuarios', icon: UserPlus },
     { id: 'turnos', label: 'Control de Turnos', icon: CheckCircle },
-    { id: 'consulta-turnos', label: 'Consultar Turnos', icon: Search },
-    { id: 'analisis-turnos', label: 'Análisis de Turnos', icon: BarChart3 },
     { id: 'editar-registros', label: 'Editar Entradas y Salidas', icon: Edit },
     { id: 'eliminar-empleados', label: 'Eliminar Empleados', icon: Trash }
   ];
