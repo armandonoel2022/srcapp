@@ -32,10 +32,10 @@ export const GestionEmpleados = () => {
     setSubmitting(true);
     const result = await agregarEmpleado({
       nombres: nuevoNombres.trim(),
-      apellidos: nuevosApellidos.trim() || undefined,
-      funcion: nuevaFuncion.trim() || undefined,
-      cedula: nuevaCedula.trim() || undefined,
-      ubicacion_designada: nuevaUbicacion.trim() || undefined
+      apellidos: nuevosApellidos.trim() || null,
+      funcion: nuevaFuncion.trim() || null,
+      cedula: nuevaCedula.trim() || null,
+      ubicacion_designada: nuevaUbicacion.trim() || null
     });
     
     if (result.success) {
@@ -72,8 +72,8 @@ export const GestionEmpleados = () => {
     setSubmitting(true);
     const result = await actualizarEmpleado(selectedEmpleado.id, {
       nombres: nuevoNombres.trim(),
-      apellidos: nuevosApellidos.trim() || undefined,
-      funcion: nuevaFuncion.trim() || undefined,
+      apellidos: nuevosApellidos.trim() || null,
+      funcion: nuevaFuncion.trim() || null,
       cedula: nuevaCedula.trim() || null,
       ubicacion_designada: nuevaUbicacion.trim() || null,
       fecha_nacimiento: nuevaFechaNacimiento || null
