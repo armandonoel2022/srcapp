@@ -368,6 +368,10 @@ export const InteractiveHeatMap = () => {
           // Si es una zona, establecerla como seleccionada
           if (foundZone) {
             setSelectedZone(foundZone);
+            // Scroll al mapa automáticamente cuando se selecciona una zona
+            setTimeout(() => {
+              mapContainer.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 500);
           }
         }
         
@@ -412,7 +416,11 @@ export const InteractiveHeatMap = () => {
     }  
   
     // Buscar la ubicación
-    await searchAndCenterLocation(searchQuery);
+    const success = await searchAndCenterLocation(searchQuery);
+    if (success) {
+      // Scroll al mapa automáticamente
+      mapContainer.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   // Función para obtener ubicación actual
@@ -486,8 +494,8 @@ export const InteractiveHeatMap = () => {
   };
 
   return (  
-    <div className="space-y-4">  
-      <Card>  
+    <div className="space-y-4 relative">  
+      <Card className="relative z-10">  
         <CardHeader>  
           <CardTitle className="flex items-center gap-2">  
             <MapPin className="h-5 w-5" />  
@@ -497,20 +505,26 @@ export const InteractiveHeatMap = () => {
         <CardContent>  
           <div className="flex flex-col gap-4">  
             {/* Barra de búsqueda */}  
-            <div className="flex gap-2">  
-              <Input  
-                placeholder="Buscar zona o dirección..."  
-                value={searchQuery}  
-                onChange={(e) => setSearchQuery(e.target.value)}  
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}  
-              />  
-              <Button onClick={handleSearch} disabled={isSearching}>  
+            <div className="flex gap-2 flex-wrap">  
+              <div className="flex-1 min-w-[200px] relative">  
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />  
+                <Input  
+                  placeholder="Buscar zona o dirección..."  
+                  value={searchQuery}  
+                  onChange={(e) => setSearchQuery(e.target.value)}  
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}  
+                  className="pl-10"  
+                />  
+              </div>  
+              <Button onClick={handleSearch} disabled={isSearching} className="min-w-[100px]">  
                 {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}  
+                Buscar  
               </Button>  
-              <Button variant="outline" onClick={getCurrentLocation} disabled={!geolocationEnabled || isSearching}>  
+              <Button variant="outline" onClick={getCurrentLocation} disabled={isSearching} className="min-w-[140px]">  
                 {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}  
+                Mi Ubicación  
               </Button>  
-            </div>  
+            </div>
   
             {/* Leyenda */}  
             <div className="flex flex-wrap gap-4 text-sm">  
@@ -533,7 +547,18 @@ export const InteractiveHeatMap = () => {
             </div>  
   
             {/* Mapa */}  
-            <div ref={mapContainer} className="h-96 w-full rounded-md border" />  
+            <div className={`w-full rounded-md border relative ${isFullScreen ? 'fixed inset-0 z-50 h-screen' : 'h-96'}`}>  
+              <div ref={mapContainer} className="w-full h-full rounded-md" />  
+              <Button  
+                onClick={() => setIsFullScreen(!isFullScreen)}  
+                className="absolute top-2 right-2 z-[1000] bg-white hover:bg-gray-100 text-gray-700 border shadow-lg"  
+                size="sm"  
+                variant="outline"  
+              >  
+                <Maximize2 className="h-4 w-4" />  
+                {isFullScreen ? 'Salir' : 'Pantalla completa'}  
+              </Button>  
+            </div>
   
             {/* Información de la zona/ubicación seleccionada */}  
             {searchResult && (  
@@ -569,7 +594,15 @@ export const InteractiveHeatMap = () => {
                 <div
                   key={zone.name}
                   className="flex items-center justify-between p-3 rounded border hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => searchAndCenterLocation(zone.name)}
+                  onClick={async () => {
+                    const success = await searchAndCenterLocation(zone.name);
+                    if (success) {
+                      // Scroll al mapa automáticamente
+                      setTimeout(() => {
+                        mapContainer.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 500);
+                    }
+                  }}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
