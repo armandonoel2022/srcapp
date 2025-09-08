@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,15 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { changePassword, loading, empleado } = useEmpleadoAuth();
+  const { changePassword, loading, empleado, checkAuth } = useEmpleadoAuth();
+
+  // Asegurar que el empleado esté cargado desde localStorage
+  useEffect(() => {
+    if (!empleado) {
+      console.log('🔄 Empleado no está cargado, llamando checkAuth()');
+      checkAuth();
+    }
+  }, [empleado, checkAuth]);
 
   const handlePasswordChange = async () => {
     console.log('🚀 BOTÓN CLICKEADO - handlePasswordChange ejecutado');
