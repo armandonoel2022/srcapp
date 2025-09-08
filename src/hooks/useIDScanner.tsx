@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
 import Tesseract from 'tesseract.js';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 interface IDData {
   cedula: string;
@@ -22,9 +24,37 @@ export const useIDScanner = () => {
     console.log('📹 Starting camera function called');
     try {
       setError(null);
-      console.log('📹 Requesting camera access...');
       
-      // Check if navigator.mediaDevices exists
+      // Check if running on mobile device with Capacitor
+      if (Capacitor.isNativePlatform()) {
+        console.log('📹 Using Capacitor Camera for mobile...');
+        
+        try {
+          const image = await Camera.getPhoto({
+            quality: 90,
+            allowEditing: false,
+            resultType: CameraResultType.DataUrl,
+            source: CameraSource.Camera,
+            saveToGallery: false
+          });
+          
+          if (image.dataUrl) {
+            console.log('📹 Capacitor camera photo captured');
+            setCapturedImage(image.dataUrl);
+            setPreviewMode(true);
+            setIsCameraActive(true);
+            return;
+          }
+        } catch (cameraError) {
+          console.error('Capacitor camera error:', cameraError);
+          setError('No se pudo acceder a la cámara. Verifique los permisos en configuración de la aplicación.');
+          return;
+        }
+      }
+      
+      console.log('📹 Using web camera for browser...');
+      
+      // Check if navigator.mediaDevices exists (for web browsers)
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera API not supported in this browser');
       }
@@ -82,7 +112,33 @@ export const useIDScanner = () => {
     setPreviewMode(false);
   };
 
-  const capturePhoto = () => {
+  const capturePhoto = async () => {
+    // If running on mobile with Capacitor, use the Camera plugin
+    if (Capacitor.isNativePlatform()) {
+      try {
+        console.log('📹 Using Capacitor Camera for photo capture...');
+        const image = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera,
+          saveToGallery: false
+        });
+        
+        if (image.dataUrl) {
+          setCapturedImage(image.dataUrl);
+          setPreviewMode(true);
+          setError(null);
+          return;
+        }
+      } catch (err) {
+        setError('Error al capturar la imagen con la cámara móvil');
+        console.error('Mobile capture error:', err);
+        return;
+      }
+    }
+
+    // Web browser capture using video stream
     if (!videoRef.current || !canvasRef.current) {
       setError('Error en los componentes de video');
       return;

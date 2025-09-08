@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Camera, X, Scan, Edit, RefreshCw, Check } from 'lucide-react';
 import { useIDScanner } from '@/hooks/useIDScanner';
 import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 interface CameraScannerProps {
   isOpen: boolean;
@@ -54,14 +55,14 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned, onPhotoCapture }
     onClose();
   };
 
-  const handleCapture = () => {
+  const handleCapture = async () => {
     if (onPhotoCapture) {
       // Para captura de turnos, capturar foto y enviarlo directamente
-      capturePhoto();
+      await capturePhoto();
       // El onPhotoCapture se llamará desde el useEffect cuando cambie capturedImage
     } else {
       // Para escaneo de IDs, usar el flujo normal
-      capturePhoto();
+      await capturePhoto();
     }
   };
 
@@ -150,11 +151,14 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned, onPhotoCapture }
                 <div className="text-center py-8">
                   <Camera className="h-16 w-16 mx-auto mb-4 text-gray-400" />
                   <p className="text-gray-600 mb-4">
-                    Active la cámara para tomar una foto clara de la cédula.
+                    {Capacitor.isNativePlatform() 
+                      ? "Presione el botón para abrir la cámara y tomar una foto de la cédula."
+                      : "Active la cámara para tomar una foto clara de la cédula."
+                    }
                   </p>
                   <Button onClick={handleStartCamera} className="gap-2">
                     <Camera className="h-4 w-4" />
-                    Activar Cámara
+                    {Capacitor.isNativePlatform() ? "Abrir Cámara" : "Activar Cámara"}
                   </Button>
                 </div>
               ) : previewMode && capturedImage ? (
