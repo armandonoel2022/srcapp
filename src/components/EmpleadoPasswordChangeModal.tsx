@@ -19,58 +19,68 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { changePassword, loading } = useEmpleadoAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    console.log('Form submitted', { newPassword, confirmPassword });
+  const handlePasswordChange = async () => {
+    console.log('🚀 BOTÓN CLICKEADO - handlePasswordChange ejecutado');
     
     if (newPassword !== confirmPassword) {
-      console.log('Passwords do not match');
+      console.log('❌ Contraseñas no coinciden');
+      alert('Las contraseñas no coinciden');
       return;
     }
 
     if (newPassword.length < 6) {
-      console.log('Password too short');
+      console.log('❌ Contraseña muy corta');
+      alert('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
-    console.log('Attempting to change password...');
-    const result = await changePassword(newPassword);
-    console.log('Change password result:', result);
-    
-    if (result.success) {
-      setNewPassword('');
-      setConfirmPassword('');
-      onClose();
+    console.log('✅ Validaciones pasadas, llamando changePassword...');
+    try {
+      const result = await changePassword(newPassword);
+      console.log('📤 Resultado:', result);
+      
+      if (result && result.success) {
+        console.log('✅ Contraseña cambiada exitosamente');
+        setNewPassword('');
+        setConfirmPassword('');
+        onClose();
+      } else {
+        console.log('❌ Error al cambiar contraseña');
+        alert('Error al cambiar la contraseña');
+      }
+    } catch (error) {
+      console.error('💥 Error:', error);
+      alert('Error inesperado: ' + error);
     }
   };
 
   const handleClose = () => {
-    if (isRequired) return; // No permitir cerrar si es requerido
+    if (isRequired) return;
     onClose();
   };
 
   const isFormValid = newPassword === confirmPassword && newPassword.length >= 6;
-  console.log('Form validation:', { newPassword, confirmPassword, isFormValid, passwordsMatch: newPassword === confirmPassword, minLength: newPassword.length >= 6 });
+
+  if (!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold">
             {isRequired ? 'Cambio de Contraseña Requerido' : 'Cambiar Contraseña'}
-          </DialogTitle>
-        </DialogHeader>
+          </h2>
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {isRequired && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                Debe cambiar su contraseña temporal antes de continuar.
-              </p>
-            </div>
-          )}
-          
+        {isRequired && (
+          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+            <p className="text-sm text-yellow-800">
+              Debe cambiar su contraseña temporal antes de continuar.
+            </p>
+          </div>
+        )}
+        
+        <div className="space-y-4">
           <div>
             <Label htmlFor="newPassword">Nueva Contraseña</Label>
             <div className="relative">
@@ -80,8 +90,7 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
-                required
-                minLength={6}
+                className="pr-10"
               />
               <Button
                 type="button"
@@ -90,11 +99,7 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
           </div>
@@ -108,8 +113,7 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Repita la nueva contraseña"
-                required
-                minLength={6}
+                className="pr-10"
               />
               <Button
                 type="button"
@@ -118,11 +122,7 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
           </div>
@@ -131,7 +131,7 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
             <p className="text-sm text-red-600">Las contraseñas no coinciden</p>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-6">
             {!isRequired && (
               <Button 
                 type="button" 
@@ -145,50 +145,15 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
             <Button 
               type="button"
               disabled={!isFormValid || loading}
-              className={isRequired ? "w-full" : "flex-1"}
-              onClick={async () => {
-                try {
-                  console.log('🔄 Iniciando cambio de contraseña...');
-                  console.log('📋 Datos:', { 
-                    newPassword: newPassword.length + ' caracteres', 
-                    confirmPassword: confirmPassword.length + ' caracteres',
-                    passwordsMatch: newPassword === confirmPassword,
-                    minLength: newPassword.length >= 6
-                  });
-                  
-                  if (newPassword !== confirmPassword) {
-                    console.log('❌ Las contraseñas no coinciden');
-                    return;
-                  }
-
-                  if (newPassword.length < 6) {
-                    console.log('❌ Contraseña muy corta');
-                    return;
-                  }
-
-                  console.log('✅ Validaciones pasadas, llamando changePassword...');
-                  const result = await changePassword(newPassword);
-                  console.log('📤 Resultado del cambio:', result);
-                  
-                  if (result && result.success) {
-                    console.log('✅ Contraseña cambiada exitosamente');
-                    setNewPassword('');
-                    setConfirmPassword('');
-                    onClose();
-                  } else {
-                    console.log('❌ Error al cambiar contraseña:', result);
-                  }
-                } catch (error) {
-                  console.error('💥 Error inesperado:', error);
-                }
-              }}
+              className={`${isRequired ? "w-full" : "flex-1"} bg-blue-600 hover:bg-blue-700 text-white`}
+              onClick={handlePasswordChange}
             >
               <Save className="mr-2 h-4 w-4" />
               {loading ? 'Guardando...' : 'Guardar cambios'}
             </Button>
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   );
 };
