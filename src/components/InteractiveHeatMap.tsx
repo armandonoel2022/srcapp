@@ -260,13 +260,8 @@ export const InteractiveHeatMap = () => {
     // Determinar el tipo de zona si está disponible
     const zoneType = zone ? getZoneTypeName(zone.type) : 'Ubicación específica';
     
-    marker.bindPopup(`  
-      <div class="p-2">  
-        <h3 class="font-bold text-sm">${title}</h3>  
-        <p class="text-xs text-gray-600">${zoneType}</p>  
-        <p class="text-xs mt-1">Coordenadas: ${coordinates[0].toFixed(6)}, ${coordinates[1].toFixed(6)}</p>  
-      </div>  
-    `);  
+    // Popup removido para no obstruir la vista del mapa
+    // La información ya se muestra en la parte inferior de la pantalla
 
     return marker;
   };
@@ -295,15 +290,8 @@ export const InteractiveHeatMap = () => {
       opacity: 0.8
     }).addTo(map);
 
-    // Popup para el área
-    circle.bindPopup(`
-      <div class="p-3">
-        <h3 class="font-bold text-sm">${zone.name}</h3>
-        <p class="text-xs text-gray-600">${getZoneTypeName(zone.type)}</p>
-        <p class="text-xs mt-1">Área aproximada de influencia</p>
-        <p class="text-xs">Radio: ${zoneStyle.radius}m</p>
-      </div>
-    `);
+    // Popup removido para no obstruir la vista del mapa
+    // La información ya se muestra en la parte inferior de la pantalla
 
     return circle;
   };
@@ -355,7 +343,7 @@ export const InteractiveHeatMap = () => {
         
         if (newMarker) {
           setMarkers([newMarker]);
-          newMarker.openPopup();
+          // No abrir popup automáticamente para no obstruir la vista
           
           // Guardar el resultado de la búsqueda para mostrar debajo del mapa
           setSearchResult({
@@ -472,7 +460,7 @@ export const InteractiveHeatMap = () => {
               coordinates: coordinates,
               displayName: 'Ubicación actual'
             });
-            newCustomLocation.bindPopup('Tu ubicación actual').openPopup();
+            newCustomLocation.bindPopup('Tu ubicación actual'); // No abrir popup automáticamente
           }
         }
         
