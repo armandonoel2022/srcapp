@@ -38,8 +38,8 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
     
-    /* Access control system colors */
-    --gradient-primary: linear-gradient(135deg, hsl(202 85% 67%), hsl(279 49% 66%));
+    /* Access control system colors - Blue theme only */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(202 85% 67%));
     --gradient-blue-form: linear-gradient(135deg, hsl(217 91% 60%), hsl(202 85% 67%));
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 96.1%));
     --shadow-elegant: 0 5px 10px hsl(222.2 84% 4.9% / 0.15);
