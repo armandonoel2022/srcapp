@@ -25,26 +25,67 @@ export const useGeolocation = () => {
       if (Capacitor.isNativePlatform()) {
         console.log('📍 Using Capacitor Geolocation for mobile...');
         
-        // Check permissions first
-        const permissions = await Geolocation.checkPermissions();
-        
-        if (permissions.location !== 'granted') {
-          const requestResult = await Geolocation.requestPermissions();
-          if (requestResult.location !== 'granted') {
-            throw new Error('Location permission denied');
-          }
-        }
-
-        const position = await Geolocation.getCurrentPosition({
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
+        // Add timeout for permission check
+        const permissionTimeout = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Permission request timeout')), 5000);
         });
 
-        return {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
+        try {
+          // Check permissions with timeout
+          const permissions = await Promise.race([
+            Geolocation.checkPermissions(),
+            permissionTimeout
+          ]);
+          
+          console.log('📍 Current permissions:', permissions);
+
+          if (permissions.location !== 'granted') {
+            console.log('📍 Requesting location permissions...');
+            
+            // Request permissions with timeout
+            const requestTimeout = new Promise<never>((_, reject) => {
+              setTimeout(() => reject(new Error('Permission request timeout')), 8000);
+            });
+            
+            const requestResult = await Promise.race([
+              Geolocation.requestPermissions(),
+              requestTimeout
+            ]);
+            
+            console.log('📍 Permission request result:', requestResult);
+            
+            if (requestResult.location !== 'granted') {
+              throw new Error('Permisos de ubicación denegados');
+            }
+          }
+
+          console.log('📍 Getting current position...');
+          
+          // Get position with timeout
+          const positionTimeout = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Position request timeout')), 8000);
+          });
+          
+          const position = await Promise.race([
+            Geolocation.getCurrentPosition({
+              enableHighAccuracy: false, // Reduced accuracy for better performance on iOS
+              timeout: 7000,
+              maximumAge: 300000, // 5 minutes cache
+            }),
+            positionTimeout
+          ]);
+
+          console.log('📍 Position obtained:', position.coords);
+
+          return {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+        } catch (capacitorError) {
+          console.warn('📍 Capacitor geolocation failed, trying web API...', capacitorError);
+          // Fall back to web geolocation if Capacitor fails
+          throw capacitorError;
+        }
       } else {
         console.log('📍 Using web geolocation for browser...');
         
