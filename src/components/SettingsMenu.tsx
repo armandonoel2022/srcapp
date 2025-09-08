@@ -7,15 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';  
 import { Badge } from '@/components/ui/badge';  
 import { Settings, Palette, MapPin, Shield, Fingerprint } from 'lucide-react';  
-import { useSettings } from '@/contexts/SettingsContext';  
-import { useBiometricAuth } from '@/hooks/useBiometricAuth';  
-import { use2FA } from '@/hooks/use2FA';  
-import { useToast } from '@/hooks/use-toast';  
-import { TwoFactorSetup } from '@/components/TwoFactorSetup';  
+import { useSettings } from '@/contexts/SettingsContext';
+import { useBiometricAuth } from '@/hooks/useBiometricAuth';
+import { useToast } from '@/hooks/use-toast';
   
-export const SettingsMenu = () => {  
-  const [isOpen, setIsOpen] = useState(false);  
-  const [show2FASetup, setShow2FASetup] = useState(false);  
+export const SettingsMenu = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const {   
     theme,   
     setTheme,   
@@ -23,10 +20,9 @@ export const SettingsMenu = () => {
     setGeolocationEnabled,  
     biometricEnabled,  
     setBiometricEnabled  
-  } = useSettings();  
-  const { registerBiometric, capabilities } = useBiometricAuth();  
-  const { config: twoFactorConfig } = use2FA();  
-  const { toast } = useToast();  
+  } = useSettings();
+  const { registerBiometric, capabilities } = useBiometricAuth();
+  const { toast } = useToast();
   
   const handleBiometricToggle = async (enabled: boolean) => {  
     if (enabled) {  
@@ -193,66 +189,6 @@ export const SettingsMenu = () => {
             </CardContent>  
           </Card>  
    
-          {/* Two-Factor Authentication */}  
-          <Card className="border-none shadow-xl">  
-            <CardHeader className="pb-3">  
-              <div className="flex items-center gap-3">  
-                <div className="p-2 bg-red-100 rounded-lg">  
-                  <Shield className="h-5 w-5 text-red-600" />  
-                </div>  
-                <div>  
-                  <CardTitle className="text-lg">Autenticación de Dos Factores</CardTitle>  
-                  <CardDescription>  
-                    Añade una capa extra de seguridad a tu cuenta  
-                  </CardDescription>  
-                </div>  
-              </div>  
-            </CardHeader>  
-            <CardContent className="pt-0">  
-              <div className="flex items-center justify-between p-3 rounded-lg bg-secondary">  
-                <div className="flex items-center gap-3">  
-                  <Shield className="h-5 w-5 text-red-600" />  
-                  <div>  
-                    <p className="font-medium text-sm">  
-                      {twoFactorConfig?.enabled ? "2FA Habilitado" : "2FA Deshabilitado"}  
-                    </p>  
-                    <p className="text-xs text-muted-foreground">  
-                      {twoFactorConfig?.enabled   
-                        ? "Tu cuenta está protegida con 2FA"   
-                        : "Habilita 2FA para mayor seguridad"  
-                      }  
-                    </p>  
-                  </div>  
-                </div>  
-                <Badge variant={twoFactorConfig?.enabled ? "default" : "destructive"}>  
-                  {twoFactorConfig?.enabled ? "Activo" : "Inactivo"}  
-                </Badge>  
-              </div>  
-                
-              <div className="mt-3">  
-                <Button  
-                  onClick={() => setShow2FASetup(true)}  
-                  variant={twoFactorConfig?.enabled ? "outline" : "default"}  
-                  className="w-full"  
-                >  
-                  <Shield className="h-4 w-4 mr-2" />  
-                  {twoFactorConfig?.enabled ? "Administrar 2FA" : "Configurar 2FA"}  
-                </Button>  
-              </div>  
-  
-              {twoFactorConfig?.enabled && (  
-                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">  
-                  <p className="text-sm text-green-800">  
-                    ✅ 2FA está habilitado. Tu cuenta está protegida con autenticación de dos factores.  
-                  </p>  
-                  <p className="text-xs text-green-700 mt-1">  
-                    Configurado el: {new Date(twoFactorConfig.created_at).toLocaleDateString()}  
-                  </p>  
-                </div>  
-              )}  
-            </CardContent>  
-          </Card>  
-  
           {/* About */}  
           <Card className="border-none shadow-xl">  
             <CardContent className="pt-6">  
@@ -267,13 +203,7 @@ export const SettingsMenu = () => {
             </CardContent>  
           </Card>  
         </div>  
-      </SheetContent>  
-        
-       <TwoFactorSetup 
-         isOpen={show2FASetup}
-         onClose={() => setShow2FASetup(false)}
-         onComplete={() => setShow2FASetup(false)}
-       />
+      </SheetContent>
     </Sheet>  
   );  
 };
