@@ -435,6 +435,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_turnos_empleados_empleado_id"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados_turnos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "turnos_empleados_empleado_id_fkey"
             columns: ["empleado_id"]
             isOneToOne: false
