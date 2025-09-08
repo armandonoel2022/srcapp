@@ -12,19 +12,12 @@ const config: CapacitorConfig = {
     allowsLinkPreview: false,
     handleApplicationURL: false,
     infoPlist: {
-      NSCameraUsageDescription: 'Esta aplicación necesita acceso a la cámara para escanear documentos de identidad.',
-      NSPhotoLibraryAddUsageDescription: 'Esta aplicación necesita acceso a la galería de fotos para guardar imágenes escaneadas.',
-      NSPhotoLibraryUsageDescription: 'Esta aplicación necesita acceso a la galería de fotos para seleccionar imágenes.',
-      NSLocationWhenInUseUsageDescription: 'Esta aplicación necesita acceso a la ubicación para registrar la posición durante el registro de turnos.',
-      NSMicrophoneUsageDescription: 'Esta aplicación necesita acceso al micrófono para funcionalidad de cámara.'
+      NSLocationWhenInUseUsageDescription: 'Esta aplicación necesita acceso a la ubicación para registrar la posición durante el registro de turnos.'
     }
   },
   plugins: {
     CapacitorHttp: {
       enabled: true,
-    },
-    Camera: {
-      permissions: ['camera', 'photos']
     },
     Geolocation: {
       permissions: ['location', 'coarseLocation']

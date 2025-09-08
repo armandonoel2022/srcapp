@@ -7,8 +7,6 @@ interface TurnoData {
   fecha: string;
   hora_entrada?: string;
   hora_salida?: string;
-  foto_entrada?: string;
-  foto_salida?: string;
   ubicacion_entrada?: { lat: number; lng: number };
   ubicacion_salida?: { lat: number; lng: number };
   tipo_registro: 'entrada' | 'salida';
@@ -51,7 +49,6 @@ export const useTurnos = () => {
             empleado_id: data.empleado_id,
             fecha: data.fecha,
             hora_entrada: data.hora_entrada,
-            foto_entrada: data.foto_entrada,
             ubicacion_entrada: data.ubicacion_entrada ? 
               `(${data.ubicacion_entrada.lat},${data.ubicacion_entrada.lng})` : null,
             tipo_registro: data.tipo_registro
@@ -65,7 +62,6 @@ export const useTurnos = () => {
           .from('turnos_empleados')
           .update({
             hora_salida: data.hora_salida,
-            foto_salida: data.foto_salida,
             ubicacion_salida: data.ubicacion_salida ? 
               `(${data.ubicacion_salida.lat},${data.ubicacion_salida.lng})` : null
           })

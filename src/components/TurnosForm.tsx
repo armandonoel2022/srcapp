@@ -2,29 +2,25 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Camera, MapPin, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Clock, MapPin, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
 import { EmpleadoTurnoSelector } from '@/components/EmpleadoTurnoSelector';
 import { EmpleadoTurnoForm } from '@/components/EmpleadoTurnoForm';
-import { CameraScanner } from '@/components/CameraScanner';
+import { PunchButton } from '@/components/PunchButton';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useGeolocation } from '@/hooks/useGeolocation';
 
 export const TurnosForm = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedEmpleado, setSelectedEmpleado] = useState('');
   const [selectedEmpleadoId, setSelectedEmpleadoId] = useState('');
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [tipoRegistro, setTipoRegistro] = useState<'entrada' | 'salida'>('entrada');
   const [estadoTurno, setEstadoTurno] = useState<{
     estado: 'sin_entrada' | 'entrada_registrada' | 'completo' | 'error';
     turno: any;
   }>({ estado: 'sin_entrada', turno: null });
 
-  const { registrarTurno, verificarEstadoTurno, loading } = useTurnos();
+  const { verificarEstadoTurno } = useTurnos();
   const { toast } = useToast();
-  const { getCurrentPosition } = useGeolocation();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -57,73 +53,14 @@ export const TurnosForm = () => {
     setSelectedEmpleadoId(empleadoId);
   };
 
-  const handleCameraCapture = async (photo: string) => {
-    if (!selectedEmpleadoId) {
-      toast({
-        title: "Error",
-        description: "Debe seleccionar un empleado primero",
-        variant: "destructive"
-      });
-      return;
+  const handleRegistroCompleto = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const nuevoEstado = await verificarEstadoTurno(selectedEmpleadoId, today);
+    setEstadoTurno(nuevoEstado);
+    
+    if (tipoRegistro === 'entrada') {
+      setTipoRegistro('salida');
     }
-
-    // Obtener ubicación actual
-    try {
-      // Usar el hook de geolocalización
-      const locationData = await getCurrentPosition();
-      
-      if (!locationData) {
-        toast({
-          title: "Error de geolocalización", 
-          description: "No se pudo obtener la ubicación. Verifique los permisos.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const ubicacion = {
-        lat: locationData.latitude,
-        lng: locationData.longitude
-      };
-
-      const now = new Date();
-      const fecha = now.toISOString().split('T')[0];
-      const hora = now.toTimeString().split(' ')[0];
-
-      const turnoData = {
-        empleado_id: selectedEmpleadoId,
-        fecha,
-        tipo_registro: tipoRegistro,
-        ubicacion_entrada: tipoRegistro === 'entrada' ? ubicacion : undefined,
-        ubicacion_salida: tipoRegistro === 'salida' ? ubicacion : undefined,
-        foto_entrada: tipoRegistro === 'entrada' ? photo : undefined,
-        foto_salida: tipoRegistro === 'salida' ? photo : undefined,
-        hora_entrada: tipoRegistro === 'entrada' ? hora : undefined,
-        hora_salida: tipoRegistro === 'salida' ? hora : undefined,
-      };
-
-      const result = await registrarTurno(turnoData);
-      
-      if (result.success) {
-        // Actualizar estado del turno
-        const nuevoEstado = await verificarEstadoTurno(selectedEmpleadoId, fecha);
-        setEstadoTurno(nuevoEstado);
-        
-        // Cambiar automáticamente a salida si se registró entrada
-        if (tipoRegistro === 'entrada') {
-          setTipoRegistro('salida');
-        }
-      }
-
-    } catch (error: any) {
-      toast({
-        title: "Error de geolocalización",
-        description: "No se pudo obtener la ubicación. Verifique los permisos.",
-        variant: "destructive"
-      });
-    }
-
-    setIsCameraOpen(false);
   };
 
   const getEstadoBadge = () => {
@@ -206,28 +143,14 @@ export const TurnosForm = () => {
             </div>
           )}
 
-          {/* Tipo de Registro */}
+          {/* PUNCH Button */}
           {selectedEmpleadoId && estadoTurno.estado !== 'completo' && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <h3 className="text-lg font-medium mb-2">
-                  Registrar {tipoRegistro === 'entrada' ? 'Entrada' : 'Salida'}
-                </h3>
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Camera className="h-4 w-4" />
-                  <span>Se capturará foto y ubicación automáticamente</span>
-                </div>
-              </div>
-
-              <Button
-                onClick={() => setIsCameraOpen(true)}
-                disabled={loading}
-                size="lg"
-                className="w-full"
-              >
-                <Camera className="mr-2 h-5 w-5" />
-                {loading ? 'Registrando...' : `Capturar ${tipoRegistro === 'entrada' ? 'Entrada' : 'Salida'}`}
-              </Button>
+            <div className="flex justify-center">
+              <PunchButton
+                empleadoId={selectedEmpleadoId}
+                tipoRegistro={tipoRegistro}
+                onRegistroCompleto={handleRegistroCompleto}
+              />
             </div>
           )}
 
@@ -245,13 +168,6 @@ export const TurnosForm = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Camera Scanner Modal */}
-      <CameraScanner
-        isOpen={isCameraOpen}
-        onClose={() => setIsCameraOpen(false)}
-        onPhotoCapture={handleCameraCapture}
-      />
     </div>
   );
 };
