@@ -152,13 +152,24 @@ export const CameraScanner = ({ isOpen, onClose, onDataScanned, onPhotoCapture }
                   <Camera className="h-16 w-16 mx-auto mb-4 text-gray-400" />
                   <p className="text-gray-600 mb-4">
                     {Capacitor.isNativePlatform() 
-                      ? "Presione el botón para abrir la cámara y tomar una foto de la cédula."
+                      ? "Presione el botón para abrir la cámara y tomar una foto."
                       : "Active la cámara para tomar una foto clara de la cédula."
                     }
                   </p>
                   <Button onClick={handleStartCamera} className="gap-2">
                     <Camera className="h-4 w-4" />
                     {Capacitor.isNativePlatform() ? "Abrir Cámara" : "Activar Cámara"}
+                  </Button>
+                </div>
+              ) : Capacitor.isNativePlatform() ? (
+                <div className="text-center py-8">
+                  <Camera className="h-16 w-16 mx-auto mb-4 text-green-600" />
+                  <p className="text-gray-600 mb-4">
+                    Cámara lista. Presione "Capturar" para tomar la foto.
+                  </p>
+                  <Button onClick={handleCapture} className="gap-2">
+                    <Camera className="h-4 w-4" />
+                    Capturar Foto
                   </Button>
                 </div>
               ) : previewMode && capturedImage ? (

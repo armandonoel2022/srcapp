@@ -29,27 +29,10 @@ export const useIDScanner = () => {
       if (Capacitor.isNativePlatform()) {
         console.log('📹 Using Capacitor Camera for mobile...');
         
-        try {
-          const image = await Camera.getPhoto({
-            quality: 90,
-            allowEditing: false,
-            resultType: CameraResultType.DataUrl,
-            source: CameraSource.Camera,
-            saveToGallery: false
-          });
-          
-          if (image.dataUrl) {
-            console.log('📹 Capacitor camera photo captured');
-            setCapturedImage(image.dataUrl);
-            setPreviewMode(true);
-            setIsCameraActive(true);
-            return;
-          }
-        } catch (cameraError) {
-          console.error('Capacitor camera error:', cameraError);
-          setError('No se pudo acceder a la cámara. Verifique los permisos en configuración de la aplicación.');
-          return;
-        }
+        // For mobile, we'll directly capture the photo instead of starting a preview
+        // This is more reliable on mobile devices
+        setIsCameraActive(true); // Set this to show we're ready
+        return;
       }
       
       console.log('📹 Using web camera for browser...');
