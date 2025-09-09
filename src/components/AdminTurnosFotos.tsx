@@ -29,7 +29,7 @@ interface TurnoConFoto {
 export const AdminTurnosFotos = () => {
   const [turnos, setTurnos] = useState<TurnoConFoto[]>([]);
   const [loading, setLoading] = useState(false);
-  const [fechaFiltro, setFechaFiltro] = useState(new Date().toISOString().split('T')[0]);
+  const [fechaFiltro, setFechaFiltro] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -37,11 +37,17 @@ export const AdminTurnosFotos = () => {
     setLoading(true);
     try {
       // First get turnos with photos
-      const { data: turnosData, error: turnosError } = await supabase
+      let query = supabase
         .from('turnos_empleados')
         .select('*')
-        .eq('fecha', fechaFiltro)
-        .or('foto_entrada.not.is.null,foto_salida.not.is.null')
+        .or('foto_entrada.not.is.null,foto_salida.not.is.null');
+        
+      // Apply date filter if provided
+      if (fechaFiltro) {
+        query = query.eq('fecha', fechaFiltro);
+      }
+      
+      const { data: turnosData, error: turnosError } = await query
         .order('created_at', { ascending: false });
 
       if (turnosError) throw turnosError;
