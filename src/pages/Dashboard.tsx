@@ -24,6 +24,7 @@ import { TurnosFormEnhanced } from '@/components/TurnosFormEnhanced';
 import { TurnosAgentForm } from '@/components/TurnosAgentForm';
 import { ConsultaTurnos } from '@/components/ConsultaTurnos';
 import { DashboardAnalisisTurnos } from '@/components/DashboardAnalisisTurnos';
+import { DashboardTurnos } from '@/components/DashboardTurnos';
 import { BiometricAuthSetup } from '@/components/BiometricAuthSetup';
 
 export const Dashboard = () => {
@@ -146,6 +147,8 @@ export const Dashboard = () => {
         return <DashboardCumplimiento />;
       case 'turnos':
         return <TurnosFormEnhanced />;
+      case 'dashboard-turnos':
+        return <DashboardTurnos />;
       case 'mapa-calor':
         return <InteractiveHeatMap />;
       default:
