@@ -445,7 +445,7 @@ export type Database = {
             foreignKeyName: "turnos_empleados_empleado_id_fkey"
             columns: ["empleado_id"]
             isOneToOne: false
-            referencedRelation: "empleados"
+            referencedRelation: "empleados_turnos"
             referencedColumns: ["id"]
           },
         ]
