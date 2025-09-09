@@ -57,45 +57,7 @@ export const useTurnos = () => {
       }
 
       if (data.tipo_registro === 'entrada') {
-        // Obtener información del empleado para verificar si es usuario de prueba
-        const { data: empleadoInfo, error: empleadoInfoError } = await supabase
-          .from('empleados_turnos')
-          .select('username, nombres, apellidos')
-          .eq('id', data.empleado_id)
-          .single();
-
-        // Para usuarios de prueba, permitir múltiples registros eliminando registros previos
-        if (empleadoInfo && empleadoInfo.username === 'uprueba') {
-          // Eliminar registros existentes del día para el usuario de prueba
-          await supabase
-            .from('turnos_empleados')
-            .delete()
-            .eq('empleado_id', data.empleado_id)
-            .eq('fecha', data.fecha);
-          
-          toast({
-            title: "Usuario de Prueba",
-            description: "Registros previos eliminados para permitir nuevas pruebas",
-          });
-        } else {
-          // Verificar si ya existe una entrada para hoy (solo para usuarios normales)
-          const { data: existingTurno } = await supabase
-            .from('turnos_empleados')
-            .select('*')
-            .eq('empleado_id', data.empleado_id)
-            .eq('fecha', data.fecha)
-            .maybeSingle();
-
-          if (existingTurno) {
-            toast({
-              title: "Error",
-              description: "Ya existe un registro de entrada para este empleado hoy",
-              variant: "destructive"
-            });
-            return { success: false };
-          }
-        }
-
+        // Siempre permitir nuevos registros de entrada para múltiples punches durante el día
         // Crear nuevo registro de entrada
         const { data: turnoData, error } = await supabase
           .from('turnos_empleados')
@@ -115,17 +77,29 @@ export const useTurnos = () => {
         return { success: true, turnoId: turnoData.id };
 
       } else {
-        // Buscar registro existente para obtener el ID
-        const { data: existingTurno, error: searchError } = await supabase
+        // Buscar el último registro de entrada sin salida para este empleado en esta fecha
+        const { data: entradaSinSalida, error: searchError } = await supabase
           .from('turnos_empleados')
           .select('id')
           .eq('empleado_id', data.empleado_id)
           .eq('fecha', data.fecha)
-          .single();
+          .is('hora_salida', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
         if (searchError) throw searchError;
 
-        // Actualizar registro existente con salida
+        if (!entradaSinSalida) {
+          toast({
+            title: "Error",
+            description: "No hay registro de entrada pendiente para registrar la salida",
+            variant: "destructive"
+          });
+          return { success: false, message: "No hay entrada pendiente" };
+        }
+
+        // Actualizar el registro de entrada con la salida
         const { error } = await supabase
           .from('turnos_empleados')
           .update({
@@ -133,12 +107,11 @@ export const useTurnos = () => {
             ubicacion_salida: data.ubicacion_salida ? 
               `(${data.ubicacion_salida.lat},${data.ubicacion_salida.lng})` : null
           })
-          .eq('empleado_id', data.empleado_id)
-          .eq('fecha', data.fecha);
+          .eq('id', entradaSinSalida.id);
 
         if (error) throw error;
 
-        return { success: true, turnoId: existingTurno.id };
+        return { success: true, turnoId: entradaSinSalida.id };
       }
     } catch (error: any) {
       toast({
@@ -191,25 +164,31 @@ export const useTurnos = () => {
 
   const verificarEstadoTurno = async (empleadoId: string, fecha: string): Promise<EstadoTurno> => {
     try {
-      const { data: turno, error } = await supabase
+      // Obtener todos los registros del empleado para esta fecha
+      const { data: turnos, error } = await supabase
         .from('turnos_empleados')
         .select('*')
         .eq('empleado_id', empleadoId)
         .eq('fecha', fecha)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      if (!turno) {
+      if (!turnos || turnos.length === 0) {
         return { estado: 'sin_entrada', turno: null };
       }
 
-      if (turno.hora_entrada && turno.hora_salida) {
-        return { estado: 'completo', turno };
+      // Verificar si hay alguna entrada sin salida
+      const entradaSinSalida = turnos.find(turno => turno.hora_entrada && !turno.hora_salida);
+      
+      if (entradaSinSalida) {
+        return { estado: 'entrada_registrada', turno: entradaSinSalida };
       }
 
-      if (turno.hora_entrada && !turno.hora_salida) {
-        return { estado: 'entrada_registrada', turno };
+      // Si todos los turnos tienen entrada y salida, está completo
+      const turnoCompleto = turnos.find(turno => turno.hora_entrada && turno.hora_salida);
+      if (turnoCompleto) {
+        return { estado: 'completo', turno: turnos }; // Retornamos todos los turnos
       }
 
       return { estado: 'sin_entrada', turno: null };
