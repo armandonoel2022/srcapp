@@ -27,7 +27,7 @@ import { DashboardAnalisisTurnos } from '@/components/DashboardAnalisisTurnos';
 import { DashboardTurnos } from '@/components/DashboardTurnos';
 import { BiometricAuthSetup } from '@/components/BiometricAuthSetup';
 import { AdminTurnosFotos } from '@/components/AdminTurnosFotos';
-import { AsignarUbicacionesEmpleados } from '@/components/AsignarUbicacionesEmpleados';
+import { MapaAsignarUbicacion } from '@/components/MapaAsignarUbicacion';
 
 export const Dashboard = () => {
   const { user, signOut, isAdmin } = useAuth();
@@ -151,8 +151,8 @@ export const Dashboard = () => {
         return <TurnosFormEnhanced />;
       case 'dashboard-turnos':
         return <DashboardTurnos />;
-      case 'asignar-ubicaciones':
-        return <AsignarUbicacionesEmpleados />;
+      case 'mapa-ubicaciones':
+        return <MapaAsignarUbicacion />;
       case 'revisar-fotos':
         return <AdminTurnosFotos />;
       case 'mapa-calor':

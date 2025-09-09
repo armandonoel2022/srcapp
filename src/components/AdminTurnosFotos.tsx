@@ -36,23 +36,37 @@ export const AdminTurnosFotos = () => {
   const cargarTurnos = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First get turnos with photos
+      const { data: turnosData, error: turnosError } = await supabase
         .from('turnos_empleados')
-        .select(`
-          *,
-          empleados_turnos!turnos_empleados_empleado_id_fkey (
-            nombres,
-            apellidos,
-            lugar_designado
-          )
-        `)
+        .select('*')
         .eq('fecha', fechaFiltro)
         .or('foto_entrada.not.is.null,foto_salida.not.is.null')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (turnosError) throw turnosError;
 
-      setTurnos(data || []);
+      // Then get empleados data for each turno
+      if (turnosData && turnosData.length > 0) {
+        const empleadoIds = turnosData.map(turno => turno.empleado_id).filter(Boolean);
+        
+        const { data: empleadosData, error: empleadosError } = await supabase
+          .from('empleados_turnos')
+          .select('id, nombres, apellidos, lugar_designado')
+          .in('id', empleadoIds);
+
+        if (empleadosError) throw empleadosError;
+
+        // Combine data
+        const turnosWithEmpleados = turnosData.map(turno => ({
+          ...turno,
+          empleados_turnos: empleadosData?.find(emp => emp.id === turno.empleado_id)
+        }));
+
+        setTurnos(turnosWithEmpleados);
+      } else {
+        setTurnos([]);
+      }
     } catch (error: any) {
       toast({
         title: "Error",
