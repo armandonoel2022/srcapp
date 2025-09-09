@@ -160,6 +160,8 @@ export type Database = {
           apellidos: string | null
           cedula: string | null
           created_at: string
+          direccion: string | null
+          fecha_ingreso: string | null
           fecha_nacimiento: string | null
           foto: string | null
           funcion: string
@@ -168,6 +170,7 @@ export type Database = {
           nombres: string
           password_hash: string | null
           requires_password_change: boolean | null
+          telefono: string | null
           ubicacion_designada: string | null
           updated_at: string
         }
@@ -176,6 +179,8 @@ export type Database = {
           apellidos?: string | null
           cedula?: string | null
           created_at?: string
+          direccion?: string | null
+          fecha_ingreso?: string | null
           fecha_nacimiento?: string | null
           foto?: string | null
           funcion: string
@@ -184,6 +189,7 @@ export type Database = {
           nombres: string
           password_hash?: string | null
           requires_password_change?: boolean | null
+          telefono?: string | null
           ubicacion_designada?: string | null
           updated_at?: string
         }
@@ -192,6 +198,8 @@ export type Database = {
           apellidos?: string | null
           cedula?: string | null
           created_at?: string
+          direccion?: string | null
+          fecha_ingreso?: string | null
           fecha_nacimiento?: string | null
           foto?: string | null
           funcion?: string
@@ -200,6 +208,7 @@ export type Database = {
           nombres?: string
           password_hash?: string | null
           requires_password_change?: boolean | null
+          telefono?: string | null
           ubicacion_designada?: string | null
           updated_at?: string
         }
@@ -691,14 +700,27 @@ export type Database = {
         Returns: boolean
       }
       create_empleado_with_password: {
-        Args: {
-          p_apellidos: string
-          p_cedula?: string
-          p_funcion: string
-          p_nombres: string
-          p_password?: string
-          p_ubicacion?: string
-        }
+        Args:
+          | {
+              p_apellidos: string
+              p_cedula?: string
+              p_direccion?: string
+              p_fecha_ingreso?: string
+              p_fecha_nacimiento?: string
+              p_funcion: string
+              p_nombres: string
+              p_password?: string
+              p_telefono?: string
+              p_ubicacion?: string
+            }
+          | {
+              p_apellidos: string
+              p_cedula?: string
+              p_funcion: string
+              p_nombres: string
+              p_password?: string
+              p_ubicacion?: string
+            }
         Returns: string
       }
       exec_sql: {

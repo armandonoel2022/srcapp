@@ -11,6 +11,9 @@ interface Empleado {
   foto?: string;
   ubicacion_designada?: string;
   fecha_nacimiento?: string;
+  fecha_ingreso?: string;
+  telefono?: string;
+  direccion?: string;
   active: boolean;
   requires_password_change: boolean;
   created_at: string;
@@ -53,6 +56,10 @@ export const useEmpleados = () => {
     funcion: string;
     cedula?: string;
     ubicacion_designada?: string;
+    fecha_nacimiento?: string;
+    telefono?: string;
+    direccion?: string;
+    fecha_ingreso?: string;
     password?: string;
   }) => {
     setLoading(true);
@@ -63,7 +70,11 @@ export const useEmpleados = () => {
         p_funcion: empleadoData.funcion,
         p_cedula: empleadoData.cedula || null,
         p_ubicacion: empleadoData.ubicacion_designada || null,
-        p_password: empleadoData.password || null
+        p_password: empleadoData.password || null,
+        p_fecha_nacimiento: empleadoData.fecha_nacimiento || null,
+        p_telefono: empleadoData.telefono || null,
+        p_direccion: empleadoData.direccion || null,
+        p_fecha_ingreso: empleadoData.fecha_ingreso || null
       });
 
       if (error) {

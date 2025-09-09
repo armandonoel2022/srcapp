@@ -122,6 +122,44 @@ export const GestionEmpleados = () => {
     return firstNameChar + firstSurname.toLowerCase();
   };
 
+  // Función para parsear fechas del formato del cliente
+  const parseDate = (dateStr: string): string | null => {
+    if (!dateStr) return null;
+    
+    try {
+      // Manejar diferentes formatos de fecha
+      const cleanDate = dateStr.trim();
+      
+      // Formato: "23 de Marzo 2011" o "11de abril de 1977"
+      const monthMap: {[key: string]: string} = {
+        'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
+        'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
+        'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+      };
+      
+      const dateRegex = /(\d{1,2})\s*de\s*(\w+)\s*(?:del?\s*)?(\d{4})/i;
+      const match = cleanDate.match(dateRegex);
+      
+      if (match) {
+        const [, day, monthName, year] = match;
+        const month = monthMap[monthName.toLowerCase()];
+        if (month) {
+          return `${year}-${month}-${day.padStart(2, '0')}`;
+        }
+      }
+      
+      // Si no coincide, intentar formato ISO
+      const isoDate = new Date(cleanDate);
+      if (!isNaN(isoDate.getTime())) {
+        return isoDate.toISOString().split('T')[0];
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
   // Función para importar empleados masivamente
   const handleBulkImport = async () => {
     if (!bulkData.trim()) {
@@ -156,11 +194,16 @@ export const GestionEmpleados = () => {
           apellidos,
           funcion: puesto || 'Oficial de Seguridad',
           cedula: cedula.trim(),
-          ubicacion_designada: direccion || null
+          ubicacion_designada: direccion || null,
+          fecha_nacimiento: parseDate(fechaNacimiento),
+          fecha_ingreso: parseDate(fechaIngreso),
+          telefono: telefonos || null,
+          direccion: direccion || null
         });
         successCount++;
       } catch (error) {
         errorCount++;
+        console.error('Error importing employee:', error);
       }
     }
 
