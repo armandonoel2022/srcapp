@@ -34,14 +34,14 @@ export const DashboardCumplimiento = () => {
   const cargarUbicaciones = async () => {
     try {
       const { data, error } = await supabase
-        .from('empleados')
-        .select('ubicacion_designada')
-        .not('ubicacion_designada', 'is', null)
+        .from('empleados_turnos')
+        .select('lugar_designado')
+        .not('lugar_designado', 'is', null)
         .eq('active', true);
 
       if (error) throw error;
 
-      const ubicacionesUnicas = [...new Set(data.map(e => e.ubicacion_designada))].filter(Boolean);
+      const ubicacionesUnicas = [...new Set(data.map(e => e.lugar_designado))].filter(Boolean);
       setUbicaciones(ubicacionesUnicas);
     } catch (error: any) {
       console.error('Error cargando ubicaciones:', error);
@@ -59,18 +59,18 @@ export const DashboardCumplimiento = () => {
           fecha,
           hora_entrada,
           hora_salida,
-          empleados!inner (
+          empleados_turnos!empleado_id (
             nombres,
             apellidos,
             funcion,
-            ubicacion_designada
+            lugar_designado
           )
         `)
         .gte('fecha', fechaInicio)
         .lte('fecha', fechaFin);
 
       if (filtroUbicacion !== 'todas') {
-        query = query.eq('empleados.ubicacion_designada', filtroUbicacion);
+        query = query.eq('empleados_turnos.lugar_designado', filtroUbicacion);
       }
 
       const { data, error } = await query;
@@ -81,7 +81,7 @@ export const DashboardCumplimiento = () => {
       const empleadosMap = new Map();
 
       data?.forEach(turno => {
-        const empleado = turno.empleados;
+        const empleado = turno.empleados_turnos;
         const key = turno.empleado_id;
 
         if (!empleadosMap.has(key)) {
@@ -90,7 +90,7 @@ export const DashboardCumplimiento = () => {
             nombres: empleado.nombres,
             apellidos: empleado.apellidos,
             funcion: empleado.funcion,
-            ubicacion: empleado.ubicacion_designada || 'Sin asignar',
+            ubicacion: empleado.lugar_designado || 'Sin asignar',
             turnos: [],
             turnos_completos: 0,
             total_turnos: 0

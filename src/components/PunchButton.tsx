@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { MapPin, Clock, Loader2 } from 'lucide-react';
+import { MapPin, Clock, Loader2, Shield } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useToast } from '@/hooks/use-toast';
@@ -81,8 +81,8 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
           {tipoRegistro === 'entrada' ? 'PUNCH IN' : 'PUNCH OUT'}
         </h3>
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <MapPin className="h-4 w-4" />
-          <span>Se registrará tu ubicación actual</span>
+          <Shield className="h-4 w-4" />
+          <span>Se verificará tu ubicación vs lugar designado</span>
         </div>
       </div>
 
@@ -103,7 +103,8 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
       </Button>
 
       <p className="text-xs text-muted-foreground text-center max-w-xs">
-        Presiona el botón PUNCH para registrar tu {tipoRegistro === 'entrada' ? 'entrada' : 'salida'} con ubicación automática
+        Presiona el botón PUNCH para registrar tu {tipoRegistro === 'entrada' ? 'entrada' : 'salida'}. 
+        Tu ubicación será validada automáticamente.
       </p>
     </div>
   );

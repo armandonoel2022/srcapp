@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { validateLocationForWork, type LocationCoordinates } from '@/utils/locationValidation';
 
 interface TurnoData {
   empleado_id: string;
@@ -24,6 +25,37 @@ export const useTurnos = () => {
   const registrarTurno = async (data: TurnoData) => {
     setLoading(true);
     try {
+      // Obtener información del empleado para validar ubicación
+      const { data: empleadoData, error: empleadoError } = await supabase
+        .from('empleados_turnos')
+        .select('lugar_designado')
+        .eq('id', data.empleado_id)
+        .single();
+
+      if (empleadoError) {
+        throw new Error('No se pudo obtener la información del empleado');
+      }
+
+      // Validar ubicación si se proporciona
+      if ((data.ubicacion_entrada || data.ubicacion_salida) && empleadoData.lugar_designado) {
+        const currentLocation: LocationCoordinates = data.ubicacion_entrada || data.ubicacion_salida!;
+        const validationResult = validateLocationForWork(currentLocation, empleadoData.lugar_designado);
+        
+        if (!validationResult.isValid) {
+          toast({
+            title: "Ubicación Inválida",
+            description: validationResult.message,
+            variant: "destructive"
+          });
+          return { success: false, message: validationResult.message };
+        } else {
+          toast({
+            title: "Ubicación Verificada",
+            description: validationResult.message,
+          });
+        }
+      }
+
       if (data.tipo_registro === 'entrada') {
         // Verificar si ya existe una entrada para hoy
         const { data: existingTurno } = await supabase
