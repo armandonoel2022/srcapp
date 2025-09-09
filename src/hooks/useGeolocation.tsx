@@ -36,52 +36,65 @@ export const useGeolocation = () => {
         console.log('📍 Using Capacitor Geolocation for mobile...');
         
         try {
-          // Solicitar permisos primero
-          console.log('📍 Requesting location permissions...');
-          const permissions = await Geolocation.requestPermissions();
-          console.log('📍 Permission result:', permissions);
+          // En iOS, intentar obtener posición directamente primero
+          console.log('📍 Attempting to get position directly...');
           
-          if (permissions.location === 'granted') {
-            console.log('📍 Permissions granted, getting position...');
-            
+          try {
             const position = await Geolocation.getCurrentPosition({
               enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 60000, // 1 minuto cache
+              timeout: 15000, // Timeout más largo para móviles
+              maximumAge: 30000, // Cache más corto para mejor precisión
             });
 
-            console.log('📍 Position obtained:', position.coords);
+            console.log('📍 Position obtained directly:', position.coords);
 
             return {
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
             };
-          } else if (permissions.location === 'prompt') {
-            console.log('📍 Permission prompt, trying to get position anyway...');
+          } catch (directPositionError) {
+            console.log('📍 Direct position failed, requesting permissions...', directPositionError);
             
-            // En iOS, a veces el permiso se otorga durante getCurrentPosition
+            // Solo si falla obtener posición directamente, solicitar permisos con timeout
+            const permissionsPromise = Geolocation.requestPermissions();
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error('Permission request timeout')), 5000);
+            });
+            
             try {
-              const position = await Geolocation.getCurrentPosition({
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 60000,
-              });
+              const permissions = await Promise.race([permissionsPromise, timeoutPromise]) as any;
+              console.log('📍 Permission result:', permissions);
+              
+              // Verificar si es un resultado válido de permisos (no el timeout)
+              if (permissions && typeof permissions === 'object' && 'location' in permissions) {
+                if (permissions.location === 'granted' || permissions.location === 'prompt') {
+                  console.log('📍 Permissions obtained, getting position...');
+                  
+                  const position = await Geolocation.getCurrentPosition({
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 30000,
+                  });
 
-              console.log('📍 Position obtained after prompt:', position.coords);
+                  console.log('📍 Position obtained after permissions:', position.coords);
 
-              return {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-              };
-            } catch (positionError) {
-              console.error('📍 Position error after prompt:', positionError);
-              throw new Error('Permiso de ubicación requerido');
+                  return {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                  };
+                } else {
+                  throw new Error('Permisos de ubicación denegados');
+                }
+              } else {
+                throw new Error('Permission request timeout');
+              }
+            } catch (permissionError) {
+              console.warn('📍 Permission request failed or timed out:', permissionError);
+              throw new Error('No se pudo obtener permisos de ubicación. Por favor, habilita la ubicación en Configuración.');
             }
-          } else {
-            throw new Error('Permisos de ubicación denegados');
           }
         } catch (capacitorError) {
-          console.warn('📍 Capacitor geolocation failed:', capacitorError);
+          console.error('📍 Capacitor geolocation failed:', capacitorError);
           throw capacitorError;
         }
       } else {
