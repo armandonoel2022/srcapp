@@ -44,12 +44,12 @@ export const Dashboard = () => {
     agentesActivos: 0
   });
 
-  // Check if password change is required
+  // Check if password change is required (only for clients)
   useEffect(() => {
-    if (requiresPasswordChange()) {
+    if (isClient && requiresPasswordChange()) {
       setShowPasswordModal(true);
     }
-  }, [requiresPasswordChange]);
+  }, [isClient, requiresPasswordChange]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -200,11 +200,13 @@ export const Dashboard = () => {
         {renderCurrentSection()}
       </main>
 
-      {/* Password Change Modal */}
-      <PasswordChangeModal 
-        isOpen={showPasswordModal} 
-        onClose={() => setShowPasswordModal(false)} 
-      />
+      {/* Password Change Modal - Only for clients */}
+      {isClient && (
+        <PasswordChangeModal 
+          isOpen={showPasswordModal} 
+          onClose={() => setShowPasswordModal(false)} 
+        />
+      )}
     </div>
   );
 };
