@@ -31,6 +31,7 @@ export const AdminTurnosFotos = () => {
   const [loading, setLoading] = useState(false);
   const [fechaFiltro, setFechaFiltro] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
   const cargarTurnos = async () => {
@@ -70,6 +71,9 @@ export const AdminTurnosFotos = () => {
         }));
 
         setTurnos(turnosWithEmpleados);
+        
+        // Cargar URLs de fotos
+        await cargarUrlsFotos(turnosWithEmpleados);
       } else {
         setTurnos([]);
       }
@@ -84,18 +88,45 @@ export const AdminTurnosFotos = () => {
     }
   };
 
+  const cargarUrlsFotos = async (turnosData: TurnoConFoto[]) => {
+    const urls: Record<string, string> = {};
+    
+    for (const turno of turnosData) {
+      if (turno.foto_entrada) {
+        const url = await obtenerUrlFoto(turno.foto_entrada);
+        if (url) urls[`entrada_${turno.id}`] = url;
+      }
+      if (turno.foto_salida) {
+        const url = await obtenerUrlFoto(turno.foto_salida);
+        if (url) urls[`salida_${turno.id}`] = url;
+      }
+    }
+    
+    setFotosUrls(urls);
+  };
+
   useEffect(() => {
     cargarTurnos();
   }, [fechaFiltro]);
 
-  const obtenerUrlFoto = (photoPath: string) => {
+  const obtenerUrlFoto = async (photoPath: string) => {
     if (!photoPath) return null;
     
-    const { data } = supabase.storage
-      .from('turnos-fotos')
-      .getPublicUrl(photoPath);
-    
-    return data.publicUrl;
+    try {
+      const { data, error } = await supabase.storage
+        .from('turnos-fotos')
+        .createSignedUrl(photoPath, 60 * 60 * 24); // 24 horas
+      
+      if (error) {
+        console.error('Error obteniendo URL firmada:', error);
+        return null;
+      }
+      
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Error creando URL firmada:', error);
+      return null;
+    }
   };
 
   const formatearHora = (hora?: string) => {
@@ -205,7 +236,7 @@ export const AdminTurnosFotos = () => {
                               </DialogHeader>
                               <div className="space-y-4">
                                 <img
-                                  src={obtenerUrlFoto(turno.foto_entrada) || ''}
+                                  src={fotosUrls[`entrada_${turno.id}`] || ''}
                                   alt="Foto de entrada"
                                   className="w-full h-auto max-h-96 object-contain rounded-lg"
                                 />
@@ -253,7 +284,7 @@ export const AdminTurnosFotos = () => {
                               </DialogHeader>
                               <div className="space-y-4">
                                 <img
-                                  src={obtenerUrlFoto(turno.foto_salida) || ''}
+                                  src={fotosUrls[`salida_${turno.id}`] || ''}
                                   alt="Foto de salida"
                                   className="w-full h-auto max-h-96 object-contain rounded-lg"
                                 />
