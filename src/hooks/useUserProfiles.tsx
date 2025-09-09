@@ -25,6 +25,21 @@ export const useUserProfiles = () => {
     setLoading(true);
     try {
       console.log('Loading user profiles...');
+      
+      // Verificar si el usuario actual es administrador
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user?.id);
+      
+      if (user) {
+        const { data: currentProfile } = await supabase
+          .from('user_profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+        
+        console.log('Current user profile:', currentProfile);
+      }
+
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
