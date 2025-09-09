@@ -6,12 +6,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, Plus, Search, Edit } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Users, Plus, Search, Edit, Upload } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export const GestionEmpleados = () => {
   const { empleados, loading, agregarEmpleado, actualizarEmpleado } = useEmpleados();
+  const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [selectedEmpleado, setSelectedEmpleado] = useState<any>(null);
   const [nuevoNombres, setNuevoNombres] = useState('');
   const [nuevosApellidos, setNuevosApellidos] = useState('');
@@ -21,6 +25,7 @@ export const GestionEmpleados = () => {
   const [nuevaFechaNacimiento, setNuevaFechaNacimiento] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [filtro, setFiltro] = useState('');
+  const [bulkData, setBulkData] = useState('');
 
   const handleAgregarEmpleado = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +98,83 @@ export const GestionEmpleados = () => {
     setSubmitting(false);
   };
 
+  // Utilidad para separar nombres y apellidos
+  const separateNameAndSurname = (fullName: string) => {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length <= 2) {
+      return {
+        nombres: parts[0] || '',
+        apellidos: parts[1] || ''
+      };
+    }
+    
+    // Para nombres con más de 2 partes, tomar los primeros 2 como nombres y el resto como apellidos
+    const nombres = parts.slice(0, 2).join(' ');
+    const apellidos = parts.slice(2).join(' ');
+    
+    return { nombres, apellidos };
+  };
+
+  // Utilidad para generar nombre de usuario
+  const generateUsername = (nombres: string, apellidos: string) => {
+    const firstNameChar = nombres.trim().charAt(0).toLowerCase();
+    const firstSurname = apellidos.trim().split(/\s+/)[0] || '';
+    return firstNameChar + firstSurname.toLowerCase();
+  };
+
+  // Función para importar empleados masivamente
+  const handleBulkImport = async () => {
+    if (!bulkData.trim()) {
+      toast({
+        title: "Error",
+        description: "Por favor ingresa los datos de empleados",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    const lines = bulkData.trim().split('\n');
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      
+      const [cedula, fullName, puesto, fechaIngreso, fechaNacimiento, direccion, telefonos] = line.split('\t');
+      
+      if (!cedula || !fullName) {
+        errorCount++;
+        continue;
+      }
+
+      const { nombres, apellidos } = separateNameAndSurname(fullName);
+      
+      try {
+        await agregarEmpleado({
+          nombres,
+          apellidos,
+          funcion: puesto || 'Oficial de Seguridad',
+          cedula: cedula.trim(),
+          ubicacion_designada: direccion || null
+        });
+        successCount++;
+      } catch (error) {
+        errorCount++;
+      }
+    }
+
+    setSubmitting(false);
+    setBulkData('');
+    setIsBulkImportOpen(false);
+
+    toast({
+      title: "Importación completada",
+      description: `${successCount} empleados importados exitosamente. ${errorCount} errores.`,
+      variant: successCount > 0 ? "default" : "destructive"
+    });
+  };
+
   const empleadosFiltrados = empleados.filter(empleado =>
     empleado.nombres.toLowerCase().includes(filtro.toLowerCase()) ||
     empleado.apellidos.toLowerCase().includes(filtro.toLowerCase()) ||
@@ -110,13 +192,23 @@ export const GestionEmpleados = () => {
             Gestión de Empleados
           </div>
           
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Agregar Empleado
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Dialog open={isBulkImportOpen} onOpenChange={setIsBulkImportOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Importar Empleados
+                </Button>
+              </DialogTrigger>
+            </Dialog>
+            
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Agregar Empleado
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Agregar Nuevo Empleado</DialogTitle>
@@ -207,8 +299,50 @@ export const GestionEmpleados = () => {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </CardTitle>
       </CardHeader>
+
+      {/* Modal de Importación Masiva */}
+      <Dialog open={isBulkImportOpen} onOpenChange={setIsBulkImportOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Importar Empleados Masivamente</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Datos de empleados (formato: Cédula, Nombre Completo, Puesto, Fecha Ingreso, Fecha Nacimiento, Dirección, Teléfonos)</Label>
+              <p className="text-sm text-muted-foreground mb-2">
+                Pega los datos separados por tabulaciones (TAB). Un empleado por línea.
+              </p>
+              <Textarea
+                value={bulkData}
+                onChange={(e) => setBulkData(e.target.value)}
+                placeholder="005-0030356-5	Nelson Laureano	Gerente General	23 de Marzo 2011	11de abril de 1977	C/Resp.8 no.11 Ens. Espaillat, Santo Dgo.	Cel: 809-280-6704"
+                className="h-64 font-mono text-xs"
+                disabled={submitting}
+              />
+            </div>
+            
+            <div className="flex gap-2 justify-end">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsBulkImportOpen(false)}
+                disabled={submitting}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleBulkImport} 
+                disabled={submitting || !bulkData.trim()}
+              >
+                {submitting ? "Importando..." : "Importar Empleados"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de Edición */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
@@ -337,23 +471,25 @@ export const GestionEmpleados = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nombre</TableHead>
+                <TableHead>Nombre Completo</TableHead>
                 <TableHead>Cédula</TableHead>
                 <TableHead>Función</TableHead>
                 <TableHead>Ubicación</TableHead>
+                <TableHead>Fecha Nacimiento</TableHead>
+                <TableHead>Estado</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     Cargando empleados...
                   </TableCell>
                 </TableRow>
               ) : empleadosFiltrados.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     {filtro ? 'No se encontraron empleados con ese filtro' : 'No hay empleados registrados'}
                   </TableCell>
                 </TableRow>
@@ -365,7 +501,24 @@ export const GestionEmpleados = () => {
                     </TableCell>
                     <TableCell>{empleado.cedula || '-'}</TableCell>
                     <TableCell>{empleado.funcion || '-'}</TableCell>
-                    <TableCell>{empleado.ubicacion_designada || '-'}</TableCell>
+                    <TableCell className="max-w-xs truncate" title={empleado.ubicacion_designada}>
+                      {empleado.ubicacion_designada || '-'}
+                    </TableCell>
+                    <TableCell>
+                      {empleado.fecha_nacimiento 
+                        ? new Date(empleado.fecha_nacimiento).toLocaleDateString() 
+                        : '-'
+                      }
+                    </TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        empleado.active 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {empleado.active ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant="outline"
