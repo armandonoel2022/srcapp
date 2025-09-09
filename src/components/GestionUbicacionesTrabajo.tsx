@@ -34,20 +34,31 @@ export const GestionUbicacionesTrabajo = () => {
     try {
       setLoading(true);
       
-      // Por ahora cargamos ubicaciones de ejemplo hasta que se ejecute la migración
-      setUbicaciones([
-        {
-          id: '1',
-          nombre: 'Oficina Principal',
-          direccion: 'F4RX+MG9, C. Club de Leones, Santo Domingo 11504',
-          coordenadas: '(18.49170,-69.90167)',
-          radio_tolerancia: 100,
-          activa: true,
-          empleados_asignados: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ]);
+      // Cargar ubicaciones con conteo de empleados asignados
+      const { data: ubicacionesData, error: ubicacionesError } = await supabase
+        .from('ubicaciones_trabajo')
+        .select('*')
+        .order('nombre');
+
+      if (ubicacionesError) throw ubicacionesError;
+
+      // Obtener conteo de empleados por ubicación
+      const ubicacionesConEmpleados = await Promise.all(
+        (ubicacionesData || []).map(async (ubicacion) => {
+          const { count } = await supabase
+            .from('empleados_turnos')
+            .select('*', { count: 'exact', head: true })
+            .eq('lugar_designado', ubicacion.nombre)
+            .eq('active', true);
+
+          return {
+            ...ubicacion,
+            coordenadas: ubicacion.coordenadas?.toString() || '',
+            empleados_asignados: count || 0
+          };
+        })
+      );
+      setUbicaciones(ubicacionesConEmpleados);
     } catch (error: any) {
       console.error('Error cargando ubicaciones:', error);
       toast({
@@ -61,7 +72,7 @@ export const GestionUbicacionesTrabajo = () => {
   };
 
   const parseCoordinates = (coordString: string) => {
-    // Formato: "(lat,lng)"
+    // Formato de Postgres POINT: "(lat,lng)"
     const match = coordString.match(/\(([^,]+),([^)]+)\)/);
     if (match) {
       return {
@@ -87,13 +98,19 @@ export const GestionUbicacionesTrabajo = () => {
     if (!confirm(`¿Estás seguro de eliminar la ubicación "${nombre}"?`)) return;
 
     try {
-      // Por ahora solo eliminamos localmente
-      setUbicaciones(prev => prev.filter(ub => ub.id !== id));
-      
+      const { error } = await supabase
+        .from('ubicaciones_trabajo')
+        .update({ activa: false })
+        .eq('id', id);
+
+      if (error) throw error;
+
       toast({
         title: "Ubicación eliminada",
-        description: "La ubicación ha sido eliminada",
+        description: "La ubicación de trabajo ha sido desactivada",
       });
+
+      cargarUbicaciones();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -105,15 +122,19 @@ export const GestionUbicacionesTrabajo = () => {
 
   const toggleActive = async (id: string, activa: boolean) => {
     try {
-      // Por ahora solo actualizamos localmente
-      setUbicaciones(prev => prev.map(ub => 
-        ub.id === id ? { ...ub, activa: !activa } : ub
-      ));
-      
+      const { error } = await supabase
+        .from('ubicaciones_trabajo')
+        .update({ activa: !activa })
+        .eq('id', id);
+
+      if (error) throw error;
+
       toast({
         title: activa ? "Ubicación desactivada" : "Ubicación activada",
         description: `La ubicación ha sido ${activa ? 'desactivada' : 'activada'}`,
       });
+
+      cargarUbicaciones();
     } catch (error: any) {
       toast({
         title: "Error",

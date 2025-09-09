@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MapPin, Save, Search, Navigation, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -251,7 +252,19 @@ export const LocationSelector = ({
 
     setSaving(true);
     try {
-      // Por ahora solo guardamos localmente hasta que se ejecute la migración
+      // Crear o actualizar ubicación de trabajo
+      const { error } = await supabase
+        .from('ubicaciones_trabajo')
+        .upsert({
+          nombre: locationData.nombre,
+          direccion: locationData.direccion,
+          coordenadas: `(${selectedCoords.lat},${selectedCoords.lng})`,
+          radio_tolerancia: locationData.radio_tolerancia,
+          activa: true
+        });
+
+      if (error) throw error;
+
       onLocationSaved({
         ...locationData,
         lat: selectedCoords.lat,
@@ -259,8 +272,8 @@ export const LocationSelector = ({
       });
 
       toast({
-        title: "Ubicación seleccionada",
-        description: "La ubicación de trabajo ha sido configurada",
+        title: "Ubicación guardada",
+        description: "La ubicación de trabajo ha sido configurada exitosamente",
       });
 
       onClose();

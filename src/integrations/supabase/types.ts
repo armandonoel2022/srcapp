@@ -494,6 +494,39 @@ export type Database = {
           },
         ]
       }
+      ubicaciones_trabajo: {
+        Row: {
+          activa: boolean
+          coordenadas: unknown
+          created_at: string
+          direccion: string | null
+          id: string
+          nombre: string
+          radio_tolerancia: number
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          coordenadas: unknown
+          created_at?: string
+          direccion?: string | null
+          id?: string
+          nombre: string
+          radio_tolerancia?: number
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          coordenadas?: unknown
+          created_at?: string
+          direccion?: string | null
+          id?: string
+          nombre?: string
+          radio_tolerancia?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_2fa: {
         Row: {
           backup_codes: string[] | null

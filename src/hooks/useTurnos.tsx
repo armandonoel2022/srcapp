@@ -39,7 +39,7 @@ export const useTurnos = () => {
       // Validar ubicación si se proporciona
       if ((data.ubicacion_entrada || data.ubicacion_salida) && empleadoData.lugar_designado) {
         const currentLocation: LocationCoordinates = data.ubicacion_entrada || data.ubicacion_salida!;
-        const validationResult = validateLocationForWork(currentLocation, empleadoData.lugar_designado);
+        const validationResult = await validateLocationForWork(currentLocation, empleadoData.lugar_designado);
         
         if (!validationResult.isValid) {
           toast({

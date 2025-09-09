@@ -55,34 +55,43 @@ export const UBICACIONES_TRABAJO = {
 export const TOLERANCIA_UBICACION = 100;
 
 // Validar si la ubicación actual está dentro del rango permitido
-export const validateLocationForWork = (
+export const validateLocationForWork = async (
   currentLocation: LocationCoordinates,
   lugarDesignado: string
-): LocationValidationResult => {
-  // Buscar la ubicación designada en nuestro catálogo
-  const ubicacionTrabajo = Object.values(UBICACIONES_TRABAJO).find(
-    ubicacion => ubicacion.nombre.toLowerCase().includes(lugarDesignado.toLowerCase()) ||
-                lugarDesignado.toLowerCase().includes(ubicacion.nombre.toLowerCase())
-  );
+): Promise<LocationValidationResult> => {
+  try {
+    // Por ahora usar el método estático mientras implementamos la consulta a BD
+    const ubicacionTrabajo = Object.values(UBICACIONES_TRABAJO).find(
+      ubicacion => ubicacion.nombre.toLowerCase().includes(lugarDesignado.toLowerCase()) ||
+                  lugarDesignado.toLowerCase().includes(ubicacion.nombre.toLowerCase())
+    );
 
-  if (!ubicacionTrabajo) {
+    if (!ubicacionTrabajo) {
+      return {
+        isValid: false,
+        distance: -1,
+        message: `Lugar de trabajo "${lugarDesignado}" no encontrado en el sistema. Contacte al administrador.`
+      };
+    }
+    const distance = calculateDistance(currentLocation, ubicacionTrabajo);
+    const isValid = distance <= TOLERANCIA_UBICACION;
+
+    return {
+      isValid,
+      distance,
+      message: isValid 
+        ? `Ubicación validada. Distancia: ${distance}m de ${ubicacionTrabajo.nombre}`
+        : `Ubicación inválida. Está a ${distance}m de ${ubicacionTrabajo.nombre}. Debe estar dentro de ${TOLERANCIA_UBICACION}m.`
+    };
+
+  } catch (error) {
+    console.error('Error validando ubicación:', error);
     return {
       isValid: false,
       distance: -1,
-      message: `Lugar de trabajo "${lugarDesignado}" no encontrado en el sistema. Contacte al administrador.`
+      message: 'Error al validar ubicación. Contacte al administrador.'
     };
   }
-
-  const distance = calculateDistance(currentLocation, ubicacionTrabajo);
-  const isValid = distance <= TOLERANCIA_UBICACION;
-
-  return {
-    isValid,
-    distance,
-    message: isValid 
-      ? `Ubicación validada. Distancia: ${distance}m de ${ubicacionTrabajo.nombre}`
-      : `Ubicación inválida. Está a ${distance}m de ${ubicacionTrabajo.nombre}. Debe estar dentro de ${TOLERANCIA_UBICACION}m.`
-  };
 };
 
 // Obtener información de una ubicación de trabajo
