@@ -34,23 +34,27 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
     { id: 'mapa-calor', label: 'Mapa de Calor', icon: MapPin }
   ];
 
-  const basicItems = [
+  // Control de Acceso Diario - Puesto Francia
+  const controlAccesoItems = [
     { id: 'registros', label: 'Registro de Acceso', icon: FileText },
     { id: 'consulta', label: 'Consultar Registros', icon: Search },
     { id: 'empleados', label: 'Gestión de Empleados', icon: Users },
-    { id: 'mapa-calor', label: 'Mapa de Calor', icon: MapPin }
-  ];
-
-  const adminItems = [
-    { id: 'usuarios', label: 'Gestionar Usuarios', icon: UserPlus },
-    { id: 'turnos', label: 'Control de Turnos', icon: CheckCircle },
     { id: 'editar-registros', label: 'Editar Entradas y Salidas', icon: Edit },
     { id: 'eliminar-empleados', label: 'Eliminar Empleados', icon: Trash }
   ];
 
-  // Removed duplicate security configuration - now handled in SettingsMenu
+  // Sistema de Turnos
+  const turnosItems = [
+    { id: 'turnos', label: 'Control de Turnos', icon: CheckCircle },
+    { id: 'dashboard-turnos', label: 'Dashboard Turnos', icon: BarChart3 }
+  ];
 
-  const menuItems = isClient ? clientItems : (authIsAdmin ? [...basicItems, ...adminItems] : basicItems);
+  // Funciones Administrativas
+  const adminItems = [
+    { id: 'usuarios', label: 'Gestionar Usuarios', icon: UserPlus }
+  ];
+
+  const menuItems = isClient ? clientItems : (authIsAdmin ? [...controlAccesoItems, ...turnosItems, ...adminItems] : [...controlAccesoItems, ...turnosItems]);
   
   console.log('Sidebar Debug - menuItems length:', menuItems.length);
   console.log('Sidebar Debug - showing admin items:', authIsAdmin);
@@ -93,37 +97,54 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
             ))
           ) : (
             <>
-              {/* Basic functionality for regular users */}
-              {basicItems.map((item) => (
-                <Button
-                  key={item.id}
-                  variant={currentSection === item.id ? "default" : "ghost"}
-                  className="justify-start"
-                  onClick={() => handleNavigation(item.id)}
-                >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.label}
-                </Button>
-              ))}
+              {/* Control de Acceso Diario - Puesto Francia */}
+              <div className="space-y-1">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2 px-2">Control de Acceso - Residencia Francia</h3>
+                {controlAccesoItems.map((item) => (
+                  <Button
+                    key={item.id}
+                    variant={currentSection === item.id ? "default" : "ghost"}
+                    className="justify-start"
+                    onClick={() => handleNavigation(item.id)}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
               
-              {/* Admin functionality */}
+              {/* Sistema de Turnos */}
+              <div className="pt-4 border-t space-y-1">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2 px-2">Sistema de Turnos</h3>
+                {turnosItems.map((item) => (
+                  <Button
+                    key={item.id}
+                    variant={currentSection === item.id ? "default" : "ghost"}
+                    className="justify-start"
+                    onClick={() => handleNavigation(item.id)}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+              
+              {/* Funciones Administrativas */}
               {authIsAdmin && (
-                <>
-                  <div className="pt-4 border-t">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Funciones Administrativas</h3>
-                    {adminItems.map((item) => (
-                      <Button
-                        key={item.id}
-                        variant={currentSection === item.id ? "default" : "ghost"}
-                        className="justify-start"
-                        onClick={() => handleNavigation(item.id)}
-                      >
-                        <item.icon className="mr-2 h-4 w-4" />
-                        {item.label}
-                      </Button>
-                    ))}
-                  </div>
-                </>
+                <div className="pt-4 border-t space-y-1">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2 px-2">Funciones Administrativas</h3>
+                  {adminItems.map((item) => (
+                    <Button
+                      key={item.id}
+                      variant={currentSection === item.id ? "default" : "ghost"}
+                      className="justify-start"
+                      onClick={() => handleNavigation(item.id)}
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.label}
+                    </Button>
+                  ))}
+                </div>
               )}
             </>
           )}
