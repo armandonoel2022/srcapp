@@ -10,7 +10,7 @@ import { RegistroForm } from '@/components/RegistroForm';
 import { GestionEmpleados } from '@/components/GestionEmpleados';
 import { Sidebar } from '@/components/Sidebar';
 import { ConsultaRegistros } from '@/components/ConsultaRegistros';
-import { GestionUsuarios } from '@/components/GestionUsuarios';
+import { CrearUsuarioCliente } from '@/components/CrearUsuarioCliente';
 import { EditarRegistros } from '@/components/EditarRegistros';
 import { EliminarEmpleados } from '@/components/EliminarEmpleados';
 import { EditarEmpleados } from '@/components/EditarEmpleados';
@@ -137,6 +137,8 @@ export const Dashboard = () => {
         return <ConsultaRegistros onNavigateToForm={() => setCurrentSection('registros')} />;
       case 'empleados':
         return <GestionEmpleados />;
+      case 'crear-cliente':
+        return <CrearUsuarioCliente />;
       case 'editar-registros':
         return <EditarRegistros />;
       case 'eliminar-empleados':
