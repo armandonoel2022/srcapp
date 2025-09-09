@@ -36,24 +36,26 @@ export const useTurnos = () => {
         throw new Error('No se pudo obtener la información del empleado');
       }
 
-      // Validar ubicación si se proporciona
+      // Validar ubicación si se proporciona (pero no bloquear el registro para permitir pruebas)
       if ((data.ubicacion_entrada || data.ubicacion_salida) && empleadoData.lugar_designado) {
         const currentLocation: LocationCoordinates = data.ubicacion_entrada || data.ubicacion_salida!;
         const validationResult = await validateLocationForWork(currentLocation, empleadoData.lugar_designado);
         
         if (!validationResult.isValid) {
           toast({
-            title: "Ubicación Inválida",
-            description: validationResult.message,
+            title: "Ubicación Fuera de Rango - MODO PRUEBA",
+            description: `${validationResult.message} - Permitiendo registro para pruebas.`,
             variant: "destructive"
           });
-          return { success: false, message: validationResult.message };
         } else {
           toast({
             title: "Ubicación Verificada",
             description: validationResult.message,
           });
         }
+        
+        // Mostrar información de distancia siempre
+        console.log(`Validación de ubicación: ${validationResult.message}`);
       }
 
       if (data.tipo_registro === 'entrada') {
