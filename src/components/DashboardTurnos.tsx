@@ -104,8 +104,7 @@ export const DashboardTurnos = () => {
       const { data: turnosHoy, error: turnosError } = await supabase
         .from('turnos_empleados')
         .select(`
-          *,
-          empleados_turnos!inner(*)
+          *
         `)
         .eq('fecha', fechaConsulta);
 
