@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface GeolocationData {
   latitude: number;
@@ -15,82 +16,72 @@ interface GeolocationError {
 export const useGeolocation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<GeolocationError | null>(null);
+  const { geolocationEnabled } = useSettings();
 
   const getCurrentPosition = async (): Promise<GeolocationData | null> => {
     setIsLoading(true);
     setError(null);
+
+    // Verificar si la geolocalización está habilitada en configuración
+    if (!geolocationEnabled) {
+      const errorMessage = 'La geolocalización está deshabilitada en configuración';
+      setError({ message: errorMessage });
+      setIsLoading(false);
+      return null;
+    }
 
     try {
       // Check if running on mobile device with Capacitor
       if (Capacitor.isNativePlatform()) {
         console.log('📍 Using Capacitor Geolocation for mobile...');
         
-        // Add timeout for permission check
-        const permissionTimeout = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('Permission request timeout')), 5000);
-        });
-
         try {
-          // Check permissions with timeout
-          const permissions = await Promise.race([
-            Geolocation.checkPermissions(),
-            permissionTimeout
-          ]);
+          // Solicitar permisos primero
+          console.log('📍 Requesting location permissions...');
+          const permissions = await Geolocation.requestPermissions();
+          console.log('📍 Permission result:', permissions);
           
-          console.log('📍 Current permissions:', permissions);
+          if (permissions.location === 'granted') {
+            console.log('📍 Permissions granted, getting position...');
+            
+            const position = await Geolocation.getCurrentPosition({
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 60000, // 1 minuto cache
+            });
 
-          if (permissions.location !== 'granted' && permissions.location !== 'prompt') {
+            console.log('📍 Position obtained:', position.coords);
+
+            return {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            };
+          } else if (permissions.location === 'prompt') {
+            console.log('📍 Permission prompt, trying to get position anyway...');
+            
+            // En iOS, a veces el permiso se otorga durante getCurrentPosition
+            try {
+              const position = await Geolocation.getCurrentPosition({
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000,
+              });
+
+              console.log('📍 Position obtained after prompt:', position.coords);
+
+              return {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+              };
+            } catch (positionError) {
+              console.error('📍 Position error after prompt:', positionError);
+              throw new Error('Permiso de ubicación requerido');
+            }
+          } else {
             throw new Error('Permisos de ubicación denegados');
           }
-
-          if (permissions.location === 'prompt') {
-            console.log('📍 Requesting location permissions...');
-            
-            // Request permissions with timeout - but don't fail if timeout occurs
-            try {
-              const requestTimeout = new Promise<never>((_, reject) => {
-                setTimeout(() => reject(new Error('Permission request timeout')), 10000);
-              });
-              
-              const requestResult = await Promise.race([
-                Geolocation.requestPermissions(),
-                requestTimeout
-              ]);
-              
-              console.log('📍 Permission request result:', requestResult);
-              
-              // Continue regardless of permission result - iOS sometimes grants permission after user interaction
-            } catch (permError) {
-              console.log('📍 Permission request failed or timed out, trying to get position anyway:', permError);
-              // Continue anyway - sometimes iOS grants permission during getCurrentPosition
-            }
-          }
-
-          console.log('📍 Getting current position...');
-          
-          // Get position with timeout
-          const positionTimeout = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error('Position request timeout')), 8000);
-          });
-          
-          const position = await Promise.race([
-            Geolocation.getCurrentPosition({
-              enableHighAccuracy: false, // Reduced accuracy for better performance on iOS
-              timeout: 7000,
-              maximumAge: 300000, // 5 minutes cache
-            }),
-            positionTimeout
-          ]);
-
-          console.log('📍 Position obtained:', position.coords);
-
-          return {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
         } catch (capacitorError) {
-          console.warn('📍 Capacitor geolocation failed, trying web API...', capacitorError);
-          // Fall back to web geolocation if Capacitor fails
+          console.warn('📍 Capacitor geolocation failed:', capacitorError);
           throw capacitorError;
         }
       } else {

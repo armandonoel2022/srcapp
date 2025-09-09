@@ -12,7 +12,8 @@ const config: CapacitorConfig = {
     allowsLinkPreview: false,
     handleApplicationURL: false,
     infoPlist: {
-      NSLocationWhenInUseUsageDescription: 'Esta aplicación necesita acceso a la ubicación para registrar la posición durante el registro de turnos.'
+      NSLocationWhenInUseUsageDescription: 'Esta aplicación necesita acceso a tu ubicación para registrar turnos',
+      NSLocationAlwaysAndWhenInUseUsageDescription: 'Esta aplicación necesita acceso a tu ubicación para registrar turnos'
     }
   },
   plugins: {
@@ -20,7 +21,7 @@ const config: CapacitorConfig = {
       enabled: true,
     },
     Geolocation: {
-      permissions: ['location', 'coarseLocation']
+      permissions: ['location']
     },
   },
 };
