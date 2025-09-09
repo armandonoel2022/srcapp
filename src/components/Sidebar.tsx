@@ -51,7 +51,6 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
 
   // Funciones Administrativas
   const adminItems = [
-    { id: 'usuarios', label: 'Gestionar Usuarios', icon: UserPlus },
     { id: 'mapa-ubicaciones', label: 'Mapa de Ubicaciones', icon: MapPin },
     { id: 'revisar-fotos', label: 'Revisar Fotos Turnos', icon: Camera }
   ];

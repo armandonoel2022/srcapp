@@ -137,8 +137,6 @@ export const Dashboard = () => {
         return <ConsultaRegistros onNavigateToForm={() => setCurrentSection('registros')} />;
       case 'empleados':
         return <GestionEmpleados />;
-      case 'usuarios':
-        return <GestionUsuarios />;
       case 'editar-registros':
         return <EditarRegistros />;
       case 'eliminar-empleados':
