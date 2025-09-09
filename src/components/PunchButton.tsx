@@ -27,7 +27,7 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { registrarTurno } = useTurnos();
-  const { getCurrentPosition, isLoading: isGeolocationLoading, error: geolocationErrorObj, getLocationSettingsInstructions, openSettingsGuide } = useGeolocation();
+  const { getCurrentPosition, isLoading: isGeolocationLoading, error: geolocationErrorObj, getLocationSettingsInstructions } = useGeolocation();
   const { toast } = useToast();
 
   const uploadPhoto = async (file: File, turnoId: string): Promise<string | null> => {
@@ -160,26 +160,14 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
         if (errorType === 'WHEN_IN_USE_PERMISSION') {
           toast({
             title: "Configuración de ubicación requerida",
-            description: (
-              <div className="flex flex-col space-y-2">
-                <p className="text-sm">{errorMessage}</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={openSettingsGuide}
-                  className="self-start"
-                >
-                  Ver Guía de Configuración
-                </Button>
-              </div>
-            ),
+            description: errorMessage,
             variant: "destructive",
             duration: 10000
           });
         } else if (errorMessage.includes('Configuración') || errorMessage.includes('permiso')) {
           toast({
             title: "Permisos de ubicación requeridos",
-            description: `${errorMessage} ${getLocationSettingsInstructions(errorType)}`,
+            description: `${errorMessage} ${getLocationSettingsInstructions()}`,
             variant: "destructive",
             duration: 8000
           });
