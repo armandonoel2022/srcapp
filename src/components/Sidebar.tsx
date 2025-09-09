@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Users, FileText, Plus, LogOut, Settings as SettingsIcon, UserPlus, Edit, Trash, Search, Home, MapPin, CheckCircle, BarChart3 } from 'lucide-react';
+import { Menu, Users, FileText, Plus, LogOut, Settings as SettingsIcon, UserPlus, Edit, Trash, Search, Home, MapPin, CheckCircle, BarChart3, Camera, UserCheck } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
 import { useNavigate } from 'react-router-dom';
@@ -51,7 +51,9 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
 
   // Funciones Administrativas
   const adminItems = [
-    { id: 'usuarios', label: 'Gestionar Usuarios', icon: UserPlus }
+    { id: 'usuarios', label: 'Gestionar Usuarios', icon: UserPlus },
+    { id: 'asignar-ubicaciones', label: 'Asignar Ubicaciones', icon: UserCheck },
+    { id: 'revisar-fotos', label: 'Revisar Fotos Turnos', icon: Camera }
   ];
 
   const menuItems = isClient ? clientItems : (authIsAdmin ? [...controlAccesoItems, ...turnosItems, ...adminItems] : [...controlAccesoItems, ...turnosItems]);

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Users, Shield, FileText, Clock, Search, UserPlus } from 'lucide-react';
+import { LogOut, Users, Shield, FileText, Clock, Search, UserPlus, Camera, UserCheck } from 'lucide-react';
 import { RegistroForm } from '@/components/RegistroForm';
 import { GestionEmpleados } from '@/components/GestionEmpleados';
 import { Sidebar } from '@/components/Sidebar';
@@ -26,6 +26,8 @@ import { ConsultaTurnos } from '@/components/ConsultaTurnos';
 import { DashboardAnalisisTurnos } from '@/components/DashboardAnalisisTurnos';
 import { DashboardTurnos } from '@/components/DashboardTurnos';
 import { BiometricAuthSetup } from '@/components/BiometricAuthSetup';
+import { AdminTurnosFotos } from '@/components/AdminTurnosFotos';
+import { AsignarUbicacionesEmpleados } from '@/components/AsignarUbicacionesEmpleados';
 
 export const Dashboard = () => {
   const { user, signOut, isAdmin } = useAuth();
@@ -149,6 +151,10 @@ export const Dashboard = () => {
         return <TurnosFormEnhanced />;
       case 'dashboard-turnos':
         return <DashboardTurnos />;
+      case 'asignar-ubicaciones':
+        return <AsignarUbicacionesEmpleados />;
+      case 'revisar-fotos':
+        return <AdminTurnosFotos />;
       case 'mapa-calor':
         return <InteractiveHeatMap />;
       default:

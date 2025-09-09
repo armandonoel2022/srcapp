@@ -60,28 +60,52 @@ export const validateLocationForWork = async (
   lugarDesignado: string
 ): Promise<LocationValidationResult> => {
   try {
-    // Por ahora usar el método estático mientras implementamos la consulta a BD
-    const ubicacionTrabajo = Object.values(UBICACIONES_TRABAJO).find(
-      ubicacion => ubicacion.nombre.toLowerCase().includes(lugarDesignado.toLowerCase()) ||
-                  lugarDesignado.toLowerCase().includes(ubicacion.nombre.toLowerCase())
-    );
+    // Usar Supabase para obtener la ubicación real desde la BD
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    const { data: ubicacionTrabajo, error } = await supabase
+      .from('ubicaciones_trabajo')
+      .select('nombre, coordenadas, radio_tolerancia, direccion')
+      .eq('nombre', lugarDesignado)
+      .eq('activa', true)
+      .single();
 
-    if (!ubicacionTrabajo) {
+    if (error || !ubicacionTrabajo) {
+      console.error('Error obteniendo ubicación:', error);
       return {
         isValid: false,
         distance: -1,
         message: `Lugar de trabajo "${lugarDesignado}" no encontrado en el sistema. Contacte al administrador.`
       };
     }
-    const distance = calculateDistance(currentLocation, ubicacionTrabajo);
-    const isValid = distance <= TOLERANCIA_UBICACION;
+
+    // Extraer coordenadas del formato Point de PostgreSQL
+    const coordenadas = ubicacionTrabajo.coordenadas as string;
+    const matches = coordenadas.match(/\(([^,]+),([^)]+)\)/);
+    
+    if (!matches) {
+      return {
+        isValid: false,
+        distance: -1,
+        message: 'Error al procesar coordenadas de ubicación. Contacte al administrador.'
+      };
+    }
+
+    const ubicacionObj = {
+      lat: parseFloat(matches[1]),
+      lng: parseFloat(matches[2])
+    };
+
+    const distance = calculateDistance(currentLocation, ubicacionObj);
+    const tolerancia = ubicacionTrabajo.radio_tolerancia || TOLERANCIA_UBICACION;
+    const isValid = distance <= tolerancia;
 
     return {
       isValid,
       distance,
       message: isValid 
         ? `Ubicación validada. Distancia: ${distance}m de ${ubicacionTrabajo.nombre}`
-        : `Ubicación inválida. Está a ${distance}m de ${ubicacionTrabajo.nombre}. Debe estar dentro de ${TOLERANCIA_UBICACION}m.`
+        : `Ubicación inválida. Está a ${distance}m de ${ubicacionTrabajo.nombre}. Debe estar dentro de ${tolerancia}m.`
     };
 
   } catch (error) {

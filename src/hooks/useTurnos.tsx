@@ -36,17 +36,14 @@ export const useTurnos = () => {
         throw new Error('No se pudo obtener la información del empleado');
       }
 
-      // Validar ubicación si se proporciona (pero no bloquear el registro para permitir pruebas)
+      // VALIDACIÓN REAL DE UBICACIÓN - MODO PRODUCCIÓN
       if ((data.ubicacion_entrada || data.ubicacion_salida) && empleadoData.lugar_designado) {
         const currentLocation: LocationCoordinates = data.ubicacion_entrada || data.ubicacion_salida!;
         const validationResult = await validateLocationForWork(currentLocation, empleadoData.lugar_designado);
         
         if (!validationResult.isValid) {
-          toast({
-            title: "Ubicación Fuera de Rango - MODO PRUEBA",
-            description: `${validationResult.message} - Permitiendo registro para pruebas.`,
-            variant: "destructive"
-          });
+          // BLOQUEAR registro si no está en ubicación válida
+          throw new Error(`UBICACIÓN INVÁLIDA: ${validationResult.message}`);
         } else {
           toast({
             title: "Ubicación Verificada",
@@ -54,8 +51,10 @@ export const useTurnos = () => {
           });
         }
         
-        // Mostrar información de distancia siempre
         console.log(`Validación de ubicación: ${validationResult.message}`);
+      } else if (!empleadoData.lugar_designado) {
+        // Si el empleado no tiene lugar designado, no puede hacer punch
+        throw new Error('No tienes una ubicación designada asignada. Contacta al administrador para configurar tu lugar de trabajo.');
       }
 
       if (data.tipo_registro === 'entrada') {
