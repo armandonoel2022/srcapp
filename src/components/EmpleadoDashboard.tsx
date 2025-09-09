@@ -22,7 +22,7 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
     turno: any;
   }>({ estado: 'sin_entrada', turno: null });
 
-  const { verificarEstadoTurno } = useTurnos();
+  const { verificarEstadoTurno, eliminarTurnosPrueba } = useTurnos();
   const { logout } = useEmpleadoAuth();
   const { toast } = useToast();
 
@@ -209,9 +209,14 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
                     variant="outline" 
                     size="sm" 
                     className="mt-2"
-                    onClick={() => {
-                      setEstadoTurno({ estado: 'sin_entrada', turno: null });
-                      setTipoRegistro('entrada');
+                    onClick={async () => {
+                      const today = new Date().toISOString().split('T')[0];
+                      const result = await eliminarTurnosPrueba(empleado.id, today);
+                      
+                      if (result.success) {
+                        setEstadoTurno({ estado: 'sin_entrada', turno: null });
+                        setTipoRegistro('entrada');
+                      }
                     }}
                   >
                     Nuevo Registro de Prueba

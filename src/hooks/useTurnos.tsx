@@ -204,10 +204,40 @@ export const useTurnos = () => {
     }
   };
 
+  const eliminarTurnosPrueba = async (empleadoId: string, fecha: string): Promise<{ success: boolean; message?: string }> => {
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('turnos_empleados')
+        .delete()
+        .eq('empleado_id', empleadoId)
+        .eq('fecha', fecha);
+
+      if (error) throw error;
+
+      toast({
+        title: "Registros eliminados",
+        description: "Los registros de prueba han sido eliminados. Puedes hacer nuevos punches.",
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `Error al eliminar registros: ${error.message}`,
+        variant: "destructive"
+      });
+      return { success: false, message: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     registrarTurno,
     obtenerTurnos,
     verificarEstadoTurno,
+    eliminarTurnosPrueba,
     loading
   };
 };
