@@ -16,7 +16,7 @@ import {
   UserCheck,
   AlertTriangle
 } from 'lucide-react';
-import { useEmpleadosTurnos } from '@/hooks/useEmpleadosTurnos';
+import { useAnalisisTurnos } from '@/hooks/useAnalisisTurnos';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -59,12 +59,12 @@ export const DashboardTurnos = () => {
   const [estadisticasPorSexo, setEstadisticasPorSexo] = useState<EstadisticasPorSexo[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { empleados } = useEmpleadosTurnos();
+  const { obtenerResumenGeneral } = useAnalisisTurnos();
   const { toast } = useToast();
 
   useEffect(() => {
     cargarEstadisticas();
-  }, [fechaConsulta, empleados]);
+  }, [fechaConsulta]);
 
   const calcularEdad = (fechaNacimiento: string): number => {
     const hoy = new Date();
@@ -90,8 +90,15 @@ export const DashboardTurnos = () => {
   const cargarEstadisticas = async () => {
     setLoading(true);
     try {
-      // Estadísticas generales
-      const empleadosActivos = empleados.length; // Todos los empleados cargados están activos por defecto
+      // Obtener todos los empleados activos
+      const { data: empleados, error: empleadosError } = await supabase
+        .from('empleados_turnos')
+        .select('*')
+        .eq('active', true);
+
+      if (empleadosError) throw empleadosError;
+
+      const empleadosActivos = empleados?.length || 0;
       
       // Obtener turnos del día seleccionado
       const { data: turnosHoy, error: turnosError } = await supabase
@@ -113,14 +120,14 @@ export const DashboardTurnos = () => {
       const ausenciasHoy = empleadosActivos - turnosConEntrada.length;
 
       setEstadisticasGenerales({
-        totalEmpleados: empleados.length,
+        totalEmpleados: empleadosActivos,
         empleadosActivos: empleadosActivos,
         puntualidadPromedio,
         ausenciasHoy
       });
 
-      // Estadísticas por ubicación
-      const ubicacionesStats = empleados.reduce((acc, emp) => {
+      // Estadísticas por ubicación usando empleados de la BD
+      const ubicacionesStats = (empleados || []).reduce((acc, emp) => {
         const ubicacion = emp.lugar_designado || 'Sin asignar';
         if (!acc[ubicacion]) {
           acc[ubicacion] = {
@@ -157,7 +164,7 @@ export const DashboardTurnos = () => {
       setEstadisticasPorUbicacion(ubicacionesArray as EstadisticasPorUbicacion[]);
 
       // Estadísticas por edad
-      const edadStats = empleados.reduce((acc, emp) => {
+      const edadStats = (empleados || []).reduce((acc, emp) => {
         if (!emp.fecha_nacimiento) return acc;
         
         const edad = calcularEdad(emp.fecha_nacimiento);
@@ -196,7 +203,7 @@ export const DashboardTurnos = () => {
       setEstadisticasPorEdad(edadArray as EstadisticasPorEdad[]);
 
       // Estadísticas por sexo
-      const sexoStats = empleados.reduce((acc, emp) => {
+      const sexoStats = (empleados || []).reduce((acc, emp) => {
         const sexo = emp.sexo || 'No especificado';
         
         if (!acc[sexo]) {
