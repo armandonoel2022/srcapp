@@ -36,22 +36,39 @@ export const useGeolocation = () => {
         console.log('📍 Using Capacitor Geolocation for mobile...');
         
         try {
-          // En iOS, intentar obtener posición directamente primero
+          // En iOS, intentar obtener posición directamente primero con timeout corto
           console.log('📍 Attempting to get position directly...');
           
           try {
-            const position = await Geolocation.getCurrentPosition({
+            // Timeout más corto para el primer intento, especialmente en iOS
+            const positionPromise = Geolocation.getCurrentPosition({
               enableHighAccuracy: true,
-              timeout: 15000, // Timeout más largo para móviles
+              timeout: 8000, // Timeout más corto para primer intento
               maximumAge: 30000, // Cache más corto para mejor precisión
             });
+            
+            // Timeout manual adicional para iOS
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => {
+                console.log('📍 First attempt timeout reached');
+                reject(new Error('First attempt timeout'));
+              }, 8000);
+            });
 
-            console.log('📍 Position obtained directly:', position.coords);
+            console.log('📍 Waiting for position or timeout...');
+            const position = await Promise.race([positionPromise, timeoutPromise]) as any;
+            
+            // Verificar que sea una respuesta válida de posición
+            if (position && position.coords && position.coords.latitude) {
+              console.log('📍 Position obtained directly:', position.coords);
 
-            return {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-            };
+              return {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+              };
+            } else {
+              throw new Error('Invalid position response');
+            }
           } catch (directPositionError) {
             console.log('📍 Direct position failed, requesting permissions...', directPositionError);
             
