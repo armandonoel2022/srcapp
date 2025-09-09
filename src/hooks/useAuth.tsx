@@ -100,10 +100,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);  
       
     try {  
-      // Try custom login with username  
-      const { data, error } = await supabase.functions.invoke('custom-login', {  
+      // Add timeout for mobile devices (iPad)
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login timeout - please try again')), 30000)
+      );
+      
+      const loginPromise = supabase.functions.invoke('custom-login', {  
         body: { username, password }  
-      });  
+      });
+      
+      // Race between login and timeout
+      const { data, error } = await Promise.race([loginPromise, timeoutPromise]) as any;
   
       if (data?.session && data?.user) {  
         // Set the session from the custom login  
@@ -119,11 +126,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // If custom login fails, return the error  
       setLoading(false);  
       return { error: data?.error || error || 'Invalid credentials' };  
-    } catch (err) {  
+    } catch (err: any) {  
       setLoading(false);  
-      return { error: err };  
+      console.error('Login error:', err);
+      return { error: err.message || 'Login failed - please try again' };  
     }  
-  };  
+  };
   
   const signInWithBiometric = async (userId?: string) => {  
     setLoading(true);  

@@ -93,10 +93,20 @@ serve(async (req) => {
     console.log('Found auth user with email:', authUser.user.email);
 
     // Try to sign in with email and password
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+    // Add timeout to prevent hanging on mobile devices
+    const signInPromise = supabase.auth.signInWithPassword({
       email: authUser.user.email!,
       password: password,
     });
+    
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Authentication timeout')), 20000)
+    );
+    
+    const { data: signInData, error: signInError } = await Promise.race([
+      signInPromise, 
+      timeoutPromise
+    ]) as any;
 
     if (signInError || !signInData.session) {
       console.log('Sign in failed:', signInError?.message);

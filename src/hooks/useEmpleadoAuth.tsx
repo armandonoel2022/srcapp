@@ -19,10 +19,18 @@ export const useEmpleadoAuth = () => {
   const loginEmpleado = async (username: string, password: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('authenticate_empleado_turno', {
+      // Add timeout for mobile devices (iPad)
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login timeout - please try again')), 25000)
+      );
+      
+      const loginPromise = supabase.rpc('authenticate_empleado_turno', {
         p_username: username,
         p_password: password
       });
+      
+      // Race between login and timeout
+      const { data, error } = await Promise.race([loginPromise, timeoutPromise]) as any;
 
       if (error) throw error;
 
@@ -52,9 +60,10 @@ export const useEmpleadoAuth = () => {
         throw new Error('Credenciales inválidas');
       }
     } catch (error: any) {
+      console.error('Empleado login error:', error);
       toast({
         title: "Error de autenticación",
-        description: error.message,
+        description: error.message || 'Error de conexión - intenta de nuevo',
         variant: "destructive"
       });
       return { success: false, empleado: null };
