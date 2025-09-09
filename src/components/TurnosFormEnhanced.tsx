@@ -6,6 +6,7 @@ import { TurnosAdminConsulta } from './TurnosAdminConsulta';
 import { EmpleadoTurnoForm } from './EmpleadoTurnoForm';
 import { GestionEmpleadosTurnos } from './GestionEmpleadosTurnos';
 import { DashboardAnalisisTurnos } from './DashboardAnalisisTurnos';
+import { ImportacionMasivaEmpleados } from './ImportacionMasivaEmpleados';
 
 export const TurnosFormEnhanced = () => {
   return (
@@ -19,7 +20,7 @@ export const TurnosFormEnhanced = () => {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="consulta" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="consulta" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Consulta de Turnos
@@ -27,6 +28,10 @@ export const TurnosFormEnhanced = () => {
               <TabsTrigger value="empleados" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Agregar Empleados
+              </TabsTrigger>
+              <TabsTrigger value="importar" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Importar Masivo
               </TabsTrigger>
               <TabsTrigger value="gestion" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
@@ -44,6 +49,10 @@ export const TurnosFormEnhanced = () => {
 
             <TabsContent value="empleados" className="space-y-4">
               <EmpleadoTurnoForm />
+            </TabsContent>
+
+            <TabsContent value="importar" className="space-y-4">
+              <ImportacionMasivaEmpleados />
             </TabsContent>
 
             <TabsContent value="gestion" className="space-y-4">
