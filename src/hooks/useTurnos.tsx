@@ -22,7 +22,7 @@ export const useTurnos = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const registrarTurno = async (data: TurnoData) => {
+  const registrarTurno = async (data: TurnoData): Promise<{ success: boolean; message?: string; turnoId?: string }> => {
     setLoading(true);
     try {
       // Obtener información del empleado para validar ubicación
@@ -97,7 +97,7 @@ export const useTurnos = () => {
         }
 
         // Crear nuevo registro de entrada
-        const { error } = await supabase
+        const { data: turnoData, error } = await supabase
           .from('turnos_empleados')
           .insert({
             empleado_id: data.empleado_id,
@@ -106,11 +106,25 @@ export const useTurnos = () => {
             ubicacion_entrada: data.ubicacion_entrada ? 
               `(${data.ubicacion_entrada.lat},${data.ubicacion_entrada.lng})` : null,
             tipo_registro: data.tipo_registro
-          });
+          })
+          .select()
+          .single();
 
         if (error) throw error;
 
+        return { success: true, turnoId: turnoData.id };
+
       } else {
+        // Buscar registro existente para obtener el ID
+        const { data: existingTurno, error: searchError } = await supabase
+          .from('turnos_empleados')
+          .select('id')
+          .eq('empleado_id', data.empleado_id)
+          .eq('fecha', data.fecha)
+          .single();
+
+        if (searchError) throw searchError;
+
         // Actualizar registro existente con salida
         const { error } = await supabase
           .from('turnos_empleados')
@@ -123,21 +137,16 @@ export const useTurnos = () => {
           .eq('fecha', data.fecha);
 
         if (error) throw error;
+
+        return { success: true, turnoId: existingTurno.id };
       }
-
-      toast({
-        title: "Turno registrado",
-        description: `${data.tipo_registro === 'entrada' ? 'Entrada' : 'Salida'} registrada exitosamente`
-      });
-
-      return { success: true };
     } catch (error: any) {
       toast({
         title: "Error",
         description: `Error al registrar turno: ${error.message}`,
         variant: "destructive"
       });
-      return { success: false };
+      return { success: false, message: error.message };
     } finally {
       setLoading(false);
     }
