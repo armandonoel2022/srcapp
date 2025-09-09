@@ -245,19 +245,6 @@ export const AdminTurnosFotos = () => {
                                     <p><strong>Hora:</strong> {formatearHora(turno.hora_entrada)}</p>
                                     <p><strong>Fecha:</strong> {new Date(turno.fecha).toLocaleDateString('es-ES')}</p>
                                   </div>
-                                  {turno.ubicacion_entrada && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        const coords = obtenerCoordenadas(turno.ubicacion_entrada);
-                                        if (coords) abrirMaps(coords);
-                                      }}
-                                    >
-                                      <MapPin className="h-4 w-4 mr-1" />
-                                      Ver Ubicación
-                                    </Button>
-                                  )}
                                 </div>
                               </div>
                             </DialogContent>
@@ -293,19 +280,6 @@ export const AdminTurnosFotos = () => {
                                     <p><strong>Hora:</strong> {formatearHora(turno.hora_salida)}</p>
                                     <p><strong>Fecha:</strong> {new Date(turno.fecha).toLocaleDateString('es-ES')}</p>
                                   </div>
-                                  {turno.ubicacion_salida && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        const coords = obtenerCoordenadas(turno.ubicacion_salida);
-                                        if (coords) abrirMaps(coords);
-                                      }}
-                                    >
-                                      <MapPin className="h-4 w-4 mr-1" />
-                                      Ver Ubicación
-                                    </Button>
-                                  )}
                                 </div>
                               </div>
                             </DialogContent>
