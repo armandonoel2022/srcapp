@@ -535,7 +535,11 @@ export const MapaAsignarUbicacion = () => {
 
       {/* Dialog para crear nueva ubicación */}
       <Dialog open={showCreateDialog} onOpenChange={(open) => !open && cancelarCreacion()}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent 
+          className="sm:max-w-md bg-background border shadow-lg" 
+          style={{ zIndex: 10000 }}
+          onPointerDownOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Ubicación Encontrada</DialogTitle>
           </DialogHeader>

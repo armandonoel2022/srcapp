@@ -236,3 +236,21 @@ All colors MUST be HSL.
     background: white !important;
   }
 }
+
+/* Map modal override - ensure dialogs appear above Leaflet maps */
+[data-radix-dialog-overlay] {
+  z-index: 10000 !important;
+}
+
+[data-radix-dialog-content] {
+  z-index: 10001 !important;
+}
+
+.leaflet-container {
+  z-index: 1 !important;
+}
+
+/* Additional z-index fix for map dialogs */
+div[data-state="open"][role="dialog"] {
+  z-index: 10001 !important;
+}
