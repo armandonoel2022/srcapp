@@ -23,10 +23,16 @@ interface Turno {
   ubicacion_entrada?: unknown;
   ubicacion_salida?: unknown;
   observaciones?: string | null;
+  minutos_tardanza?: number;
+  estado_cumplimiento?: string;
+  alerta_temprana?: boolean;
   empleados_turnos: {
     nombres: string;
     apellidos?: string | null;
     funcion: string;
+    hora_entrada_programada?: string | null;
+    hora_salida_programada?: string | null;
+    lugar_designado?: string | null;
   } | null;
 }
 
@@ -80,13 +86,47 @@ export const TurnosAdminConsulta = () => {
     setFilteredTurnos(filtered);
   };
 
+  const calcularHorasTrabajadas = (horaEntrada?: string | null, horaSalida?: string | null) => {
+    if (!horaEntrada || !horaSalida) return 0;
+    
+    const entrada = new Date(`2000-01-01T${horaEntrada}`);
+    const salida = new Date(`2000-01-01T${horaSalida}`);
+    
+    // Si la salida es menor que la entrada, asumimos que es del día siguiente
+    if (salida < entrada) {
+      salida.setDate(salida.getDate() + 1);
+    }
+    
+    const diffMs = salida.getTime() - entrada.getTime();
+    return diffMs / (1000 * 60 * 60); // Convertir a horas
+  };
+
   const getEstadoBadge = (turno: Turno) => {
-    if (turno.hora_entrada && turno.hora_salida) {
-      return <Badge variant="default">Completo</Badge>;
-    } else if (turno.hora_entrada) {
+    if (!turno.hora_entrada) {
+      return <Badge variant="destructive">Sin entrada</Badge>;
+    }
+    
+    if (!turno.hora_salida) {
       return <Badge variant="secondary">Solo entrada</Badge>;
+    }
+
+    const horasTrabajadas = calcularHorasTrabajadas(turno.hora_entrada, turno.hora_salida);
+    
+    // Verificar si está dentro del horario programado (considerar horario nocturno)
+    const horaEntrada = new Date(`2000-01-01T${turno.hora_entrada}`);
+    const horaProgramada = new Date(`2000-01-01T08:00:00`); // Asumiendo 8 AM por defecto
+    
+    // Si entró más de 30 minutos tarde
+    const minutosTarde = (horaEntrada.getTime() - horaProgramada.getTime()) / (1000 * 60);
+    
+    if (horasTrabajadas < 7) {
+      return <Badge variant="destructive">Turno incompleto ({horasTrabajadas.toFixed(1)}h)</Badge>;
+    } else if (minutosTarde > 30) {
+      return <Badge variant="outline">Tarde pero completo ({horasTrabajadas.toFixed(1)}h)</Badge>;
+    } else if (horasTrabajadas >= 8) {
+      return <Badge variant="default">Completo ({horasTrabajadas.toFixed(1)}h)</Badge>;
     } else {
-      return <Badge variant="destructive">Incompleto</Badge>;
+      return <Badge variant="secondary">Parcial ({horasTrabajadas.toFixed(1)}h)</Badge>;
     }
   };
 
@@ -223,10 +263,10 @@ export const TurnosAdminConsulta = () => {
                     <th className="text-left p-3 font-medium">Empleado</th>
                     <th className="text-left p-3 font-medium">Función</th>
                     <th className="text-left p-3 font-medium">Fecha</th>
-                    <th className="text-left p-3 font-medium">Entrada</th>
-                    <th className="text-left p-3 font-medium">Salida</th>
-                    <th className="text-left p-3 font-medium">Estado</th>
-                    <th className="text-left p-3 font-medium">Acciones</th>
+                     <th className="text-left p-3 font-medium">Entrada</th>
+                     <th className="text-left p-3 font-medium">Salida</th>
+                     <th className="text-left p-3 font-medium">Estado del Turno</th>
+                     <th className="text-left p-3 font-medium">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -260,32 +300,60 @@ export const TurnosAdminConsulta = () => {
                             {new Date(turno.fecha).toLocaleDateString('es-ES')}
                           </div>
                         </td>
-                        <td className="p-3">
-                          {turno.hora_entrada ? (
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                              {turno.hora_entrada}
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <AlertTriangle className="h-4 w-4 text-red-600" />
-                              Sin registro
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-3">
-                          {turno.hora_salida ? (
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                              {turno.hora_salida}
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                              Pendiente
-                            </div>
-                          )}
-                        </td>
+                         <td className="p-3">
+                           {turno.hora_entrada ? (
+                             <div className="space-y-1">
+                               <div className="flex items-center gap-2">
+                                 {turno.minutos_tardanza && turno.minutos_tardanza > 0 ? (
+                                   <AlertTriangle className="h-4 w-4 text-red-600" />
+                                 ) : (
+                                   <CheckCircle className="h-4 w-4 text-green-600" />
+                                 )}
+                                 {turno.hora_entrada}
+                               </div>
+                               {turno.minutos_tardanza && turno.minutos_tardanza > 0 && (
+                                 <div className="text-xs text-red-600">
+                                   {turno.minutos_tardanza} min tarde
+                                 </div>
+                               )}
+                               {turno.empleados_turnos?.hora_entrada_programada && (
+                                 <div className="text-xs text-muted-foreground">
+                                   Prog: {turno.empleados_turnos.hora_entrada_programada}
+                                 </div>
+                               )}
+                             </div>
+                           ) : (
+                             <div className="flex items-center gap-2">
+                               <AlertTriangle className="h-4 w-4 text-red-600" />
+                               Sin registro
+                             </div>
+                           )}
+                         </td>
+                         <td className="p-3">
+                           {turno.hora_salida ? (
+                             <div className="space-y-1">
+                               <div className="flex items-center gap-2">
+                                 <CheckCircle className="h-4 w-4 text-green-600" />
+                                 {turno.hora_salida}
+                               </div>
+                               {turno.hora_entrada && (
+                                 <div className="text-xs text-muted-foreground">
+                                   {calcularHorasTrabajadas(turno.hora_entrada, turno.hora_salida).toFixed(1)}h trabajadas
+                                 </div>
+                               )}
+                               {turno.empleados_turnos?.hora_salida_programada && (
+                                 <div className="text-xs text-muted-foreground">
+                                   Prog: {turno.empleados_turnos.hora_salida_programada}
+                                 </div>
+                               )}
+                             </div>
+                           ) : (
+                             <div className="flex items-center gap-2">
+                               <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                               Pendiente
+                             </div>
+                           )}
+                         </td>
                         <td className="p-3">{getEstadoBadge(turno)}</td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
@@ -296,15 +364,21 @@ export const TurnosAdminConsulta = () => {
                             >
                               <Edit3 className="h-4 w-4" />
                             </Button>
-                            {turno.ubicacion_entrada && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openGoogleMaps(turno.ubicacion_entrada)}
-                              >
-                                <MapPin className="h-4 w-4" />
-                              </Button>
-                            )}
+                             {(turno.ubicacion_entrada || turno.ubicacion_salida) && (
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => openGoogleMaps(turno.ubicacion_entrada || turno.ubicacion_salida)}
+                                 title="Ver ubicación en Google Maps"
+                               >
+                                 <MapPin className="h-4 w-4" />
+                               </Button>
+                             )}
+                             {turno.empleados_turnos?.lugar_designado && (
+                               <div className="text-xs text-muted-foreground mt-1">
+                                 Lugar: {turno.empleados_turnos.lugar_designado}
+                               </div>
+                             )}
                           </div>
                         </td>
                       </tr>
