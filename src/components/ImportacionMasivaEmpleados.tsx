@@ -134,6 +134,26 @@ export const ImportacionMasivaEmpleados = () => {
       fecha_ingreso: "2018-06-07"
     },
     {
+      cedula: "001-1771752-0",
+      nombres: "Andres",
+      apellidos: "Bertran",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1951-04-27",
+      direccion: "N/A",
+      telefonos: "N/A",
+      fecha_ingreso: "2018-06-07"
+    },
+    {
+      cedula: "001-1814327-0",
+      nombres: "Jissell",
+      apellidos: "Daleymi",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1987-04-11",
+      direccion: "N/A",
+      telefonos: "N/A",
+      fecha_ingreso: "2018-06-07"
+    },
+    {
       cedula: "017-0020056-9",
       nombres: "Domingo",
       apellidos: "Arias Guzman",
@@ -222,6 +242,326 @@ export const ImportacionMasivaEmpleados = () => {
       direccion: "Calle Gioconda no. 03, Villa Mella Sto Dgo Norte.",
       telefonos: "829-922-3190",
       fecha_ingreso: "2022-04-05"
+    },
+    {
+      cedula: "020-0017730-9",
+      nombres: "Carmen Elizabeth",
+      apellidos: "Perez Perez",
+      funcion: "Oficial De Seguridad",
+      fecha_nacimiento: "1990-01-06",
+      direccion: "Calle Francisco Febrillet 27, Villa Faro Santo Domingo Este R.D",
+      telefonos: "809-461-6931",
+      fecha_ingreso: "2022-04-21"
+    },
+    {
+      cedula: "099-0004449-7",
+      nombres: "Sonyer Pascual",
+      apellidos: "Montero Ramirez",
+      funcion: "Oficial De Seguridad",
+      fecha_nacimiento: "1989-12-25",
+      direccion: "Calle Gioconda, Los Trinitarios no. 38, Villa Mella Santo Domingo Norte R.D",
+      telefonos: "829-682-1600",
+      fecha_ingreso: "2022-08-11"
+    },
+    {
+      cedula: "001-1213173-5",
+      nombres: "Teofilo",
+      apellidos: "Diaz Perez",
+      funcion: "Oficial De Seguridad",
+      fecha_nacimiento: "1972-03-05",
+      direccion: "Calle 5, No. 05 La Paz Punta de Villa Mella, Sto Dgo Norte.",
+      telefonos: "809-973-0053",
+      fecha_ingreso: "2022-08-30"
+    },
+    {
+      cedula: "001-1103297-5",
+      nombres: "Maria Ysabel",
+      apellidos: "Betance Ramos",
+      funcion: "Oficial De Seguridad",
+      fecha_nacimiento: "1973-09-14",
+      direccion: "Calle Duarte no. 61 Brisa del Este, Santo Domingo Este R.D",
+      telefonos: "809-769-6328",
+      fecha_ingreso: "2023-01-16"
+    },
+    {
+      cedula: "001-0515753-1",
+      nombres: "Antonio",
+      apellidos: "Cross Agramonte",
+      funcion: "Oficial De Seguridad",
+      fecha_nacimiento: "1965-04-01",
+      direccion: "Calle Simon Bolivar no. 54, Sector Simon Bolivar Santo Domingo Norte RD",
+      telefonos: "829-447-8789",
+      fecha_ingreso: "2023-02-03"
+    },
+    {
+      cedula: "001-1584780-8",
+      nombres: "Elvis",
+      apellidos: "Dominguez Contreras",
+      funcion: "Oficial De Seguridad",
+      fecha_nacimiento: "1978-09-21",
+      direccion: "Calle Rosa Duarte no. 02, Sector Los Tres Brazos Sto Dgo Este R.D",
+      telefonos: "829-464-0231",
+      fecha_ingreso: "2023-09-02"
+    },
+    {
+      cedula: "402-2800286-7",
+      nombres: "Joma Antonio",
+      apellidos: "Perez Montero",
+      funcion: "Oficial De Seguridad",
+      fecha_nacimiento: "1995-09-03",
+      direccion: "Calle Orlando Martinez no. 113, Los Tres Brazos Santo Domingo Este R.D",
+      telefonos: "849-330-9001",
+      fecha_ingreso: "2023-09-02"
+    },
+    {
+      cedula: "001-0547477-9",
+      nombres: "Juan Antonio",
+      apellidos: "Reyes Santana",
+      funcion: "Oficial De Seguridad",
+      fecha_nacimiento: "1965-06-01",
+      direccion: "Calle peatonal 6 no. 15, 3ra planta, Los Praditos Sto. Dgo.",
+      telefonos: "829-920-9304",
+      fecha_ingreso: "2023-09-15"
+    },
+    {
+      cedula: "225-0087221-7",
+      nombres: "Francisco Antonio",
+      apellidos: "Feliz",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1991-12-07",
+      direccion: "Calle, la gioconda callejon C, Villa Mella Santo Domingo Norte R.D",
+      telefonos: "809-304-8138",
+      fecha_ingreso: "2024-03-01"
+    },
+    {
+      cedula: "001-1757080-4",
+      nombres: "Renol",
+      apellidos: "Madis Hernandez",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1983-09-02",
+      direccion: "calle, el Almendro, San Felipe Villa mella, Santo Domingo Norte.",
+      telefonos: "809-702-3871",
+      fecha_ingreso: "2024-04-11"
+    },
+    {
+      cedula: "001-1133720-0",
+      nombres: "Pedro",
+      apellidos: "Torres Marte",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1966-10-10",
+      direccion: "Calle: Francisco del Rosario, no. Barrio san pedro, La Victoria, Santo Domingo Norte R.D",
+      telefonos: "829-319-0238",
+      fecha_ingreso: "2024-07-05"
+    },
+    {
+      cedula: "082-0025230-5",
+      nombres: "Francis Nathanael",
+      apellidos: "Vallejo Rodriguez",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1987-02-02",
+      direccion: "Calle: Libertad, Sector el callejon, Yaguate, S,C, R.D",
+      telefonos: "849-249-0212",
+      fecha_ingreso: "2024-11-23"
+    },
+    {
+      cedula: "027-0044619-4",
+      nombres: "Reyes",
+      apellidos: "Silvestre Muñoz",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1989-05-05",
+      direccion: "Calle: La Gioconda No.02 Villa Mella, Santo Domingo R.D",
+      telefonos: "809-839-0594",
+      fecha_ingreso: "2024-12-02"
+    },
+    {
+      cedula: "001-1188824-4",
+      nombres: "Tony",
+      apellidos: "Santana",
+      funcion: "Operador de control y asistencia",
+      fecha_nacimiento: "1970-07-25",
+      direccion: "Calle: Central esquina duarte 31, el Tamarindo Santo Domingo Este",
+      telefonos: "829-846-8982",
+      fecha_ingreso: "2024-12-03"
+    },
+    {
+      cedula: "001-1761652-4",
+      nombres: "Carlos Guarionex",
+      apellidos: "Garcia Gonzalez",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1984-05-18",
+      direccion: "Calle Primera los coquitos No. 24 Villa mella, Santo Domingo Norte",
+      telefonos: "849-220-9148",
+      fecha_ingreso: "2024-12-07"
+    },
+    {
+      cedula: "402-0253510-6",
+      nombres: "Genny Naomi",
+      apellidos: "de Peña Flores",
+      funcion: "Recepcionista",
+      fecha_nacimiento: "2006-01-12",
+      direccion: "Calle: Las Enfermeras No. 1, Los mina, Santo Domingo Este",
+      telefonos: "829-357-2741",
+      fecha_ingreso: "2024-12-09"
+    },
+    {
+      cedula: "012-0019607-7",
+      nombres: "Francisco",
+      apellidos: "Turbi Presinal",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1973-12-13",
+      direccion: "Calle: las Damas no. 7, los tres brazos Santo Domingo Este",
+      telefonos: "829-794-2907",
+      fecha_ingreso: "2025-01-08"
+    },
+    {
+      cedula: "001-1598928-7",
+      nombres: "Roberto",
+      apellidos: "Jimenez Frias",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1967-05-15",
+      direccion: "Calle: Anacaona 1era Barrio punta de Villa mella, Santo Domingo Norte",
+      telefonos: "809994-6119",
+      fecha_ingreso: "2025-01-01"
+    },
+    {
+      cedula: "402-5182505-1",
+      nombres: "Ezequiel",
+      apellidos: "de los Santos Rene",
+      funcion: "Operador CCTV",
+      fecha_nacimiento: "2002-08-08",
+      direccion: "Calle: Santo Domingo Norte, los Arquianos de Villa Mella",
+      telefonos: "829-426-3636",
+      fecha_ingreso: "2025-01-16"
+    },
+    {
+      cedula: "225-0089297-5",
+      nombres: "Eliadis Antonio",
+      apellidos: "Marine Mañon",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1995-07-19",
+      direccion: "Calle: Progreso no. 14 Sabana Perdida Santo Domingo Norte",
+      telefonos: "849-506-4140",
+      fecha_ingreso: "2025-01-16"
+    },
+    {
+      cedula: "001-0646145-2",
+      nombres: "Juan",
+      apellidos: "Duran Ferreras",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1960-01-28",
+      direccion: "Calle: Peatonal, no. 17 a. Villa Liberacion Santo Domingo Norte",
+      telefonos: "809-417-2566",
+      fecha_ingreso: "2025-01-23"
+    },
+    {
+      cedula: "001-1090007-3",
+      nombres: "Robert",
+      apellidos: "Ventura Ramirez",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1974-06-21",
+      direccion: "Calle: Respaldo 9, Casa no. 40, sector Villa Mella, Santo Domingo Norte",
+      telefonos: "849-436-2174",
+      fecha_ingreso: "2025-02-17"
+    },
+    {
+      cedula: "090-0015738-9",
+      nombres: "Juan",
+      apellidos: "Valoy Pierre",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1976-12-30",
+      direccion: "Calle: C/ 28 sector la amet, Villa mella, Santo Domingo Norte.",
+      telefonos: "849-629-8818",
+      fecha_ingreso: "2025-03-26"
+    },
+    {
+      cedula: "002-0165768-1",
+      nombres: "Jahrol Deybi",
+      apellidos: "Rafael Aguasviva",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1988-08-25",
+      direccion: "Calle: Barrio invi os mina, no.54 parte atrás",
+      telefonos: "809-449-0931",
+      fecha_ingreso: "2025-04-10"
+    },
+    {
+      cedula: "223-0171125-9",
+      nombres: "Jennifer",
+      apellidos: "Victoriano",
+      funcion: "Oficial de Seguridad",
+      fecha_nacimiento: "1994-11-03",
+      direccion: "Calle; 41 sector los mina casa No. 44",
+      telefonos: "",
+      fecha_ingreso: "2025-04-16"
+    },
+    {
+      cedula: "010-0059020-6",
+      nombres: "Bienvenido",
+      apellidos: "Ramirez",
+      funcion: "Oficial De Seguridad",
+      fecha_nacimiento: "1971-01-26",
+      direccion: "Calle; la fuente casa No. 46 sector los tres brazos",
+      telefonos: "",
+      fecha_ingreso: "2025-04-23"
+    },
+    {
+      cedula: "001-0141314-4",
+      nombres: "Rafael",
+      apellidos: "Santana Rodriguez",
+      funcion: "Oficial De Seguridad",
+      fecha_nacimiento: "1982-05-25",
+      direccion: "Calle: rogelio roselle apto. 303 nayona santo domigo oeste",
+      telefonos: "",
+      fecha_ingreso: "2025-05-22"
+    },
+    {
+      cedula: "023-0141904-6",
+      nombres: "Francisco",
+      apellidos: "Viola",
+      funcion: "Oficial De Seguridad",
+      fecha_nacimiento: "1974-12-27",
+      direccion: "Calle: ceiba sector de los creto de villa mella",
+      telefonos: "",
+      fecha_ingreso: "2025-05-29"
+    },
+    {
+      cedula: "220-0019406-7",
+      nombres: "Raisa",
+      apellidos: "Nuñez Acevedo",
+      funcion: "OFICIAL DE SEGURIDAD",
+      fecha_nacimiento: "1981-03-31",
+      direccion: "vista vella calle no. 29 villa mella",
+      telefonos: "",
+      fecha_ingreso: "2025-07-16"
+    },
+    {
+      cedula: "001-1655502-0",
+      nombres: "Gregory",
+      apellidos: "Argelis Casilla",
+      funcion: "OFICIAL DE SEGURIDAD",
+      fecha_nacimiento: "1978-09-18",
+      direccion: "Callle ensache espanal herrera",
+      telefonos: "",
+      fecha_ingreso: "2025-07-02"
+    },
+    {
+      cedula: "402-0970435-8",
+      nombres: "Angel",
+      apellidos: "Matos Estevez",
+      funcion: "OFICIAL DE SEGURIDAD",
+      fecha_nacimiento: "2002-05-29",
+      direccion: "Calle: sanchez ramirez no. 40 sector villa mella",
+      telefonos: "",
+      fecha_ingreso: "2025-08-07"
+    },
+    {
+      cedula: "402-3530391-0",
+      nombres: "Natanael",
+      apellidos: "Heredia Guzman",
+      funcion: "OFICIAL DE SEGURIDAD",
+      fecha_nacimiento: "1997-12-04",
+      direccion: "Calle: juan sanchez ramirez no. 40 sector villa mella",
+      telefonos: "",
+      fecha_ingreso: "2025-08-12"
     }
   ];
 
