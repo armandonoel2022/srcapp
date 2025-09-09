@@ -57,21 +57,43 @@ export const useTurnos = () => {
       }
 
       if (data.tipo_registro === 'entrada') {
-        // Verificar si ya existe una entrada para hoy
-        const { data: existingTurno } = await supabase
-          .from('turnos_empleados')
-          .select('*')
-          .eq('empleado_id', data.empleado_id)
-          .eq('fecha', data.fecha)
-          .maybeSingle();
+        // Obtener información del empleado para verificar si es usuario de prueba
+        const { data: empleadoInfo, error: empleadoInfoError } = await supabase
+          .from('empleados_turnos')
+          .select('username, nombres, apellidos')
+          .eq('id', data.empleado_id)
+          .single();
 
-        if (existingTurno) {
+        // Para usuarios de prueba, permitir múltiples registros eliminando registros previos
+        if (empleadoInfo && empleadoInfo.username === 'uprueba') {
+          // Eliminar registros existentes del día para el usuario de prueba
+          await supabase
+            .from('turnos_empleados')
+            .delete()
+            .eq('empleado_id', data.empleado_id)
+            .eq('fecha', data.fecha);
+          
           toast({
-            title: "Error",
-            description: "Ya existe un registro de entrada para este empleado hoy",
-            variant: "destructive"
+            title: "Usuario de Prueba",
+            description: "Registros previos eliminados para permitir nuevas pruebas",
           });
-          return { success: false };
+        } else {
+          // Verificar si ya existe una entrada para hoy (solo para usuarios normales)
+          const { data: existingTurno } = await supabase
+            .from('turnos_empleados')
+            .select('*')
+            .eq('empleado_id', data.empleado_id)
+            .eq('fecha', data.fecha)
+            .maybeSingle();
+
+          if (existingTurno) {
+            toast({
+              title: "Error",
+              description: "Ya existe un registro de entrada para este empleado hoy",
+              variant: "destructive"
+            });
+            return { success: false };
+          }
         }
 
         // Crear nuevo registro de entrada

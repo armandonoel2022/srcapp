@@ -199,8 +199,24 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
                   <span className="font-medium">Turno completo registrado</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Ya tienes registradas tanto la entrada como la salida para hoy.
+                  {empleado.nombres === 'Usuario' && empleado.apellidos === 'Prueba' 
+                    ? 'Turno completo. Como usuario de prueba, puedes hacer un nuevo registro eliminando el anterior.'
+                    : 'Ya tienes registradas tanto la entrada como la salida para hoy.'
+                  }
                 </p>
+                {empleado.nombres === 'Usuario' && empleado.apellidos === 'Prueba' && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={() => {
+                      setEstadoTurno({ estado: 'sin_entrada', turno: null });
+                      setTipoRegistro('entrada');
+                    }}
+                  >
+                    Nuevo Registro de Prueba
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>
