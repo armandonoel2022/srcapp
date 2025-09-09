@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, MapPin, CheckCircle, AlertTriangle, User } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
-import { useAuth } from '@/hooks/useAuth';
+import { useEmpleadoAuth } from '@/hooks/useEmpleadoAuth';
 import { PunchButton } from '@/components/PunchButton';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 export const TurnosAgentForm = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -19,7 +18,7 @@ export const TurnosAgentForm = () => {
   const [empleadoId, setEmpleadoId] = useState<string>('');
 
   const { verificarEstadoTurno } = useTurnos();
-  const { user } = useAuth();
+  const { empleado } = useEmpleadoAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,53 +29,44 @@ export const TurnosAgentForm = () => {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      // Verificar el estado del turno para el usuario autenticado
+    if (empleado) {
+      console.log('📋 Empleado cargado:', empleado);
+      // Verificar el estado del turno para el empleado autenticado
       const today = new Date().toISOString().split('T')[0];
+      setEmpleadoId(empleado.id);
       buscarEmpleadoYVerificarEstado(today);
     }
-  }, [user]);
+  }, [empleado]);
 
   const buscarEmpleadoYVerificarEstado = async (fecha: string) => {
-    if (!user?.username) return;
+    if (!empleado?.id) return;
     
     try {
-      // Buscar el empleado por nombre de usuario
-      const { data: empleados, error } = await supabase
-        .from('empleados_turnos')
-        .select('id')
-        .or(`nombres.ilike.%${user.username}%,apellidos.ilike.%${user.username}%`)
-        .eq('active', true)
-        .limit(1);
-
-      if (error) throw error;
-
-      if (empleados && empleados.length > 0) {
-        const foundEmpleadoId = empleados[0].id;
-        setEmpleadoId(foundEmpleadoId);
-        
-        const result = await verificarEstadoTurno(foundEmpleadoId, fecha);
-        setEstadoTurno(result);
-        
-        // Determinar el tipo de registro basado en el estado
-        if (result.estado === 'sin_entrada') {
-          setTipoRegistro('entrada');
-        } else if (result.estado === 'entrada_registrada') {
-          setTipoRegistro('salida');
-        }
-      } else {
-        toast({
-          title: "Error",
-          description: "No se encontró un empleado asociado a este usuario",
-          variant: "destructive"
-        });
+      console.log('🔍 Verificando estado del turno para empleado:', empleado.id);
+      
+      // Usar directamente el ID del empleado autenticado
+      const estado = await verificarEstadoTurno(empleado.id, fecha);
+      
+      if (estado.estado === 'sin_entrada') {
+        setTipoRegistro('entrada');
+        setEstadoTurno({ estado: 'sin_entrada', turno: null });
+      } else if (estado.estado === 'entrada_registrada') {
+        setTipoRegistro('salida');
+        setEstadoTurno({ estado: 'entrada_registrada', turno: estado.turno });
+      } else if (estado.estado === 'completo') {
+        setEstadoTurno({ estado: 'completo', turno: estado.turno });
       }
-    } catch (error: any) {
+      
+      setEmpleadoId(empleado.id);
+      
+    } catch (error) {
+      console.error('Error al verificar estado del turno:', error);
       toast({
         title: "Error",
-        description: `Error al verificar estado: ${error.message}`,
+        description: "No se pudo verificar el estado del turno",
         variant: "destructive"
       });
+      setEstadoTurno({ estado: 'error', turno: null });
     }
   };
 
@@ -124,7 +114,7 @@ export const TurnosAgentForm = () => {
     );
   };
 
-  if (!user || user.role !== 'agente_seguridad') {
+  if (!empleado) {
     return (
       <div className="space-y-6">
         <Card>
@@ -132,7 +122,7 @@ export const TurnosAgentForm = () => {
             <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">Acceso Restringido</h3>
             <p className="text-muted-foreground">
-              Esta sección solo está disponible para agentes de seguridad autenticados.
+              Debe iniciar sesión como empleado para acceder a esta sección.
             </p>
           </CardContent>
         </Card>
@@ -150,7 +140,7 @@ export const TurnosAgentForm = () => {
           </CardTitle>
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <User className="h-4 w-4" />
-            <span>Conectado como: {user.username}</span>
+            <span>Conectado como: {empleado.nombres} {empleado.apellidos}</span>
           </div>
           <div className="text-lg font-mono">
             {currentTime.toLocaleDateString('es-ES', {
