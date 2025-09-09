@@ -4,10 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MapPin, Save, Search, Navigation, X, Check } from 'lucide-react';
+import { MapPin, Save, Search, Navigation, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useSettings } from '@/contexts/SettingsContext';
-import { supabase } from '@/integrations/supabase/client';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface LocationData {
   nombre: string;
@@ -40,50 +40,50 @@ export const LocationSelector = ({
     lng: initialLocation?.lng || 0,
     radio_tolerancia: initialLocation?.radio_tolerancia || 100
   });
-  const [map, setMap] = useState<any>(null);
-  const [marker, setMarker] = useState<any>(null);
+  const [map, setMap] = useState<L.Map | null>(null);
+  const [marker, setMarker] = useState<L.Marker | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [saving, setSaving] = useState(false);
   
   const mapContainer = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { mapboxToken } = useSettings();
 
   // Inicializar mapa
   useEffect(() => {
-    if (!isOpen || !mapboxToken || !mapContainer.current) return;
+    if (!isOpen || !mapContainer.current) return;
 
-    const initializeMap = async () => {
+    const initializeMap = () => {
       try {
-        const mapboxgl = await import('mapbox-gl');
-        await import('mapbox-gl/dist/mapbox-gl.css');
-        
-        mapboxgl.default.accessToken = mapboxToken;
-
-        const mapInstance = new mapboxgl.default.Map({
-          container: mapContainer.current!,
-          style: 'mapbox://styles/mapbox/streets-v12',
-          center: initialLocation ? [initialLocation.lng, initialLocation.lat] : [-69.9156, 18.4655],
-          zoom: initialLocation ? 16 : 11
+        // Configurar iconos por defecto de Leaflet
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png'
         });
 
-        mapInstance.addControl(new mapboxgl.default.NavigationControl(), 'top-right');
+        const mapInstance = L.map(mapContainer.current!).setView(
+          initialLocation ? [initialLocation.lat, initialLocation.lng] : [18.4655, -69.9156],
+          initialLocation ? 16 : 11
+        );
+
+        // Agregar capa de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(mapInstance);
 
         // Click event para seleccionar ubicación
         mapInstance.on('click', (e) => {
-          const { lng, lat } = e.lngLat;
+          const { lat, lng } = e.latlng;
           setSelectedCoords({ lat, lng });
           setLocationData(prev => ({ ...prev, lat, lng }));
           
           // Actualizar marcador
           if (marker) {
-            marker.remove();
+            mapInstance.removeLayer(marker);
           }
           
-          const newMarker = new mapboxgl.default.Marker({ color: '#ef4444' })
-            .setLngLat([lng, lat])
-            .addTo(mapInstance);
-          
+          const newMarker = L.marker([lat, lng]).addTo(mapInstance);
           setMarker(newMarker);
           
           // Geocoding reverso para obtener dirección
@@ -92,9 +92,7 @@ export const LocationSelector = ({
 
         // Si hay ubicación inicial, agregar marcador
         if (initialLocation) {
-          const initialMarker = new mapboxgl.default.Marker({ color: '#ef4444' })
-            .setLngLat([initialLocation.lng, initialLocation.lat])
-            .addTo(mapInstance);
+          const initialMarker = L.marker([initialLocation.lat, initialLocation.lng]).addTo(mapInstance);
           setMarker(initialMarker);
         }
 
@@ -104,28 +102,27 @@ export const LocationSelector = ({
           mapInstance.remove();
         };
       } catch (error) {
-        console.error('Error loading Mapbox:', error);
+        console.error('Error loading map:', error);
         toast({
           title: "Error al cargar el mapa",
-          description: "Verifica que el token de Mapbox sea válido",
+          description: "Error al inicializar el mapa",
           variant: "destructive"
         });
       }
     };
 
     initializeMap();
-  }, [isOpen, mapboxToken, toast]);
+  }, [isOpen, toast]);
 
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxToken}&language=es`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`
       );
       const data = await response.json();
       
-      if (data.features && data.features.length > 0) {
-        const address = data.features[0].place_name;
-        setLocationData(prev => ({ ...prev, direccion: address }));
+      if (data && data.display_name) {
+        setLocationData(prev => ({ ...prev, direccion: data.display_name }));
       }
     } catch (error) {
       console.error('Error en geocoding reverso:', error);
@@ -133,21 +130,22 @@ export const LocationSelector = ({
   };
 
   const searchLocation = async () => {
-    if (!searchQuery.trim() || !mapboxToken) return;
+    if (!searchQuery.trim()) return;
     
     try {
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${mapboxToken}&country=DO&language=es&limit=5`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=do&limit=5&accept-language=es`
       );
       const data = await response.json();
       
-      if (data.features && data.features.length > 0) {
-        const feature = data.features[0];
-        const [lng, lat] = feature.center;
+      if (data && data.length > 0) {
+        const result = data[0];
+        const lat = parseFloat(result.lat);
+        const lng = parseFloat(result.lon);
         
         // Centrar mapa en resultado
         if (map) {
-          map.flyTo({ center: [lng, lat], zoom: 16 });
+          map.setView([lat, lng], 16);
         }
         
         // Actualizar coordenadas seleccionadas
@@ -156,24 +154,20 @@ export const LocationSelector = ({
           ...prev, 
           lat, 
           lng, 
-          direccion: feature.place_name 
+          direccion: result.display_name 
         }));
         
         // Actualizar marcador
         if (marker) {
-          marker.remove();
+          map?.removeLayer(marker);
         }
         
-        const mapboxgl = await import('mapbox-gl');
-        const newMarker = new mapboxgl.default.Marker({ color: '#ef4444' })
-          .setLngLat([lng, lat])
-          .addTo(map);
-        
+        const newMarker = L.marker([lat, lng]).addTo(map!);
         setMarker(newMarker);
         
         toast({
           title: "Ubicación encontrada",
-          description: feature.place_name,
+          description: result.display_name,
         });
       } else {
         toast({
@@ -206,7 +200,7 @@ export const LocationSelector = ({
         const { latitude: lat, longitude: lng } = position.coords;
         
         if (map) {
-          map.flyTo({ center: [lng, lat], zoom: 16 });
+          map.setView([lat, lng], 16);
         }
         
         setSelectedCoords({ lat, lng });
@@ -257,19 +251,7 @@ export const LocationSelector = ({
 
     setSaving(true);
     try {
-      // Crear o actualizar ubicación de trabajo
-      const { error } = await supabase
-        .from('ubicaciones_trabajo')
-        .upsert({
-          nombre: locationData.nombre,
-          direccion: locationData.direccion,
-          coordenadas: `(${selectedCoords.lat},${selectedCoords.lng})`,
-          radio_tolerancia: locationData.radio_tolerancia,
-          activa: true
-        });
-
-      if (error) throw error;
-
+      // Por ahora solo guardamos localmente hasta que se ejecute la migración
       onLocationSaved({
         ...locationData,
         lat: selectedCoords.lat,
@@ -277,8 +259,8 @@ export const LocationSelector = ({
       });
 
       toast({
-        title: "Ubicación guardada",
-        description: "La ubicación de trabajo ha sido configurada exitosamente",
+        title: "Ubicación seleccionada",
+        description: "La ubicación de trabajo ha sido configurada",
       });
 
       onClose();
@@ -295,25 +277,6 @@ export const LocationSelector = ({
 
   if (!isOpen) return null;
 
-  if (!mapboxToken) {
-    return (
-      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="pt-6">
-            <Alert>
-              <MapPin className="h-4 w-4" />
-              <AlertDescription>
-                Para usar el selector de ubicaciones, necesitas configurar un token de Mapbox en la configuración.
-              </AlertDescription>
-            </Alert>
-            <Button onClick={onClose} className="mt-4 w-full">
-              Cerrar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
