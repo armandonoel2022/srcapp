@@ -43,7 +43,7 @@ export const useEstadosEmpleados = () => {
         .from('empleados_estados')
         .select(`
           *,
-          empleados_turnos (
+          empleados_turnos!empleados_estados_empleado_id_fkey (
             nombres,
             apellidos,
             funcion

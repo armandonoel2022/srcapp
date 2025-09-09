@@ -106,7 +106,7 @@ export const useAnalisisTurnos = () => {
         .from('turnos_empleados')
         .select(`
           *,
-          empleados_turnos (
+          empleados_turnos!turnos_empleados_empleado_id_fkey (
             nombres,
             apellidos,
             funcion,

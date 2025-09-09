@@ -59,7 +59,7 @@ export const DashboardCumplimiento = () => {
           fecha,
           hora_entrada,
           hora_salida,
-          empleados_turnos!empleado_id (
+          empleados_turnos!turnos_empleados_empleado_id_fkey (
             nombres,
             apellidos,
             funcion,
