@@ -9,6 +9,7 @@ import { LogOut, Users, Shield, FileText, Clock, Search, UserPlus, Camera, UserC
 import { RegistroForm } from '@/components/RegistroForm';
 import { GestionEmpleados } from '@/components/GestionEmpleados';
 import { Sidebar } from '@/components/Sidebar';
+import { WelcomeScreen } from '@/components/WelcomeScreen';
 import { ConsultaRegistros } from '@/components/ConsultaRegistros';
 import { CrearUsuarioCliente } from '@/components/CrearUsuarioCliente';
 import { EditarRegistros } from '@/components/EditarRegistros';
@@ -36,8 +37,9 @@ export const Dashboard = () => {
   const isClient = user?.type === 'client' || user?.role === 'cliente';
   const { toast } = useToast();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [currentSection, setCurrentSection] = useState(isClient ? 'mapa-calor' : 'registros');
+  const [currentSection, setCurrentSection] = useState(isClient ? 'mapa-calor' : 'registro');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(!isClient); // Solo mostrar bienvenida si no es cliente
   const [stats, setStats] = useState({
     empleados: 0,
     registrosHoy: 0,
@@ -83,6 +85,12 @@ export const Dashboard = () => {
     fetchStats();
   }, []);
 
+  // Función para manejar la navegación entre secciones
+  const handleNavigate = (section: string) => {
+    setCurrentSection(section);
+    setShowWelcome(false); // Ocultar la pantalla de bienvenida cuando se navega
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -106,14 +114,14 @@ export const Dashboard = () => {
     }
     
     switch (currentSection) {
-      case 'registros':
+      case 'registro':
         return (
           <div className="space-y-6">
             <RegistroForm />
             {/* Quick Access Buttons */}
             <div className="flex gap-4 justify-center">
               <Button
-                onClick={() => setCurrentSection('consulta')}
+                onClick={() => handleNavigate('consulta')}
                 variant="outline"
                 size="lg"
                 className="flex items-center gap-2"
@@ -122,7 +130,7 @@ export const Dashboard = () => {
                 Consultar Horas
               </Button>
               <Button
-                onClick={() => setCurrentSection('empleados')}
+                onClick={() => handleNavigate('empleados')}
                 variant="outline"
                 size="lg"
                 className="flex items-center gap-2"
@@ -134,10 +142,10 @@ export const Dashboard = () => {
           </div>
         );
       case 'consulta':
-        return <ConsultaRegistros onNavigateToForm={() => setCurrentSection('registros')} />;
+        return <ConsultaRegistros onNavigateToForm={() => handleNavigate('registro')} />;
       case 'empleados':
         return <GestionEmpleados />;
-      case 'crear-cliente':
+      case 'crear-usuario-cliente':
         return <CrearUsuarioCliente />;
       case 'editar-registros':
         return <EditarRegistros />;
@@ -147,11 +155,11 @@ export const Dashboard = () => {
         return <EditarEmpleados />;
       case 'dashboard-cumplimiento':
         return <DashboardCumplimiento />;
-      case 'turnos':
+      case 'turnos-enhanced':
         return <TurnosFormEnhanced />;
       case 'dashboard-turnos':
         return <DashboardTurnos />;
-      case 'mapa-ubicaciones':
+      case 'ubicaciones':
         return <MapaAsignarUbicacion />;
       case 'revisar-fotos':
         return <AdminTurnosFotos />;
@@ -164,7 +172,7 @@ export const Dashboard = () => {
             {/* Quick Access Buttons */}
             <div className="flex gap-4 justify-center">
               <Button
-                onClick={() => setCurrentSection('consulta')}
+                onClick={() => handleNavigate('consulta')}
                 variant="outline"
                 size="lg"
                 className="flex items-center gap-2"
@@ -173,7 +181,7 @@ export const Dashboard = () => {
                 Consultar Horas
               </Button>
               <Button
-                onClick={() => setCurrentSection('empleados')}
+                onClick={() => handleNavigate('empleados')}
                 variant="outline"
                 size="lg"
                 className="flex items-center gap-2"
@@ -187,10 +195,15 @@ export const Dashboard = () => {
     }
   };
 
+  // Mostrar pantalla de bienvenida si está activada y no es cliente
+  if (showWelcome && !isClient && !showPasswordModal) {
+    return <WelcomeScreen onNavigate={handleNavigate} isActive={true} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar 
-        onNavigate={setCurrentSection} 
+        onNavigate={handleNavigate} 
         currentSection={currentSection}
         isClient={isClient}
       />
