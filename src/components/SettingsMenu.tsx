@@ -24,29 +24,71 @@ export const SettingsMenu = () => {
   const { registerBiometric, capabilities } = useBiometricAuth();
   const { toast } = useToast();
   
-  const handleBiometricToggle = async (enabled: boolean) => {  
+  const handleBiometricToggle = async (enabled: boolean) => {
+    console.log('Biometric Debug - Toggle requested:', enabled);
+    console.log('Biometric Debug - Current state:', biometricEnabled);
+    
     if (enabled) {  
-      try {  
-        const result = await registerBiometric();  
+      try {
+        // Add timeout for mobile devices (iPad)
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Biometric setup timeout - please try again')), 25000)
+        );
+        
+        const biometricPromise = registerBiometric();
+        
+        // Race between registration and timeout
+        const result = await Promise.race([biometricPromise, timeoutPromise]) as any;
+        
+        console.log('Biometric Debug - Registration result:', result);
+        
         if (result.success) {  
-          setBiometricEnabled(true);  
+          setBiometricEnabled(true);
+          console.log('Biometric Debug - Successfully enabled');
+        } else {
+          console.log('Biometric Debug - Registration failed:', result.error);
+          toast({  
+            title: "Error",  
+            description: result.error || "No se pudo activar la autenticación biométrica",  
+            variant: "destructive",  
+          });
         }  
-      } catch (error) {  
+      } catch (error: any) {  
+        console.error('Biometric Debug - Error during toggle:', error);
         toast({  
           title: "Error",  
-          description: "No se pudo activar la autenticación biométrica",  
+          description: error.message || "No se pudo activar la autenticación biométrica",  
           variant: "destructive",  
         });  
       }  
     } else {  
-      setBiometricEnabled(false);  
-      localStorage.setItem('biometricEnabled', 'false');  
-      toast({  
-        title: "Autenticación biométrica desactivada",  
-        description: "Se ha desactivado el acceso biométrico",  
-      });  
+      try {
+        console.log('Biometric Debug - Disabling biometric auth');
+        setBiometricEnabled(false);
+        
+        // Forzar actualización del estado con delay para iPad
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Verificar que se guardó correctamente
+        const savedState = localStorage.getItem('biometricEnabled');
+        console.log('Biometric Debug - Saved state after disable:', savedState);
+        
+        toast({  
+          title: "Autenticación biométrica desactivada",  
+          description: "Se ha desactivado el acceso biométrico",  
+        });
+      } catch (error: any) {
+        console.error('Biometric Debug - Error disabling:', error);
+        toast({  
+          title: "Error",  
+          description: "Error al desactivar la autenticación biométrica",  
+          variant: "destructive",  
+        });
+        // Revertir el estado si hay error
+        setBiometricEnabled(true);
+      }
     }  
-  };  
+  };
   
   return (  
     <Sheet open={isOpen} onOpenChange={setIsOpen}>  
