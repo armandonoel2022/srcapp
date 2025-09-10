@@ -112,85 +112,166 @@ export const Dashboard = () => {
     if (isClient) {
       return <InteractiveHeatMap />;
     }
+
+    // Botón para volver a la pantalla principal (solo si no estamos en bienvenida)
+    const BackButton = () => !showWelcome && (
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          onClick={() => setShowWelcome(true)}
+          variant="outline"
+          size="lg"
+          className="bg-white/90 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all duration-300"
+          style={{ boxShadow: "var(--shadow-elegant)" }}
+        >
+          <span className="text-sm font-medium">🏠 Volver al Inicio</span>
+        </Button>
+      </div>
+    );
     
     switch (currentSection) {
       case 'registro':
         return (
-          <div className="space-y-6">
-            <RegistroForm />
-            {/* Quick Access Buttons */}
-            <div className="flex gap-4 justify-center">
-              <Button
-                onClick={() => handleNavigate('consulta')}
-                variant="outline"
-                size="lg"
-                className="flex items-center gap-2"
-              >
-                <Search className="h-5 w-5" />
-                Consultar Horas
-              </Button>
-              <Button
-                onClick={() => handleNavigate('empleados')}
-                variant="outline"
-                size="lg"
-                className="flex items-center gap-2"
-              >
-                <UserPlus className="h-5 w-5" />
-                Agregar Empleado
-              </Button>
+          <>
+            <div className="space-y-6">
+              <RegistroForm />
+              {/* Quick Access Buttons */}
+              <div className="flex gap-4 justify-center">
+                <Button
+                  onClick={() => handleNavigate('consulta')}
+                  variant="outline"
+                  size="lg"
+                  className="flex items-center gap-2"
+                >
+                  <Search className="h-5 w-5" />
+                  Consultar Horas
+                </Button>
+                <Button
+                  onClick={() => handleNavigate('empleados')}
+                  variant="outline"
+                  size="lg"
+                  className="flex items-center gap-2"
+                >
+                  <UserPlus className="h-5 w-5" />
+                  Agregar Empleado
+                </Button>
+              </div>
             </div>
-          </div>
+            <BackButton />
+          </>
         );
       case 'consulta':
-        return <ConsultaRegistros onNavigateToForm={() => handleNavigate('registro')} />;
+        return (
+          <>
+            <ConsultaRegistros onNavigateToForm={() => handleNavigate('registro')} />
+            <BackButton />
+          </>
+        );
       case 'empleados':
-        return <GestionEmpleados />;
+        return (
+          <>
+            <GestionEmpleados />
+            <BackButton />
+          </>
+        );
       case 'crear-usuario-cliente':
-        return <CrearUsuarioCliente />;
+        return (
+          <>
+            <CrearUsuarioCliente />
+            <BackButton />
+          </>
+        );
       case 'editar-registros':
-        return <EditarRegistros />;
+        return (
+          <>
+            <EditarRegistros />
+            <BackButton />
+          </>
+        );
       case 'eliminar-empleados':
-        return <EliminarEmpleados />;
+        return (
+          <>
+            <EliminarEmpleados />
+            <BackButton />
+          </>
+        );
       case 'editar-empleados':
-        return <EditarEmpleados />;
+        return (
+          <>
+            <EditarEmpleados />
+            <BackButton />
+          </>
+        );
       case 'dashboard-cumplimiento':
-        return <DashboardCumplimiento />;
+        return (
+          <>
+            <DashboardCumplimiento />
+            <BackButton />
+          </>
+        );
       case 'turnos-enhanced':
-        return <TurnosFormEnhanced />;
+        return (
+          <>
+            <TurnosFormEnhanced />
+            <BackButton />
+          </>
+        );
       case 'dashboard-turnos':
-        return <DashboardTurnos />;
+        return (
+          <>
+            <DashboardTurnos />
+            <BackButton />
+          </>
+        );
       case 'ubicaciones':
-        return <MapaAsignarUbicacion />;
+        return (
+          <>
+            <MapaAsignarUbicacion />
+            <BackButton />
+          </>
+        );
       case 'revisar-fotos':
-        return <AdminTurnosFotos />;
+        return (
+          <>
+            <AdminTurnosFotos />
+            <BackButton />
+          </>
+        );
       case 'mapa-calor':
-        return <InteractiveHeatMap />;
+        return (
+          <>
+            <InteractiveHeatMap />
+            <BackButton />
+          </>
+        );
       default:
         return (
-          <div className="space-y-6">
-            <RegistroForm />
-            {/* Quick Access Buttons */}
-            <div className="flex gap-4 justify-center">
-              <Button
-                onClick={() => handleNavigate('consulta')}
-                variant="outline"
-                size="lg"
-                className="flex items-center gap-2"
-              >
-                <Search className="h-5 w-5" />
-                Consultar Horas
-              </Button>
-              <Button
-                onClick={() => handleNavigate('empleados')}
-                variant="outline"
-                size="lg"
-                className="flex items-center gap-2"
-              >
-                <UserPlus className="h-5 w-5" />
-                Agregar Empleado
-              </Button>
+          <>
+            <div className="space-y-6">
+              <RegistroForm />
+              {/* Quick Access Buttons */}
+              <div className="flex gap-4 justify-center">
+                <Button
+                  onClick={() => handleNavigate('consulta')}
+                  variant="outline"
+                  size="lg"
+                  className="flex items-center gap-2"
+                >
+                  <Search className="h-5 w-5" />
+                  Consultar Horas
+                </Button>
+                <Button
+                  onClick={() => handleNavigate('empleados')}
+                  variant="outline"
+                  size="lg"
+                  className="flex items-center gap-2"
+                >
+                  <UserPlus className="h-5 w-5" />
+                  Agregar Empleado
+                </Button>
+              </div>
             </div>
-          </div>
+            <BackButton />
+          </>
         );
     }
   };

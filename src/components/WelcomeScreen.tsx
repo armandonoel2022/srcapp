@@ -90,7 +90,7 @@ export const WelcomeScreen = ({ onNavigate, isActive }: WelcomeScreenProps) => {
               Sistema de Control de Acceso SRC
             </p>
             <p className="text-white/80 text-sm">
-              Accede con tus credenciales para gestionar el control de acceso
+              Selecciona una opción para acceder a las funcionalidades del sistema
             </p>
           </div>
         </div>
