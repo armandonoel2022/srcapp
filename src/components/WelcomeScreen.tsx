@@ -91,15 +91,20 @@ export const WelcomeScreen = ({ onNavigate, onLogout, onBackToHome, isActive }: 
     const currentY = e.touches[0].clientY;
     const diffY = touchStartY - currentY;
     
-    if (diffY > 20) { // Swipe up threshold
+    if (diffY > 10) { // Reduced threshold - easier to trigger
       setIsDragging(true);
-      if (diffY > 50) { // Show buttons threshold
+      if (diffY > 30) { // Reduced threshold for showing buttons
         setShowHiddenButtons(true);
       }
-    } else if (diffY < -20) { // Swipe down
+    } else if (diffY < -10) { // Reduced threshold for swipe down
       setShowHiddenButtons(false);
       setIsDragging(false);
     }
+  };
+
+  // Click handler for easy access (alternative to swipe)
+  const handleDoubleClick = () => {
+    setShowHiddenButtons(!showHiddenButtons);
   };
 
   const handleTouchEnd = () => {
@@ -126,7 +131,16 @@ export const WelcomeScreen = ({ onNavigate, onLogout, onBackToHome, isActive }: 
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onDoubleClick={handleDoubleClick}
       >
+        
+        {/* Swipe Indicator - Always visible */}
+        <div className="swipe-hint">
+          <div className="swipe-hint-content">
+            <div className="swipe-hint-line"></div>
+            <span className="swipe-hint-text">Desliza hacia arriba o doble click para más opciones</span>
+          </div>
+        </div>
         
         <div className={`welcome-container ${isActive ? 'active' : ''} ${isAnimating ? 'animating' : ''}`}>
           
@@ -344,6 +358,54 @@ export const WelcomeScreen = ({ onNavigate, onLogout, onBackToHome, isActive }: 
           background: var(--gradient-blue-form);
           z-index: 2;
           transition: 1.8s ease-in-out;
+        }
+
+        /* Swipe Hint - Always visible indicator */
+        .swipe-hint {
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 500;
+          pointer-events: none;
+        }
+
+        .swipe-hint-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(10px);
+          padding: 12px 20px;
+          border-radius: 20px;
+          border: 1px solid hsl(var(--border));
+          animation: pulse-gentle 3s infinite;
+        }
+
+        .swipe-hint-line {
+          width: 30px;
+          height: 3px;
+          background: hsl(var(--primary));
+          border-radius: 2px;
+          animation: bounce-gentle 2s infinite;
+        }
+
+        .swipe-hint-text {
+          font-size: 12px;
+          color: hsl(var(--muted-foreground));
+          text-align: center;
+          white-space: nowrap;
+        }
+
+        @keyframes pulse-gentle {
+          0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+          50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+        }
+
+        @keyframes bounce-gentle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
         }
 
         .welcome-container.animating .message-panel {
