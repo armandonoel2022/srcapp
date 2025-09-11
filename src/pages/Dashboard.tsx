@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,6 @@ import { MapaAsignarUbicacion } from '@/components/MapaAsignarUbicacion';
 
 export const Dashboard = () => {
   const { user, signOut, isAdmin } = useAuth();
-  const navigate = useNavigate();
   const { requiresPasswordChange } = useUserProfiles();
   
   const isClient = user?.type === 'client' || user?.role === 'cliente';
@@ -116,20 +114,20 @@ export const Dashboard = () => {
     }
 
     // Botón para volver a la pantalla principal (solo si no estamos en bienvenida)
-      const BackButton = () => !showWelcome && (    
-      <div className="fixed bottom-6 right-6 z-50">    
-        <Button    
-          onClick={() => window.location.href = '/'} // Usar window.location como signOut  
-          variant="outline"    
-          size="lg"    
-          className="bg-white/90 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all duration-300"    
-          style={{ boxShadow: "var(--shadow-elegant)" }}    
-        >    
-          <span className="text-sm font-medium">🏠 Pantalla Principal</span>    
-        </Button>    
-      </div>    
+    const BackButton = () => !showWelcome && (
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          onClick={() => setShowWelcome(true)}
+          variant="outline"
+          size="lg"
+          className="bg-white/90 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all duration-300"
+          style={{ boxShadow: "var(--shadow-elegant)" }}
+        >
+          <span className="text-sm font-medium">🏠 Volver al Inicio</span>
+        </Button>
+      </div>
     );
-        
+    
     switch (currentSection) {
       case 'registro':
         return (
@@ -280,17 +278,7 @@ export const Dashboard = () => {
 
   // Mostrar pantalla de bienvenida si está activada y no es cliente
   if (showWelcome && !isClient && !showPasswordModal) {
-    return (
-      <WelcomeScreen 
-        onNavigate={handleNavigate} 
-        isActive={true}
-        onLogout={() => {
-          signOut();
-          navigate('/auth');
-        }}
-        onBackToHome={() => setShowWelcome(true)}
-      />
-    );
+    return <WelcomeScreen onNavigate={handleNavigate} isActive={true} />;
   }
 
   return (
