@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ import { MapaAsignarUbicacion } from '@/components/MapaAsignarUbicacion';
 
 export const Dashboard = () => {
   const { user, signOut, isAdmin } = useAuth();
+  const navigate = useNavigate();
   const { requiresPasswordChange } = useUserProfiles();
   
   const isClient = user?.type === 'client' || user?.role === 'cliente';
@@ -278,7 +280,17 @@ export const Dashboard = () => {
 
   // Mostrar pantalla de bienvenida si está activada y no es cliente
   if (showWelcome && !isClient && !showPasswordModal) {
-    return <WelcomeScreen onNavigate={handleNavigate} isActive={true} />;
+    return (
+      <WelcomeScreen 
+        onNavigate={handleNavigate} 
+        isActive={true}
+        onLogout={() => {
+          signOut();
+          navigate('/auth');
+        }}
+        onBackToHome={() => setShowWelcome(true)}
+      />
+    );
   }
 
   return (
