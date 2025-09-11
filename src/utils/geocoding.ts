@@ -158,7 +158,7 @@ export const BARRIOS_DISTRITO_NACIONAL = [
   // Zonas de riesgo moderado
   "Altos de Arroyo Hondo", "Buenos Aires", "Ensanche Espaillat", 
   "Ensanche La Fe", "Ensanche Luperón", "Ensanche Quisqueya", 
-  "Honduras del Norte", "Jardines del Sur", 
+  "Honduras del Norte", "Honduras del Oeste", "Jardines del Sur", 
   "Julieta Morales", "La Agustina", "La Hondonada", "La Isabela", 
   "La Julia", "Las Praderas", "Los Peralejos", "Los Ríos", 
   "María Auxiliadora", "Mata Hambre", "Mejoramiento Social", 
@@ -166,9 +166,9 @@ export const BARRIOS_DISTRITO_NACIONAL = [
   "Los Próceres", "Renacimiento", "Viejo Arroyo Hondo", "Villas Agrícolas",
   
   // Zonas de bajo riesgo
-  "30 de Mayo", "Arroyo Manzano", "Bella Vista", "El Cacique", 
+  "30 de Mayo", "Arroyo Manzano", "Atala", "Bella Vista", "El Cacique", 
   "Centro de los Héroes", "Centro Olímpico", "Cerros de Arroyo Hondo", 
-  "Ciudad Colonial", "Ciudad Nueva", "El Millón", 
+  "Ciudad Colonial", "Ciudad Nueva", "Ciudad Universitaria", "El Millón", 
   "Ensanche Naco", "Gascue", "General Antonio Duverge", "Jardín Botánico", 
   "Jardín Zoológico", "La Castellana", "La Esperilla", "Los Cacicazgos", 
   "Los Prados", "Mirador Sur", "Paraíso", "Piantini", "San Carlos", 

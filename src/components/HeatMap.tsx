@@ -32,6 +32,7 @@ const heatMapZones = [
   { name: "Ensanche Luperón", type: "intermediate", color: "yellow", coords: [18.509765, -69.892776] },
   { name: "Ensanche Quisqueya", type: "intermediate", color: "yellow", coords: [18.499598, -69.898422] },
   { name: "Honduras del Norte", type: "intermediate", color: "yellow", coords: [18.508700, -69.891990] },
+  { name: "Honduras del Oeste", type: "intermediate", color: "yellow", coords: [18.493714, -69.902170] },
   { name: "30 de Mayo", type: "intermediate", color: "yellow", coords: [18.504925, -69.894532] },
   
   // Zonas Verdes (Frías) - Bajo riesgo
