@@ -41,17 +41,12 @@ export const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentSection, setCurrentSection] = useState(isClient ? 'mapa-calor' : 'registro');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(!isClient);
+  const [showWelcome, setShowWelcome] = useState(!isClient); // Solo mostrar bienvenida si no es cliente
   const [stats, setStats] = useState({
     empleados: 0,
     registrosHoy: 0,
     agentesActivos: 0
   });
-
-  // Función para volver a la pantalla principal
-  const handleBackToHome = () => {
-    navigate('/');
-  };
 
   // Check if password change is required (only for clients)
   useEffect(() => {
@@ -95,7 +90,7 @@ export const Dashboard = () => {
   // Función para manejar la navegación entre secciones
   const handleNavigate = (section: string) => {
     setCurrentSection(section);
-    setShowWelcome(false);
+    setShowWelcome(false); // Ocultar la pantalla de bienvenida cuando se navega
   };
 
   const handleSignOut = async () => {
@@ -114,27 +109,27 @@ export const Dashboard = () => {
     }
   };
 
-  // Botón para volver a la pantalla principal (solo si no estamos en bienvenida)
-  const BackButton = () => !showWelcome && (    
-    <div className="fixed bottom-6 right-6 z-50">    
-      <Button    
-        onClick={handleBackToHome} // ← Corregido aquí
-        variant="outline"    
-        size="lg"    
-        className="bg-white/90 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all duration-300"    
-        style={{ boxShadow: "var(--shadow-elegant)" }}    
-      >    
-        <span className="text-sm font-medium">🏠 Pantalla Principal</span>    
-      </Button>    
-    </div>    
-  );
-
   const renderCurrentSection = () => {
     // If user is client, only allow access to heat map
     if (isClient) {
       return <InteractiveHeatMap />;
     }
 
+    // Botón para volver a la pantalla principal (solo si no estamos en bienvenida)
+      const BackButton = () => !showWelcome && (    
+      <div className="fixed bottom-6 right-6 z-50">    
+        <Button    
+          onClick={() => window.location.href = '/'} // Usar window.location como signOut  
+          variant="outline"    
+          size="lg"    
+          className="bg-white/90 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all duration-300"    
+          style={{ boxShadow: "var(--shadow-elegant)" }}    
+        >    
+          <span className="text-sm font-medium">🏠 Pantalla Principal</span>    
+        </Button>    
+      </div>    
+    );
+        
     switch (currentSection) {
       case 'registro':
         return (
