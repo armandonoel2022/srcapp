@@ -288,17 +288,19 @@ export const WelcomeScreen = ({ onNavigate, isActive }: WelcomeScreenProps) => {
           .message-panel {
             position: relative;
             width: 100%;
-            height: 30%;
+            height: 35%;
             background: var(--gradient-blue-form);
             padding: 20px;
+            padding-top: 40px;
           }
 
           .options-panel {
             position: relative;
             width: 100%;
-            height: 70%;
+            height: 65%;
             background: #fff;
             padding: 20px;
+            padding-top: 10px;
           }
 
           .options-grid {
