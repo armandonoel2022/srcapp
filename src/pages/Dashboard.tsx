@@ -116,20 +116,20 @@ export const Dashboard = () => {
     }
 
     // Botón para volver a la pantalla principal (solo si no estamos en bienvenida)
-      const BackButton = () => !showWelcome && (  
-      <div className="fixed bottom-6 right-6 z-50">  
-        <Button  
-          onClick={() => navigate('/')} // Cambiar esta línea  
-          variant="outline"  
-          size="lg"  
-          className="bg-white/90 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all duration-300"  
-          style={{ boxShadow: "var(--shadow-elegant)" }}  
-        >  
-          <span className="text-sm font-medium">🏠 Pantalla Principal</span>  
-        </Button>  
-      </div>  
+      const BackButton = () => !showWelcome && (    
+      <div className="fixed bottom-6 right-6 z-50">    
+        <Button    
+          onClick={() => window.location.href = '/'} // Usar window.location como signOut  
+          variant="outline"    
+          size="lg"    
+          className="bg-white/90 backdrop-blur-sm shadow-lg border-2 hover:shadow-xl transition-all duration-300"    
+          style={{ boxShadow: "var(--shadow-elegant)" }}    
+        >    
+          <span className="text-sm font-medium">🏠 Pantalla Principal</span>    
+        </Button>    
+      </div>    
     );
-    
+        
     switch (currentSection) {
       case 'registro':
         return (
