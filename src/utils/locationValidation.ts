@@ -54,58 +54,101 @@ export const UBICACIONES_TRABAJO = {
 // Radio de tolerancia en metros (100 metros de tolerancia)
 export const TOLERANCIA_UBICACION = 100;
 
-// Validar si la ubicación actual está dentro del rango permitido
+// Validar si la ubicación actual está dentro del rango de alguna ubicación asignada al empleado
 export const validateLocationForWork = async (
   currentLocation: LocationCoordinates,
-  lugarDesignado: string
+  empleadoId: string
 ): Promise<LocationValidationResult> => {
   try {
-    // Usar Supabase para obtener la ubicación real desde la BD
+    // Usar Supabase para obtener las ubicaciones asignadas al empleado
     const { supabase } = await import('@/integrations/supabase/client');
     
-    const { data: ubicacionTrabajo, error } = await supabase
+    // Obtener todas las ubicaciones asignadas al empleado
+    const { data: ubicacionesAsignadas, error: errorAsignadas } = await supabase
+      .from('empleados_ubicaciones_asignadas')
+      .select('ubicacion_nombre')
+      .eq('empleado_id', empleadoId)
+      .eq('activa', true);
+
+    if (errorAsignadas) {
+      console.error('Error obteniendo ubicaciones asignadas:', errorAsignadas);
+      return {
+        isValid: false,
+        distance: -1,
+        message: 'Error al obtener ubicaciones asignadas. Contacte al administrador.'
+      };
+    }
+
+    if (!ubicacionesAsignadas || ubicacionesAsignadas.length === 0) {
+      return {
+        isValid: false,
+        distance: -1,
+        message: 'No tiene ubicaciones de trabajo asignadas. Contacte al administrador.'
+      };
+    }
+
+    // Obtener detalles de todas las ubicaciones asignadas
+    const nombresUbicaciones = ubicacionesAsignadas.map(u => u.ubicacion_nombre);
+    const { data: ubicacionesTrabajo, error: errorUbicaciones } = await supabase
       .from('ubicaciones_trabajo')
       .select('nombre, coordenadas, radio_tolerancia, direccion')
-      .eq('nombre', lugarDesignado)
-      .eq('activa', true)
-      .single();
+      .in('nombre', nombresUbicaciones)
+      .eq('activa', true);
 
-    if (error || !ubicacionTrabajo) {
-      console.error('Error obteniendo ubicación:', error);
+    if (errorUbicaciones || !ubicacionesTrabajo || ubicacionesTrabajo.length === 0) {
       return {
         isValid: false,
         distance: -1,
-        message: `Lugar de trabajo "${lugarDesignado}" no encontrado en el sistema. Contacte al administrador.`
+        message: 'Las ubicaciones asignadas no están disponibles. Contacte al administrador.'
       };
     }
 
-    // Extraer coordenadas del formato Point de PostgreSQL
-    const coordenadas = ubicacionTrabajo.coordenadas as string;
-    const matches = coordenadas.match(/\(([^,]+),([^)]+)\)/);
-    
-    if (!matches) {
-      return {
-        isValid: false,
-        distance: -1,
-        message: 'Error al procesar coordenadas de ubicación. Contacte al administrador.'
+    // Validar la ubicación actual contra todas las ubicaciones asignadas
+    let mejorCoincidencia: LocationValidationResult | null = null;
+    let menorDistancia = Infinity;
+
+    for (const ubicacion of ubicacionesTrabajo) {
+      // Extraer coordenadas del formato Point de PostgreSQL
+      const coordenadas = ubicacion.coordenadas as string;
+      const matches = coordenadas.match(/\(([^,]+),([^)]+)\)/);
+      
+      if (!matches) {
+        continue;
+      }
+
+      const ubicacionObj = {
+        lat: parseFloat(matches[1]),
+        lng: parseFloat(matches[2])
       };
+
+      const distance = calculateDistance(currentLocation, ubicacionObj);
+      const tolerancia = ubicacion.radio_tolerancia || TOLERANCIA_UBICACION;
+
+      // Si está dentro del rango de tolerancia, es válido
+      if (distance <= tolerancia) {
+        return {
+          isValid: true,
+          distance,
+          message: `Ubicación validada en ${ubicacion.nombre}. Distancia: ${distance}m`
+        };
+      }
+
+      // Mantener registro de la ubicación más cercana
+      if (distance < menorDistancia) {
+        menorDistancia = distance;
+        mejorCoincidencia = {
+          isValid: false,
+          distance,
+          message: `Ubicación más cercana: ${ubicacion.nombre} (${distance}m). Debe estar dentro de ${tolerancia}m.`
+        };
+      }
     }
 
-    const ubicacionObj = {
-      lat: parseFloat(matches[1]),
-      lng: parseFloat(matches[2])
-    };
-
-    const distance = calculateDistance(currentLocation, ubicacionObj);
-    const tolerancia = ubicacionTrabajo.radio_tolerancia || TOLERANCIA_UBICACION;
-    const isValid = distance <= tolerancia;
-
-    return {
-      isValid,
-      distance,
-      message: isValid 
-        ? `Ubicación validada. Distancia: ${distance}m de ${ubicacionTrabajo.nombre}`
-        : `Ubicación inválida. Está a ${distance}m de ${ubicacionTrabajo.nombre}. Debe estar dentro de ${tolerancia}m.`
+    // Si no está dentro del rango de ninguna ubicación, devolver la más cercana
+    return mejorCoincidencia || {
+      isValid: false,
+      distance: -1,
+      message: 'No se pudo validar la ubicación. Contacte al administrador.'
     };
 
   } catch (error) {

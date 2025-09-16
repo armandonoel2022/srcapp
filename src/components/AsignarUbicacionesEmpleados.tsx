@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Users, Save } from 'lucide-react';
+import { MapPin, Users, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { AsignarMultiplesUbicaciones } from './AsignarMultiplesUbicaciones';
 
 interface Empleado {
   id: string;
   nombres: string;
   apellidos: string;
   lugar_designado?: string;
+  ubicaciones_count?: number;
 }
 
 interface UbicacionTrabajo {
@@ -24,13 +25,13 @@ export const AsignarUbicacionesEmpleados = () => {
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [ubicaciones, setUbicaciones] = useState<UbicacionTrabajo[]>([]);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState<string | null>(null);
+  const [showMultipleAssignment, setShowMultipleAssignment] = useState(false);
   const { toast } = useToast();
 
   const cargarDatos = async () => {
     setLoading(true);
     try {
-      // Cargar empleados
+      // Cargar empleados con conteo de ubicaciones asignadas
       const { data: empleadosData, error: empleadosError } = await supabase
         .from('empleados_turnos')
         .select('id, nombres, apellidos, lugar_designado')
@@ -38,6 +39,22 @@ export const AsignarUbicacionesEmpleados = () => {
         .order('nombres');
 
       if (empleadosError) throw empleadosError;
+
+      // Para cada empleado, obtener cuántas ubicaciones tiene asignadas
+      const empleadosConUbicaciones = await Promise.all(
+        (empleadosData || []).map(async (emp) => {
+          const { count } = await supabase
+            .from('empleados_ubicaciones_asignadas')
+            .select('*', { count: 'exact', head: true })
+            .eq('empleado_id', emp.id)
+            .eq('activa', true);
+
+          return {
+            ...emp,
+            ubicaciones_count: count || 0
+          };
+        })
+      );
 
       // Cargar ubicaciones
       const { data: ubicacionesData, error: ubicacionesError } = await supabase
@@ -48,7 +65,7 @@ export const AsignarUbicacionesEmpleados = () => {
 
       if (ubicacionesError) throw ubicacionesError;
 
-      setEmpleados(empleadosData || []);
+      setEmpleados(empleadosConUbicaciones);
       setUbicaciones(ubicacionesData || []);
     } catch (error: any) {
       toast({
@@ -65,49 +82,31 @@ export const AsignarUbicacionesEmpleados = () => {
     cargarDatos();
   }, []);
 
-  const asignarUbicacion = async (empleadoId: string, ubicacionNombre: string | null) => {
-    setSaving(empleadoId);
-    try {
-      const { error } = await supabase
-        .from('empleados_turnos')
-        .update({ lugar_designado: ubicacionNombre })
-        .eq('id', empleadoId);
+  if (showMultipleAssignment) {
+    return <AsignarMultiplesUbicaciones />;
+  }
 
-      if (error) throw error;
-
-      // Actualizar estado local
-      setEmpleados(empleados.map(emp => 
-        emp.id === empleadoId 
-          ? { ...emp, lugar_designado: ubicacionNombre || undefined }
-          : emp
-      ));
-
-      toast({
-        title: "Ubicación asignada",
-        description: `Ubicación ${ubicacionNombre ? 'asignada' : 'eliminada'} correctamente`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `Error al asignar ubicación: ${error.message}`,
-        variant: "destructive"
-      });
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  const empleadosSinUbicacion = empleados.filter(emp => !emp.lugar_designado);
-  const empleadosConUbicacion = empleados.filter(emp => emp.lugar_designado);
+  const empleadosConUbicacionesMultiples = empleados.filter(emp => emp.ubicaciones_count > 1);
+  const empleadosConUnaUbicacion = empleados.filter(emp => emp.ubicaciones_count === 1);
+  const empleadosSinUbicacion = empleados.filter(emp => emp.ubicaciones_count === 0);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Asignar Ubicaciones a Empleados
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Gestión de Ubicaciones de Empleados
+            </CardTitle>
+            <Button onClick={() => setShowMultipleAssignment(true)}>
+              <Settings className="h-4 w-4 mr-2" />
+              Asignación Múltiple
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Los empleados ahora pueden tener múltiples ubicaciones asignadas para mayor flexibilidad
+          </p>
         </CardHeader>
         <CardContent>
           {loading && (
@@ -134,36 +133,15 @@ export const AsignarUbicacionesEmpleados = () => {
                                 {empleado.nombres} {empleado.apellidos}
                               </h4>
                               <Badge variant="destructive" className="mt-1">
-                                Sin ubicación
+                                Sin ubicaciones
                               </Badge>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Select
-                                onValueChange={(value) => asignarUbicacion(empleado.id, value === 'null' ? null : value)}
-                                disabled={saving === empleado.id}
-                              >
-                                <SelectTrigger className="w-64">
-                                  <SelectValue placeholder="Seleccionar ubicación" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {ubicaciones.map((ubicacion) => (
-                                    <SelectItem key={ubicacion.id} value={ubicacion.nombre}>
-                                      {ubicacion.nombre}
-                                      {ubicacion.direccion && (
-                                        <span className="text-xs text-muted-foreground ml-2">
-                                          ({ubicacion.direccion})
-                                        </span>
-                                      )}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {saving === empleado.id && (
-                                <div className="text-sm text-muted-foreground">
-                                  Guardando...
-                                </div>
-                              )}
-                            </div>
+                            <Button
+                              onClick={() => setShowMultipleAssignment(true)}
+                              variant="outline"
+                            >
+                              Asignar Ubicaciones
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -172,14 +150,47 @@ export const AsignarUbicacionesEmpleados = () => {
                 </div>
               )}
 
-              {/* Empleados con ubicación asignada */}
-              {empleadosConUbicacion.length > 0 && (
+              {/* Empleados con una ubicación */}
+              {empleadosConUnaUbicacion.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-4 text-green-600">
-                    Empleados con ubicación asignada ({empleadosConUbicacion.length})
+                  <h3 className="text-lg font-semibold mb-4 text-yellow-600">
+                    Empleados con una ubicación ({empleadosConUnaUbicacion.length})
                   </h3>
                   <div className="grid gap-4">
-                    {empleadosConUbicacion.map((empleado) => (
+                    {empleadosConUnaUbicacion.map((empleado) => (
+                      <Card key={empleado.id} className="border-l-4 border-l-yellow-500">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium">
+                                {empleado.nombres} {empleado.apellidos}
+                              </h4>
+                              <Badge variant="secondary" className="mt-1">
+                                1 ubicación asignada
+                              </Badge>
+                            </div>
+                            <Button
+                              onClick={() => setShowMultipleAssignment(true)}
+                              variant="outline"
+                            >
+                              Gestionar Ubicaciones
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Empleados con múltiples ubicaciones */}
+              {empleadosConUbicacionesMultiples.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-green-600">
+                    Empleados con múltiples ubicaciones ({empleadosConUbicacionesMultiples.length})
+                  </h3>
+                  <div className="grid gap-4">
+                    {empleadosConUbicacionesMultiples.map((empleado) => (
                       <Card key={empleado.id} className="border-l-4 border-l-green-500">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
@@ -188,40 +199,15 @@ export const AsignarUbicacionesEmpleados = () => {
                                 {empleado.nombres} {empleado.apellidos}
                               </h4>
                               <Badge variant="default" className="mt-1">
-                                {empleado.lugar_designado}
+                                {empleado.ubicaciones_count} ubicaciones
                               </Badge>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Select
-                                defaultValue={empleado.lugar_designado}
-                                onValueChange={(value) => asignarUbicacion(empleado.id, value === 'null' ? null : value)}
-                                disabled={saving === empleado.id}
-                              >
-                                <SelectTrigger className="w-64">
-                                  <SelectValue placeholder="Cambiar ubicación" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="null">
-                                    <span className="text-red-600">Quitar ubicación</span>
-                                  </SelectItem>
-                                  {ubicaciones.map((ubicacion) => (
-                                    <SelectItem key={ubicacion.id} value={ubicacion.nombre}>
-                                      {ubicacion.nombre}
-                                      {ubicacion.direccion && (
-                                        <span className="text-xs text-muted-foreground ml-2">
-                                          ({ubicacion.direccion})
-                                        </span>
-                                      )}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {saving === empleado.id && (
-                                <div className="text-sm text-muted-foreground">
-                                  Guardando...
-                                </div>
-                              )}
-                            </div>
+                            <Button
+                              onClick={() => setShowMultipleAssignment(true)}
+                              variant="outline"
+                            >
+                              Gestionar Ubicaciones
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -236,14 +222,17 @@ export const AsignarUbicacionesEmpleados = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Users className="h-5 w-5" />
-                      <span className="font-medium">Resumen</span>
+                      <span className="font-medium">Resumen del Sistema de Ubicaciones Múltiples</span>
                     </div>
                     <div className="flex gap-4 text-sm">
                       <span className="text-green-600">
-                        Con ubicación: {empleadosConUbicacion.length}
+                        Múltiples ubicaciones: {empleadosConUbicacionesMultiples.length}
+                      </span>
+                      <span className="text-yellow-600">
+                        Una ubicación: {empleadosConUnaUbicacion.length}
                       </span>
                       <span className="text-red-600">
-                        Sin ubicación: {empleadosSinUbicacion.length}
+                        Sin ubicaciones: {empleadosSinUbicacion.length}
                       </span>
                       <span className="text-muted-foreground">
                         Total: {empleados.length}

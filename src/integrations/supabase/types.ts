@@ -327,6 +327,33 @@ export type Database = {
         }
         Relationships: []
       }
+      empleados_ubicaciones_asignadas: {
+        Row: {
+          activa: boolean | null
+          created_at: string | null
+          empleado_id: string
+          id: string
+          ubicacion_nombre: string
+          updated_at: string | null
+        }
+        Insert: {
+          activa?: boolean | null
+          created_at?: string | null
+          empleado_id: string
+          id?: string
+          ubicacion_nombre: string
+          updated_at?: string | null
+        }
+        Update: {
+          activa?: boolean | null
+          created_at?: string | null
+          empleado_id?: string
+          id?: string
+          ubicacion_nombre?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       registros: {
         Row: {
           agente: string
