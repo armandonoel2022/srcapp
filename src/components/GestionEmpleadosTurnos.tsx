@@ -299,7 +299,7 @@ export const GestionEmpleadosTurnos = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar sexo" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-popover border border-border">
                     <SelectItem value="masculino">Masculino</SelectItem>
                     <SelectItem value="femenino">Femenino</SelectItem>
                   </SelectContent>

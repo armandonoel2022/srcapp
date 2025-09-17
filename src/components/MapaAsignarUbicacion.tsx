@@ -143,6 +143,9 @@ export const MapaAsignarUbicacion = () => {
 
     // Add existing locations to map
     ubicaciones.forEach(ubicacion => {
+      // Special styling for OFICINA SRC SEGURIDAD
+      const isOficinaSrc = ubicacion.nombre === "OFICINA SRC SEGURIDAD";
+      
       const marker = L.marker([ubicacion.coordenadas.lat, ubicacion.coordenadas.lng])
         .addTo(map)
         .bindPopup(`
@@ -150,16 +153,17 @@ export const MapaAsignarUbicacion = () => {
             <h4>${ubicacion.nombre}</h4>
             <p>${ubicacion.direccion || 'Sin dirección'}</p>
             <p>Radio: ${ubicacion.radio_tolerancia}m</p>
+            ${isOficinaSrc ? '<p><strong>📍 Base de Operaciones</strong></p>' : ''}
           </div>
         `);
 
-      // Add circle to show tolerance radius
+      // Add circle to show tolerance radius with special color for OFICINA SRC
       L.circle([ubicacion.coordenadas.lat, ubicacion.coordenadas.lng], {
         radius: ubicacion.radio_tolerancia,
-        fillColor: '#3b82f6',
-        fillOpacity: 0.1,
-        color: '#3b82f6',
-        weight: 2
+        fillColor: isOficinaSrc ? '#22c55e' : '#3b82f6',
+        fillOpacity: isOficinaSrc ? 0.2 : 0.1,
+        color: isOficinaSrc ? '#22c55e' : '#3b82f6',
+        weight: isOficinaSrc ? 3 : 2
       }).addTo(map);
     });
 
@@ -311,16 +315,39 @@ export const MapaAsignarUbicacion = () => {
     if (!selectedEmployeeForAssignment || !selectedLocationForAssignment) return;
 
     try {
-      const { error } = await supabase
+      // First, assign the main location
+      const { error: updateError } = await supabase
         .from('empleados_turnos')
         .update({ lugar_designado: selectedLocationForAssignment })
         .eq('id', selectedEmployeeForAssignment);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Then, assign default "OFICINA SRC SEGURIDAD" to all employees if not already assigned
+      const oficinaSrc = ubicaciones.find(ub => ub.nombre === "OFICINA SRC SEGURIDAD");
+      if (oficinaSrc) {
+        // Check if employee already has this assignment
+        const { data: existingAssignment } = await supabase
+          .from('empleados_ubicaciones_asignadas')
+          .select('id')
+          .eq('empleado_id', selectedEmployeeForAssignment)
+          .eq('ubicacion_nombre', "OFICINA SRC SEGURIDAD")
+          .single();
+
+        if (!existingAssignment) {
+          await supabase
+            .from('empleados_ubicaciones_asignadas')
+            .insert({
+              empleado_id: selectedEmployeeForAssignment,
+              ubicacion_nombre: "OFICINA SRC SEGURIDAD",
+              activa: true
+            });
+        }
+      }
 
       toast({
         title: "Éxito",
-        description: "Ubicación asignada exitosamente",
+        description: "Ubicación asignada exitosamente (incluye acceso a OFICINA SRC SEGURIDAD por defecto)",
       });
 
       // Reset selections and reload data
@@ -462,12 +489,37 @@ export const MapaAsignarUbicacion = () => {
                 id="ubicacion-select"
                 className="w-full mt-1 p-2 border rounded-md bg-background"
                 value={selectedLocationForAssignment}
-                onChange={(e) => setSelectedLocationForAssignment(e.target.value)}
+                onChange={(e) => {
+                  setSelectedLocationForAssignment(e.target.value);
+                  // Highlight selected location on map
+                  if (e.target.value && mapInstance) {
+                    const selectedUbicacion = ubicaciones.find(ub => ub.nombre === e.target.value);
+                    if (selectedUbicacion) {
+                      // Center map on selected location
+                      mapInstance.setView([selectedUbicacion.coordenadas.lat, selectedUbicacion.coordenadas.lng], 15);
+                      
+                      // Add temporary highlight circle
+                      const highlightCircle = L.circle([selectedUbicacion.coordenadas.lat, selectedUbicacion.coordenadas.lng], {
+                        radius: selectedUbicacion.radio_tolerancia + 50,
+                        fillColor: '#f59e0b',
+                        fillOpacity: 0.3,
+                        color: '#f59e0b',
+                        weight: 4,
+                        dashArray: '10, 10'
+                      }).addTo(mapInstance);
+                      
+                      // Remove highlight after 3 seconds
+                      setTimeout(() => {
+                        mapInstance.removeLayer(highlightCircle);
+                      }, 3000);
+                    }
+                  }
+                }}
               >
                 <option value="">Seleccionar ubicación...</option>
                 {ubicaciones.map(ub => (
                   <option key={ub.id} value={ub.nombre}>
-                    {ub.nombre}
+                    {ub.nombre} {ub.nombre === "OFICINA SRC SEGURIDAD" ? "🏢 (Base)" : ""}
                   </option>
                 ))}
               </select>
