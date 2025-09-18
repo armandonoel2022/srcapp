@@ -262,14 +262,19 @@ export const TurnosAgentForm = () => {
           {estadoTurno.estado !== 'completo' && empleadoId && (  
             <div className="flex justify-center">  
               <Button  
-                onClick={handlePunchWithValidation}  
-                size="lg"  
-                className="w-full max-w-xs"  
-                disabled={loading}  
-              >  
-                <MapPin className="mr-2 h-4 w-4" />  
-                {loading ? 'Procesando...' : `PUNCH ${tipoRegistro.toUpperCase()}`}  
-              </Button>  
+              onClick={handlePunchWithValidation}  
+              disabled={isValidating}  
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"  
+            >  
+              {isValidating ? (  
+                <>  
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />  
+                  Validando ubicación...  
+                </>  
+              ) : (  
+                'PUNCH'  
+              )}  
+            </Button>
             </div>  
           )}  
   
