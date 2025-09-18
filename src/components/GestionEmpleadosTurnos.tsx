@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { useEmpleadosTurnos, EmpleadoTurno } from '@/hooks/useEmpleadosTurnos';
 import { useToast } from '@/hooks/use-toast';
 import { Edit, Eye, UserPlus, Clock, Users } from 'lucide-react';
@@ -32,7 +33,8 @@ export const GestionEmpleadosTurnos = () => {
       lugar_designado: empleado.lugar_designado,
       hora_entrada_programada: empleado.hora_entrada_programada,
       hora_salida_programada: empleado.hora_salida_programada,
-      username: empleado.username
+      username: empleado.username,
+      active: empleado.active !== false
     });
     setIsEditModalOpen(true);
   };
@@ -59,6 +61,7 @@ export const GestionEmpleadosTurnos = () => {
           hora_entrada_programada: editFormData.hora_entrada_programada,
           hora_salida_programada: editFormData.hora_salida_programada,
           username: editFormData.username,
+          active: editFormData.active !== false,
           updated_at: new Date().toISOString()
         })
         .eq('id', selectedEmpleado.id);
@@ -103,7 +106,7 @@ export const GestionEmpleadosTurnos = () => {
             <Users className="h-5 w-5" />
             Gestión de Empleados de Turnos
             <Badge variant="secondary" className="ml-2">
-              {empleados.length} empleados activos
+              {empleados.filter(e => e.active !== false).length} activos / {empleados.length} total
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -125,6 +128,7 @@ export const GestionEmpleadosTurnos = () => {
                       <TableHead>Usuario</TableHead>
                       <TableHead>Lugar Designado</TableHead>
                       <TableHead>Horario</TableHead>
+                      <TableHead>Estado</TableHead>
                       <TableHead>Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -149,6 +153,11 @@ export const GestionEmpleadosTurnos = () => {
                             <div>Entrada: {formatTime(empleado.hora_entrada_programada)}</div>
                             <div>Salida: {formatTime(empleado.hora_salida_programada)}</div>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={empleado.active !== false ? "default" : "destructive"}>
+                            {empleado.active !== false ? "Activo" : "Inactivo"}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
@@ -355,6 +364,27 @@ export const GestionEmpleadosTurnos = () => {
                   value={editFormData.hora_salida_programada || ''}
                   onChange={(e) => setEditFormData({ ...editFormData, hora_salida_programada: e.target.value })}
                 />
+              </div>
+            </div>
+
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="edit-active">Estado del Empleado</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Controla si el empleado puede acceder a la plataforma
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm font-medium ${editFormData.active !== false ? 'text-green-600' : 'text-red-600'}`}>
+                    {editFormData.active !== false ? 'Activo' : 'Inactivo'}
+                  </span>
+                  <Switch
+                    id="edit-active"
+                    checked={editFormData.active !== false}
+                    onCheckedChange={(checked) => setEditFormData({ ...editFormData, active: checked })}
+                  />
+                </div>
               </div>
             </div>
 

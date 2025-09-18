@@ -16,6 +16,7 @@ export interface EmpleadoTurno {
   username?: string;
   requires_password_change?: boolean;
   last_login?: string;
+  active?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -44,7 +45,6 @@ export const useEmpleadosTurnos = () => {
       const { data, error } = await supabase
         .from('empleados_turnos')
         .select('*')
-        .eq('active', true)
         .order('nombres');
 
       if (error) throw error;
