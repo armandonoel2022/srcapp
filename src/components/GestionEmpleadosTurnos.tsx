@@ -27,7 +27,7 @@ export const GestionEmpleadosTurnos = () => {
       apellidos: empleado.apellidos,
       funcion: empleado.funcion,
       cedula: empleado.cedula,
-      sexo: empleado.sexo,
+      sexo: empleado.sexo ? (empleado.sexo.toLowerCase().startsWith('f') ? 'femenino' : 'masculino') : 'masculino',
       fecha_nacimiento: empleado.fecha_nacimiento,
       lugar_designado: empleado.lugar_designado,
       hora_entrada_programada: empleado.hora_entrada_programada,
@@ -53,7 +53,7 @@ export const GestionEmpleadosTurnos = () => {
           apellidos: editFormData.apellidos,
           funcion: editFormData.funcion,
           cedula: editFormData.cedula,
-          sexo: editFormData.sexo,
+          sexo: editFormData.sexo ? (editFormData.sexo.toLowerCase() === 'femenino' ? 'Femenino' : 'Masculino') : null,
           fecha_nacimiento: editFormData.fecha_nacimiento,
           lugar_designado: editFormData.lugar_designado,
           hora_entrada_programada: editFormData.hora_entrada_programada,
@@ -295,7 +295,7 @@ export const GestionEmpleadosTurnos = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="edit-sexo">Sexo</Label>
-                <Select value={editFormData.sexo || ''} onValueChange={(value) => setEditFormData({ ...editFormData, sexo: value })}>
+                <Select value={editFormData.sexo ?? undefined} onValueChange={(value) => setEditFormData({ ...editFormData, sexo: value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar sexo" />
                   </SelectTrigger>
