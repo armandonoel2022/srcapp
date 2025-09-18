@@ -143,8 +143,7 @@ export const TurnosAdminConsulta = () => {
 
     try {
       const updateData: any = {
-        observaciones: editObservaciones,
-        updated_at: new Date().toISOString()
+        observaciones: editObservaciones
       };
 
       // Solo actualizar horas si han cambiado y se proporcionó una justificación
