@@ -18,7 +18,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Zonas del Distrito Nacional - Listado completo actualizado
+// Zonas del Distrito Nacional - Listado completo (sin coordenadas fijas)
 const heatMapZones = [  
   { name: "24 de Abril", type: "hot", color: "red" },  
   { name: "Cristo Rey", type: "hot", color: "red" },  
@@ -79,7 +79,7 @@ const heatMapZones = [
   { name: "Gascue", type: "cold", color: "green" },  
   { name: "General Antonio Duverge", type: "cold", color: "green" },  
   { name: "Jardín Botánico", type: "cold", color: "green" },  
-  { name: "Parque Zoológico", type: "cold", color: "green" },  // CAMBIADO: Jardín Zoológico -> Parque Zoológico
+  { name: "Parque Zoológico", type: "cold", color: "green" },  
   { name: "La Castellana", type: "cold", color: "green" },  
   { name: "La Esperilla", type: "cold", color: "green" },  
   { name: "Los Cacicazgos", type: "cold", color: "green" },  
@@ -231,13 +231,574 @@ export const InteractiveHeatMap = () => {
     if (!map) return null;
 
     const iconColor = color === 'red' ? '#ef4444' : 
-                     color === 'yellow' ? '#f59e0b' : 
-                     color === 'green' ? '#10b981' : '#3b82f6';
+                     color === 'yellow' ? '#f59e0b' : '#10b981';
     
     // Corregir los errores de TypeScript usando L.point
     const iconSize = isHighlighted ? L.point(26, 26) : L.point(18, 18);
     const iconAnchor = isHighlighted ? L.point(13, 13) : L.point(9, 9);
-    const markerSize = isHighlighted ?
+    const markerSize = isHighlighted ? '20px' : '14px';
+    const borderSize = isHighlighted ? '3px' : '2px';
+    
+    const customIcon = L.divIcon({  
+      className: isHighlighted ? 'custom-heat-marker-highlight' : 'custom-heat-marker',  
+      html: `<div style="  
+        background-color: ${iconColor};  
+        width: ${markerSize};  
+        height: ${markerSize};  
+        border-radius: 50%;  
+        border: ${borderSize} solid white;  
+        box-shadow: 0 0 6px rgba(0,0,0,0.4);  
+      "></div>`,  
+      iconSize: iconSize,  
+      iconAnchor: iconAnchor  
+    });  
 
-Wiki pages you might want to explore:
-- [Data Visualization (armandonoel2022/srcapp)](/wiki/armandonoel2022/srcapp#7)
+    const marker = L.marker(coordinates, {  
+      icon: customIcon  
+    }).addTo(map);  
+
+    // Determinar el tipo de zona si está disponible
+    const zoneType = zone ? getZoneTypeName(zone.type) : 'Ubicación específica';
+    
+    // Popup removido para no obstruir la vista del mapa
+    // La información ya se muestra en la parte inferior de la pantalla
+
+    return marker;
+  };
+
+  // Función para crear área destacada de zona
+  const createZoneHighlight = (coordinates: [number, number], zone: any) => {
+    if (!map) return null;
+
+    // Definir colores y radio según el tipo de zona
+    const zoneColors = {
+      hot: { color: '#ef4444', fillColor: '#fee2e2', radius: 800 },
+      intermediate: { color: '#f59e0b', fillColor: '#fef3c7', radius: 600 },
+      cold: { color: '#10b981', fillColor: '#dcfce7', radius: 500 }
+    };
+
+    const zoneStyle = zoneColors[zone.type as keyof typeof zoneColors] || 
+                     { color: '#3b82f6', fillColor: '#dbeafe', radius: 500 };
+
+    // Crear círculo de área
+    const circle = L.circle(coordinates, {
+      color: zoneStyle.color,
+      fillColor: zoneStyle.fillColor,
+      fillOpacity: 0.3,
+      radius: zoneStyle.radius,
+      weight: 3,
+      opacity: 0.8
+    }).addTo(map);
+
+    // Popup removido para no obstruir la vista del mapa
+    // La información ya se muestra en la parte inferior de la pantalla
+
+    return circle;
+  };
+  
+  // Función para buscar y centrar en una ubicación
+  const searchAndCenterLocation = async (query: string) => {
+    setIsSearching(true);
+    
+    try {
+      // Primero buscar si es una zona predefinida
+      const foundZone = heatMapZones.find(zone =>   
+        zone.name.toLowerCase().includes(query.toLowerCase())  
+      );
+      
+      const coordinates = await searchWithOpenStreetMap(query);
+      
+      if (coordinates && map) {
+        // Limpiar marcadores y áreas anteriores
+        markers.forEach(marker => map.removeLayer(marker));
+        if (customLocation) {
+          map.removeLayer(customLocation);
+        }
+        if (highlightedZone) {
+          map.removeLayer(highlightedZone);
+          setHighlightedZone(null);
+        }
+        
+        // Centrar el mapa
+        map.setView(coordinates, 15);
+        
+        // Determinar el color basado en la zona encontrada o usar azul por defecto
+        const markerColor = foundZone ? foundZone.color : '#3b82f6';
+        
+        // Agregar nuevo marcador
+        const newMarker = addMarkerToMap(
+          coordinates, 
+          foundZone ? foundZone.name : query,
+          markerColor,
+          true,
+          foundZone
+        );
+
+        // Si es una zona predefinida, crear área de influencia
+        let newHighlight = null;
+        if (foundZone) {
+          newHighlight = createZoneHighlight(coordinates, foundZone);
+          setHighlightedZone(newHighlight);
+        }
+        
+        if (newMarker) {
+          setMarkers([newMarker]);
+          // No abrir popup automáticamente para no obstruir la vista
+          
+          // Guardar el resultado de la búsqueda para mostrar debajo del mapa
+          setSearchResult({
+            name: foundZone ? foundZone.name : query,
+            type: foundZone ? foundZone.type : 'location',
+            coordinates: coordinates,
+            displayName: foundZone ? foundZone.name : query
+          });
+          
+          // Si es una zona, establecerla como seleccionada
+          if (foundZone) {
+            setSelectedZone(foundZone);
+            // Scroll al mapa automáticamente cuando se selecciona una zona
+            setTimeout(() => {
+              mapContainer.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 500);
+          }
+        }
+        
+        toast({
+          title: foundZone ? "Zona encontrada" : "Ubicación encontrada",
+          description: foundZone ? 
+            `${foundZone.name} - ${getZoneTypeName(foundZone.type)}` : 
+            `Coordenadas: ${coordinates[0].toFixed(6)}, ${coordinates[1].toFixed(6)}`,
+        });
+        
+        return true;
+      } else {
+        toast({
+          title: "Ubicación no encontrada",
+          description: "No se pudo encontrar la ubicación especificada",
+          variant: "destructive"
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error("Error in search:", error);
+      toast({
+        title: "Error de búsqueda",
+        description: "No se pudo completar la búsqueda",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  // Función para manejar la búsqueda
+  const handleSearch = async () => {  
+    if (!searchQuery.trim()) {  
+      toast({  
+        title: "Búsqueda vacía",  
+        description: "Ingresa el nombre de una zona o dirección para buscar",  
+        variant: "destructive"  
+      });  
+      return;  
+    }  
+  
+    // Buscar la ubicación
+    const success = await searchAndCenterLocation(searchQuery);
+    if (success) {
+      // Scroll al mapa automáticamente
+      mapContainer.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Función para obtener ubicación actual
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Geolocalización no soportada",
+        description: "Tu navegador no soporta geolocalización",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSearching(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setCurrentLocation({ lat: latitude, lng: longitude });
+        
+        if (map) {
+          const coordinates: [number, number] = [latitude, longitude];
+          
+          // Limpiar marcadores y áreas anteriores
+          markers.forEach(marker => map.removeLayer(marker));
+          if (customLocation) {
+            map.removeLayer(customLocation);
+          }
+          if (highlightedZone) {
+            map.removeLayer(highlightedZone);
+            setHighlightedZone(null);
+          }
+          
+          // Centrar el mapa
+          map.setView(coordinates, 15);
+          
+          // Agregar marcador de ubicación actual
+          const newCustomLocation = addMarkerToMap(
+            coordinates,
+            'Tu ubicación actual',
+            '#3b82f6',
+            true
+          );
+          
+          if (newCustomLocation) {
+            setCustomLocation(newCustomLocation);
+            setSearchResult({
+              name: 'Tu ubicación actual',
+              type: 'location',
+              coordinates: coordinates,
+              displayName: 'Ubicación actual'
+            });
+            newCustomLocation.bindPopup('Tu ubicación actual'); // No abrir popup automáticamente
+          }
+        }
+        
+        toast({
+          title: "Ubicación encontrada",
+          description: "Se ha centrado el mapa en tu ubicación actual",
+        });
+        setIsSearching(false);
+      },
+      (error) => {
+        toast({
+          title: "Error de geolocalización",
+          description: "No se pudo obtener tu ubicación",
+          variant: "destructive"
+        });
+        setIsSearching(false);
+      }
+    );
+  };
+
+  return (  
+    <div className="space-y-4 relative">  
+      <Card className="relative z-10">  
+        <CardHeader>  
+          <CardTitle className="flex items-center gap-2">  
+            <MapPin className="h-5 w-5" />  
+            Mapa de Calor - Distrito Nacional  
+          </CardTitle>  
+        </CardHeader>  
+        <CardContent>  
+          <div className="flex flex-col gap-4">  
+            {/* Barra de búsqueda */}  
+            <div className="flex gap-2 flex-wrap">  
+              <div className="flex-1 min-w-[200px] relative">  
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />  
+                <Input  
+                  placeholder="Buscar zona o dirección..."  
+                  value={searchQuery}  
+                  onChange={(e) => setSearchQuery(e.target.value)}  
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}  
+                  className="pl-10"  
+                />  
+              </div>  
+              <Button onClick={handleSearch} disabled={isSearching} className="min-w-[100px]">  
+                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}  
+                Buscar  
+              </Button>  
+              <Button variant="outline" onClick={getCurrentLocation} disabled={isSearching} className="min-w-[140px]">  
+                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}  
+                Mi Ubicación  
+              </Button>  
+            </div>
+  
+            {/* Leyenda */}  
+            <div className="flex flex-wrap gap-4 text-sm">  
+              <div className="flex items-center gap-1">  
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>  
+                <span>Zona Caliente</span>  
+              </div>  
+              <div className="flex items-center gap-1">  
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>  
+                <span>Zona Intermedia</span>  
+              </div>  
+              <div className="flex items-center gap-1">  
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>  
+                <span>Zona Fría</span>  
+              </div>  
+              <div className="flex items-center gap-1">  
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>  
+                <span>Ubicación encontrada</span>  
+              </div>  
+            </div>  
+  
+            {/* Mapa */}  
+            <div className={`w-full rounded-md border relative ${isFullScreen ? 'fixed inset-0 z-50 h-screen' : 'h-96'}`}>  
+              <div ref={mapContainer} className="w-full h-full rounded-md" />  
+              <Button  
+                onClick={() => setIsFullScreen(!isFullScreen)}  
+                className="absolute top-2 right-2 z-[1000] bg-white hover:bg-gray-100 text-gray-700 border shadow-lg"  
+                size="sm"  
+                variant="outline"  
+              >  
+                <Maximize2 className="h-4 w-4" />  
+                {isFullScreen ? 'Salir' : 'Pantalla completa'}  
+              </Button>  
+            </div>
+  
+            {/* Información de la zona/ubicación seleccionada */}  
+            {searchResult && (  
+              <div className="p-4 border rounded-md">  
+                <h3 className="font-bold flex items-center gap-2">  
+                  {searchResult.type === 'hot' && <AlertTriangle className="h-5 w-5 text-red-500" />}  
+                  {searchResult.type === 'intermediate' && <AlertCircle className="h-5 w-5 text-yellow-500" />}  
+                  {searchResult.type === 'cold' && <CheckCircle className="h-5 w-5 text-green-500" />}  
+                  {searchResult.type === 'location' && <MapPin className="h-5 w-5 text-blue-500" />}  
+                  {searchResult.name}  
+                </h3>  
+                <p className="text-sm text-gray-600 mt-1">  
+                  {searchResult.type !== 'location' ? `Tipo: ${getZoneTypeName(searchResult.type)}` : 'Ubicación específica'}  
+                </p>  
+                <p className="text-sm text-gray-600">  
+                  Coordenadas: {searchResult.coordinates[0].toFixed(6)}, {searchResult.coordinates[1].toFixed(6)}  
+                </p>  
+              </div>  
+            )}  
+          </div>  
+        </CardContent>  
+      </Card>  
+
+      {/* Search Results */}
+      {searchQuery && filteredZones.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Resultados de búsqueda ({filteredZones.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {filteredZones.map((zone) => (
+                <div
+                  key={zone.name}
+                  className="flex items-center justify-between p-3 rounded border hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={async () => {
+                    const success = await searchAndCenterLocation(zone.name);
+                    if (success) {
+                      // Scroll al mapa automáticamente
+                      setTimeout(() => {
+                        mapContainer.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 500);
+                    }
+                  }}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      {getZoneIcon(zone.type)}
+                      <span className="font-medium">{zone.name}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground ml-6">
+                      {getZoneTypeName(zone.type)}
+                    </div>
+                  </div>
+                  <Badge variant={getZoneBadgeVariant(zone.type)}>
+                    {zone.type === 'hot' ? 'ALTO' : zone.type === 'intermediate' ? 'MEDIO' : 'BAJO'}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Zone Lists - Listados completos */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Hot Zones */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Zonas de Alto Riesgo ({hotZones.length})
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Extremar precauciones - Basadas en estadísticas oficiales</p>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-80 overflow-y-auto">
+            {hotZones.map((zone) => (
+              <div
+                key={zone.name}
+                className="flex items-center justify-between p-3 rounded border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-colors cursor-pointer"
+                onClick={() => searchAndCenterLocation(zone.name)}
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    <span className="text-sm font-medium">{zone.name}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground ml-6">
+                    {getZoneTypeName(zone.type)}
+                  </div>
+                </div>
+                <Badge variant="destructive" className="text-xs">ALTO</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Intermediate Zones */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2 text-orange-600">
+              <AlertCircle className="h-5 w-5" />
+              Zonas de Riesgo Moderado ({intermediateZones.length})
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Mantener precaución - Nivel intermedio</p>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-80 overflow-y-auto">
+            {intermediateZones.map((zone) => (
+              <div
+                key={zone.name}
+                className="flex items-center justify-between p-3 rounded border border-orange-200 bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer"
+                onClick={() => searchAndCenterLocation(zone.name)}
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-orange-600" />
+                    <span className="text-sm font-medium">{zone.name}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground ml-6">
+                    {getZoneTypeName(zone.type)}
+                  </div>
+                </div>
+                <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800">MEDIO</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Cold Zones */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-5 w-5" />
+              Zonas de Bajo Riesgo ({coldZones.length})
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Relativamente seguras - Precauciones básicas</p>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-80 overflow-y-auto">
+            {coldZones.map((zone) => (
+              <div
+                key={zone.name}
+                className="flex items-center justify-between p-3 rounded border border-green-200 bg-green-50 hover:bg-green-100 transition-colors cursor-pointer"
+                onClick={() => searchAndCenterLocation(zone.name)}
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium">{zone.name}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground ml-6">
+                    {getZoneTypeName(zone.type)}
+                  </div>
+                </div>
+                <Badge variant="default" className="text-xs bg-green-100 text-green-800">BAJO</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Statistics Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Estadísticas del Distrito Nacional</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 rounded bg-destructive/5 border border-destructive/20">
+              <div className="text-2xl font-bold text-destructive">{hotZones.length}</div>
+              <div className="text-sm text-muted-foreground">Zonas de Alto Riesgo</div>
+              <div className="text-xs text-muted-foreground">
+                Barrios clasificados como peligrosos
+              </div>
+            </div>
+            <div className="text-center p-4 rounded bg-orange-50 border border-orange-200">
+              <div className="text-2xl font-bold text-orange-600">{intermediateZones.length}</div>
+              <div className="text-sm text-muted-foreground">Zonas de Riesgo Moderado</div>
+              <div className="text-xs text-muted-foreground">
+                Barrios con precauciones normales
+              </div>
+            </div>
+            <div className="text-center p-4 rounded bg-green-50 border border-green-200">
+              <div className="text-2xl font-bold text-green-600">{coldZones.length}</div>
+              <div className="text-sm text-muted-foreground">Zonas de Bajo Riesgo</div>
+              <div className="text-xs text-muted-foreground">
+                Barrios relativamente seguros
+              </div>
+            </div>
+            <div className="text-center p-4 rounded bg-muted/50 border">
+              <div className="text-2xl font-bold">{heatMapZones.length}</div>
+              <div className="text-sm text-muted-foreground">Total de Sectores</div>
+              <div className="text-xs text-muted-foreground">
+                Barrios mapeados en el Distrito
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Legend */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Leyenda del Sistema</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-3 rounded border border-destructive/20 bg-destructive/5">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <div>
+                <div className="font-medium text-destructive">Zona de Alto Riesgo</div>
+                <div className="text-xs text-muted-foreground">Extremar precauciones según estadísticas oficiales</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded border border-orange-200 bg-orange-50">
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+              <div>
+                <div className="font-medium text-orange-600">Zona de Riesgo Moderado</div>
+                <div className="text-xs text-muted-foreground">Mantener precauciones normales</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded border border-green-200 bg-green-50">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <div>
+                <div className="font-medium text-green-600">Zona de Bajo Riesgo</div>
+                <div className="text-xs text-muted-foreground">Relativamente segura, precauciones básicas</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Estilos para la animación de pulso */}
+      <style>{`  
+        .custom-heat-marker-highlight div {  
+          animation: pulse 2s infinite;  
+        }
+        
+        @keyframes pulse {  
+          0% {  
+            transform: scale(1);  
+            opacity: 1;  
+          }  
+          50% {  
+            transform: scale(1.1);  
+            opacity: 0.7;  
+          }  
+          100% {  
+            transform: scale(1);  
+            opacity: 1;  
+          }  
+        }  
+      `}</style>
+    </div>  
+  );  
+};
