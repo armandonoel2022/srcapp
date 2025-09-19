@@ -202,12 +202,20 @@ export const useAnalisisTurnos = () => {
 
       if (empleadosError) throw empleadosError;
 
-      // Obtener estadísticas para cada empleado
-      const estadisticas = await Promise.all(
-        (empleados || []).map(async (empleado) => {
-          return await obtenerEstadisticasEmpleado(empleado.id, fechaInicio, fechaFin);
-        })
-      );
+      // Obtener estadísticas para cada empleado en paralelo sin sobrecargar
+      const estadisticas = [];
+      const empleadosList = empleados || [];
+      
+      // Procesar empleados en lotes de 5 para evitar demasiadas consultas paralelas
+      for (let i = 0; i < empleadosList.length; i += 5) {
+        const lote = empleadosList.slice(i, i + 5);
+        const estadisticasLote = await Promise.all(
+          lote.map(async (empleado) => {
+            return await obtenerEstadisticasEmpleado(empleado.id, fechaInicio, fechaFin);
+          })
+        );
+        estadisticas.push(...estadisticasLote);
+      }
 
       return estadisticas.filter((stat): stat is EstadisticasEmpleado => stat !== null);
     } catch (error: any) {

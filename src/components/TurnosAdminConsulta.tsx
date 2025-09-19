@@ -262,6 +262,7 @@ export const TurnosAdminConsulta = () => {
                     <th className="text-left p-3 font-medium">Empleado</th>
                     <th className="text-left p-3 font-medium">Función</th>
                     <th className="text-left p-3 font-medium">Fecha</th>
+                    <th className="text-left p-3 font-medium">Ubicación</th>
                      <th className="text-left p-3 font-medium">Entrada</th>
                      <th className="text-left p-3 font-medium">Salida</th>
                      <th className="text-left p-3 font-medium">Estado del Turno</th>
@@ -271,13 +272,13 @@ export const TurnosAdminConsulta = () => {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={7} className="text-center p-6">
+                      <td colSpan={8} className="text-center p-6">
                         Cargando turnos...
                       </td>
                     </tr>
                   ) : filteredTurnos.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-center p-6 text-muted-foreground">
+                      <td colSpan={8} className="text-center p-6 text-muted-foreground">
                         No se encontraron turnos con los filtros aplicados
                       </td>
                     </tr>
@@ -297,6 +298,14 @@ export const TurnosAdminConsulta = () => {
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             {new Date(turno.fecha).toLocaleDateString('es-ES')}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">
+                              {turno.empleados_turnos?.lugar_designado || 'No asignada'}
+                            </span>
                           </div>
                         </td>
                          <td className="p-3">
@@ -363,21 +372,16 @@ export const TurnosAdminConsulta = () => {
                             >
                               <Edit3 className="h-4 w-4" />
                             </Button>
-                             {(turno.ubicacion_entrada || turno.ubicacion_salida) && (
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 onClick={() => openGoogleMaps(turno.ubicacion_entrada || turno.ubicacion_salida)}
-                                 title="Ver ubicación en Google Maps"
-                               >
-                                 <MapPin className="h-4 w-4" />
-                               </Button>
-                             )}
-                             {turno.empleados_turnos?.lugar_designado && (
-                               <div className="text-xs text-muted-foreground mt-1">
-                                 Lugar: {turno.empleados_turnos.lugar_designado}
-                               </div>
-                             )}
+                              {(turno.ubicacion_entrada || turno.ubicacion_salida) && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openGoogleMaps(turno.ubicacion_entrada || turno.ubicacion_salida)}
+                                  title="Ver ubicación exacta del punch en Google Maps"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              )}
                           </div>
                         </td>
                       </tr>
