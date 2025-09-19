@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';  
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';  
-import { Button } from '@/components/ui/button';  
-import { Badge } from '@/components/ui/badge';  
-import { Clock, MapPin, CheckCircle, AlertTriangle, User } from 'lucide-react';  
-import { useTurnos } from '@/hooks/useTurnos';  
-import { useEmpleadoAuth } from '@/hooks/useEmpleadoAuth';  
-import { PunchButton } from '@/components/PunchButton';  
-import { useToast } from '@/hooks/use-toast';  
-import { supabase } from '@/integrations/supabase/client';  
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Clock, MapPin, CheckCircle, AlertTriangle, User, Loader2 } from 'lucide-react';
+import { useTurnos } from '@/hooks/useTurnos';
+import { useEmpleadoAuth } from '@/hooks/useEmpleadoAuth';
+import { PunchButton } from '@/components/PunchButton';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
   
 // Función para calcular distancia usando la fórmula de Haversine  
 const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {  
@@ -21,19 +21,24 @@ const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * c;  
 };  
   
-// Función para validar ubicación del usuario  
-const validateUserLocation = async (currentLat: number, currentLng: number) => {  
-  try {  
-    const { data: ubicaciones, error } = await supabase  
-      .from('ubicaciones_trabajo')  
-      .select('*')  
-      .eq('activa', true);  
-        
-    if (error) throw error;  
-        
-    for (const ubicacion of ubicaciones) {  
-      // Extraer coordenadas del campo point  
-      const [lng, lat] = ubicacion.coordenadas.coordinates;  
+// Función para validar ubicación del usuario
+const validateUserLocation = async (currentLat: number, currentLng: number) => {
+  try {
+    const { data: ubicaciones, error } = await supabase
+      .from('ubicaciones_trabajo')
+      .select('*')
+      .eq('activa', true);
+      
+    if (error) throw error;
+      
+    for (const ubicacion of ubicaciones) {
+      // Extraer coordenadas del campo point - coordenadas es un string en formato "(lat,lng)"
+      const coordStr = ubicacion.coordenadas as string;
+      const matches = coordStr.match(/\(([^,]+),([^)]+)\)/);
+      if (!matches) continue;
+      
+      const lat = parseFloat(matches[1]);
+      const lng = parseFloat(matches[2]);
         
       const distance = calculateDistance(currentLat, currentLng, lat, lng);  
         
@@ -67,112 +72,69 @@ const validateGeolocationSettings = async () => {
   }  
 };  
   
-export const TurnosAgentForm = () => {  
-  const [currentTime, setCurrentTime] = useState(new Date());  
-  const { empleadoId, empleado, isAuthenticated } = useEmpleadoAuth();  
-  const { estadoTurno, loading, refetch } = useTurnos(empleadoId);  
-  const { toast } = useToast();  
+export const TurnosAgentForm = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [estadoTurno, setEstadoTurno] = useState({ estado: 'sin_entrada', entrada: null, salida: null, horasTrabajadas: null });
+  const [isValidating, setIsValidating] = useState(false);
+  const { empleado, loading: authLoading } = useEmpleadoAuth();
+  const { verificarEstadoTurno, loading: turnosLoading } = useTurnos();
+  const { toast } = useToast();
+
+  const empleadoId = empleado?.id;
+  const isAuthenticated = !!empleado;
   
-  useEffect(() => {  
-    const timer = setInterval(() => {  
-      setCurrentTime(new Date());  
-    }, 1000);  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Cargar estado del turno cuando se carga el empleado
+  useEffect(() => {
+    const loadEstadoTurno = async () => {
+      if (empleadoId) {
+        const fecha = new Date().toISOString().split('T')[0];
+        const estado = await verificarEstadoTurno(empleadoId, fecha);
+        setEstadoTurno({
+          estado: estado.estado,
+          entrada: estado.turno?.hora_entrada || null,
+          salida: estado.turno?.hora_salida || null,
+          horasTrabajadas: estado.turno?.hora_entrada && estado.turno?.hora_salida ? 
+            calculateHorasTrabajadas(estado.turno.hora_entrada, estado.turno.hora_salida) : null
+        });
+      }
+    };
+
+    loadEstadoTurno();
+  }, [empleadoId, verificarEstadoTurno]);
+
+  const calculateHorasTrabajadas = (entrada: string, salida: string) => {
+    const entradaTime = new Date(`2000-01-01T${entrada}`);
+    const salidaTime = new Date(`2000-01-01T${salida}`);
+    const diffMs = salidaTime.getTime() - entradaTime.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${diffHours}h ${diffMinutes}m`;
+  };
   
-    return () => clearInterval(timer);  
-  }, []);  
+  const refetch = async () => {
+    if (empleadoId) {
+      const fecha = new Date().toISOString().split('T')[0];
+      const estado = await verificarEstadoTurno(empleadoId, fecha);
+      setEstadoTurno({
+        estado: estado.estado,
+        entrada: estado.turno?.hora_entrada || null,
+        salida: estado.turno?.hora_salida || null,
+        horasTrabajadas: estado.turno?.hora_entrada && estado.turno?.hora_salida ? 
+          calculateHorasTrabajadas(estado.turno.hora_entrada, estado.turno.hora_salida) : null
+      });
+    }
+  };
   
-  // Función mejorada para manejar punch con validación de ubicación  
-  const handlePunchWithValidation = async () => {  
-    // Validar configuración inicial  
-    const configValidation = await validateGeolocationSettings();  
-    if (!configValidation.valid) {  
-      toast({  
-        title: "Error de configuración",  
-        description: configValidation.error || "Contacte al administrador",  
-        variant: "destructive"  
-      });  
-      return;  
-    }  
-  
-    if (!navigator.geolocation) {  
-      toast({  
-        title: "Error de geolocalización",  
-        description: "Tu dispositivo no soporta geolocalización",  
-        variant: "destructive"  
-      });  
-      return;  
-    }  
-  
-    // Mostrar indicador de carga  
-    toast({  
-      title: "Validando ubicación...",  
-      description: "Obteniendo tu ubicación actual",  
-    });  
-  
-    navigator.geolocation.getCurrentPosition(  
-      async (position) => {  
-        const { latitude, longitude } = position.coords;  
-          
-        const validation = await validateUserLocation(latitude, longitude);  
-          
-        if (!validation.valid) {  
-          toast({  
-            title: "UBICACION INVALIDA",  
-            description: validation.error || "Contacte al administrador",  
-            variant: "destructive"  
-          });  
-          return;  
-        }  
-  
-        // Si la validación es exitosa, mostrar ubicación válida  
-        toast({  
-          title: "Ubicación válida",  
-          description: `Registrando desde: ${validation.ubicacion?.nombre || 'Ubicación autorizada'}`,  
-        });  
-  
-        // Aquí puedes proceder con el punch normal  
-        // Por ahora, simularemos el éxito del punch  
-        await handleRegistroCompleto();  
-      },  
-      (error) => {  
-        let errorMessage = "No se pudo obtener tu ubicación actual";  
-          
-        switch(error.code) {  
-          case error.PERMISSION_DENIED:  
-            errorMessage = "Permiso de ubicación denegado. Actívalo en tu navegador.";  
-            break;  
-          case error.POSITION_UNAVAILABLE:  
-            errorMessage = "Información de ubicación no disponible.";  
-            break;  
-          case error.TIMEOUT:  
-            errorMessage = "Tiempo de espera agotado al obtener la ubicación.";  
-            break;  
-        }  
-          
-        toast({  
-          title: "Error de ubicación",  
-          description: errorMessage,  
-          variant: "destructive"  
-        });  
-      },  
-      {  
-        enableHighAccuracy: true,  
-        timeout: 15000,  
-        maximumAge: 60000  
-      }  
-    );  
-  };  
-  
-  const handleRegistroCompleto = async () => {  
-    await refetch();  
-    toast({  
-      title: "Registro exitoso",  
-      description: "Tu turno ha sido registrado correctamente",  
-    });  
-  };  
-  
-  const getEstadoBadge = () => {  
-    if (loading) return <Badge variant="outline">Cargando...</Badge>;  
+  const getEstadoBadge = () => {
+    if (authLoading || turnosLoading) return <Badge variant="outline">Cargando...</Badge>;
       
     switch (estadoTurno.estado) {  
       case 'sin_entrada':  
@@ -186,8 +148,8 @@ export const TurnosAgentForm = () => {
     }  
   };  
   
-  const getTurnoInfo = () => {  
-    if (loading) return <div className="text-sm text-muted-foreground">Cargando información...</div>;  
+  const getTurnoInfo = () => {
+    if (authLoading || turnosLoading) return <div className="text-sm text-muted-foreground">Cargando información...</div>;
       
     return (  
       <div className="space-y-2 text-sm">  
@@ -258,25 +220,16 @@ export const TurnosAgentForm = () => {
             {getTurnoInfo()}  
           </div>  
   
-          {/* PUNCH Button con validación de ubicación */}  
-          {estadoTurno.estado !== 'completo' && empleadoId && (  
-            <div className="flex justify-center">  
-              <Button  
-              onClick={handlePunchWithValidation}  
-              disabled={isValidating}  
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"  
-            >  
-              {isValidating ? (  
-                <>  
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />  
-                  Validando ubicación...  
-                </>  
-              ) : (  
-                'PUNCH'  
-              )}  
-            </Button>
-            </div>  
-          )}  
+          {/* PUNCH Button */}
+          {estadoTurno.estado !== 'completo' && empleadoId && (
+            <div className="flex justify-center">
+              <PunchButton 
+                empleadoId={empleadoId}
+                tipoRegistro={estadoTurno.estado === 'sin_entrada' ? 'entrada' : 'salida'}
+                onRegistroCompleto={refetch}
+              />
+            </div>
+          )}
   
           {/* Mensaje de turno completo */}  
           {estadoTurno.estado === 'completo' && (  

@@ -39,7 +39,7 @@ export const useTurnos = () => {
       // VALIDACIÓN REAL DE UBICACIÓN - MODO PRODUCCIÓN
       if ((data.ubicacion_entrada || data.ubicacion_salida) && empleadoData.lugar_designado) {
         const currentLocation: LocationCoordinates = data.ubicacion_entrada || data.ubicacion_salida!;
-        const validationResult = await validateLocationForWork(currentLocation, empleadoData.lugar_designado);
+        const validationResult = await validateLocationForWork(currentLocation, data.empleado_id);
         
         if (!validationResult.isValid) {
           // BLOQUEAR registro si no está en ubicación válida
