@@ -26,6 +26,7 @@ interface Turno {
   minutos_tardanza?: number;
   estado_cumplimiento?: string;
   alerta_temprana?: boolean;
+  ubicacion_real_entrada?: string | null;
   empleados_turnos: {
     nombres: string;
     apellidos?: string | null;
@@ -46,12 +47,14 @@ export const TurnosAdminConsulta = () => {
   const [editObservaciones, setEditObservaciones] = useState('');
   const [editHoraEntrada, setEditHoraEntrada] = useState('');
   const [editHoraSalida, setEditHoraSalida] = useState('');
+  const [ubicacionesTrabajo, setUbicacionesTrabajo] = useState<any[]>([]);
 
   const { obtenerTurnos, loading } = useTurnos();
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
+    cargarUbicaciones();
     cargarTurnos();
   }, []);
 
@@ -59,11 +62,80 @@ export const TurnosAdminConsulta = () => {
     filterTurnos();
   }, [turnos, searchDate, searchEmpleado]);
 
+  const cargarUbicaciones = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ubicaciones_trabajo')
+        .select('nombre, coordenadas, radio_tolerancia')
+        .eq('activa', true);
+      
+      if (!error && data) {
+        setUbicacionesTrabajo(data);
+      }
+    } catch (error) {
+      console.error('Error cargando ubicaciones:', error);
+    }
+  };
+
   const cargarTurnos = async () => {
     const result = await obtenerTurnos();
     if (result.success) {
-      setTurnos(result.data as any[]);
+      const turnosConUbicacion = (result.data as any[]).map(turno => ({
+        ...turno,
+        ubicacion_real_entrada: determinarUbicacionReal(turno.ubicacion_entrada)
+      }));
+      setTurnos(turnosConUbicacion);
     }
+  };
+
+  const determinarUbicacionReal = (ubicacionPunch: unknown) => {
+    if (!ubicacionPunch || ubicacionesTrabajo.length === 0) return null;
+    
+    const ubicacionStr = String(ubicacionPunch);
+    const match = ubicacionStr.match(/\((-?\d+\.?\d*),(-?\d+\.?\d*)\)/);
+    
+    if (!match) return null;
+    
+    const punchCoords = {
+      lat: parseFloat(match[1]),
+      lng: parseFloat(match[2])
+    };
+    
+    let ubicacionMasCercana = null;
+    let menorDistancia = Infinity;
+    
+    for (const ubicacion of ubicacionesTrabajo) {
+      const coordenadas = ubicacion.coordenadas as string;
+      const coordMatch = coordenadas.match(/\(([^,]+),([^)]+)\)/);
+      
+      if (!coordMatch) continue;
+      
+      const ubicCoords = {
+        lat: parseFloat(coordMatch[1]),
+        lng: parseFloat(coordMatch[2])
+      };
+      
+      const distancia = calcularDistancia(punchCoords, ubicCoords);
+      const tolerancia = ubicacion.radio_tolerancia || 100;
+      
+      if (distancia <= tolerancia && distancia < menorDistancia) {
+        menorDistancia = distancia;
+        ubicacionMasCercana = ubicacion.nombre;
+      }
+    }
+    
+    return ubicacionMasCercana;
+  };
+
+  const calcularDistancia = (coord1: {lat: number, lng: number}, coord2: {lat: number, lng: number}) => {
+    const R = 6371000; // Radio de la Tierra en metros
+    const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
+    const dLng = (coord2.lng - coord1.lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(coord1.lat * Math.PI / 180) * Math.cos(coord2.lat * Math.PI / 180) *
+      Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
   };
 
   const filterTurnos = () => {
@@ -303,9 +375,16 @@ export const TurnosAdminConsulta = () => {
                         <td className="p-3">
                           <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">
-                              {turno.empleados_turnos?.lugar_designado || 'No asignada'}
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">
+                                {turno.ubicacion_real_entrada || 'Ubicación no identificada'}
+                              </span>
+                              {turno.empleados_turnos?.lugar_designado && (
+                                <span className="text-xs text-muted-foreground">
+                                  Designada: {turno.empleados_turnos.lugar_designado}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
                          <td className="p-3">
