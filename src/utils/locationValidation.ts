@@ -63,43 +63,17 @@ export const validateLocationForWork = async (
     // Usar Supabase para obtener las ubicaciones asignadas al empleado
     const { supabase } = await import('@/integrations/supabase/client');
     
-    // Obtener todas las ubicaciones asignadas al empleado
-    const { data: ubicacionesAsignadas, error: errorAsignadas } = await supabase
-      .from('empleados_ubicaciones_asignadas')
-      .select('ubicacion_nombre')
-      .eq('empleado_id', empleadoId)
-      .eq('activa', true);
-
-    if (errorAsignadas) {
-      console.error('Error obteniendo ubicaciones asignadas:', errorAsignadas);
-      return {
-        isValid: false,
-        distance: -1,
-        message: 'Error al obtener ubicaciones asignadas. Contacte al administrador.'
-      };
-    }
-
-    if (!ubicacionesAsignadas || ubicacionesAsignadas.length === 0) {
-      return {
-        isValid: false,
-        distance: -1,
-        message: 'No tiene ubicaciones de trabajo asignadas. Contacte al administrador.'
-      };
-    }
-
-    // Obtener detalles de todas las ubicaciones asignadas
-    const nombresUbicaciones = ubicacionesAsignadas.map(u => u.ubicacion_nombre);
+    // Permitir punch en cualquier ubicación activa, no solo asignadas
     const { data: ubicacionesTrabajo, error: errorUbicaciones } = await supabase
       .from('ubicaciones_trabajo')
       .select('nombre, coordenadas, radio_tolerancia, direccion')
-      .in('nombre', nombresUbicaciones)
       .eq('activa', true);
 
     if (errorUbicaciones || !ubicacionesTrabajo || ubicacionesTrabajo.length === 0) {
       return {
         isValid: false,
         distance: -1,
-        message: 'Las ubicaciones asignadas no están disponibles. Contacte al administrador.'
+        message: 'No hay ubicaciones activas configuradas. Contacte al administrador.'
       };
     }
 
