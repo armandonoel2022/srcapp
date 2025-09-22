@@ -29,6 +29,7 @@ import { DashboardTurnos } from '@/components/DashboardTurnos';
 import { BiometricAuthSetup } from '@/components/BiometricAuthSetup';
 import { AdminTurnosFotos } from '@/components/AdminTurnosFotos';
 import { MapaAsignarUbicacion } from '@/components/MapaAsignarUbicacion';
+import { DescargaArchivosAndroid } from '@/components/DescargaArchivosAndroid';
 
 export const Dashboard = () => {
   const { user, signOut, isAdmin } = useAuth();
@@ -163,6 +164,8 @@ export const Dashboard = () => {
         return <MapaAsignarUbicacion />;
       case 'revisar-fotos':
         return <AdminTurnosFotos />;
+      case 'descargar-android':
+        return <DescargaArchivosAndroid />;
       case 'mapa-calor':
         return <InteractiveHeatMap />;
       default:

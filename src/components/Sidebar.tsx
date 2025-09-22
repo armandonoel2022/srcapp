@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Users, FileText, Plus, LogOut, Settings as SettingsIcon, UserPlus, Edit, Trash, Search, Home, MapPin, CheckCircle, BarChart3, Camera, UserCheck } from 'lucide-react';
+import { Menu, Users, FileText, Plus, LogOut, Settings as SettingsIcon, UserPlus, Edit, Trash, Search, Home, MapPin, CheckCircle, BarChart3, Camera, UserCheck, Download } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
 import { useNavigate } from 'react-router-dom';
@@ -53,7 +53,8 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
   const adminItems = [
     { id: 'crear-cliente', label: 'Crear Usuario Cliente', icon: UserPlus },
     { id: 'mapa-ubicaciones', label: 'Mapa de Ubicaciones', icon: MapPin },
-    { id: 'revisar-fotos', label: 'Revisar Fotos Turnos', icon: Camera }
+    { id: 'revisar-fotos', label: 'Revisar Fotos Turnos', icon: Camera },
+    { id: 'descargar-android', label: 'Descargar Archivos Android', icon: Download }
   ];
 
   const menuItems = isClient ? clientItems : (authIsAdmin ? [...controlAccesoItems, ...turnosItems, ...adminItems] : [...controlAccesoItems, ...turnosItems]);
