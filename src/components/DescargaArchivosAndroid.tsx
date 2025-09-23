@@ -12,6 +12,7 @@ export const DescargaArchivosAndroid = () => {
   const androidFiles = [
     // Drawable files
     { path: 'android/app/src/main/res/drawable/ic_launcher_background.xml', type: 'xml' },
+    { path: 'android/app/src/main/res/drawable/ic_launcher_foreground.png', type: 'image' },
     { path: 'android/app/src/main/res/drawable/splash.png', type: 'image' },
     { path: 'android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml', type: 'xml' },
     
