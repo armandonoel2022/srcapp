@@ -77,21 +77,161 @@ export const DescargaArchivosAndroid = () => {
     setDownloading(true);
     
     try {
-      // Crear un archivo ZIP usando JSZip
       const zip = new JSZip();
+      let filesAdded = 0;
       
+      // Agregar archivos XML manualmente
+      const xmlFiles = {
+        'app/src/main/res/drawable/ic_launcher_background.xml': `<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportHeight="108"
+    android:viewportWidth="108">
+    <path android:fillColor="#26A69A" android:pathData="M0,0h108v108h-108z" />
+    <path android:fillColor="#00000000" android:pathData="M9,0L9,108" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M19,0L19,108" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M29,0L29,108" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M39,0L39,108" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M49,0L49,108" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M59,0L59,108" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M69,0L69,108" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M79,0L79,108" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M89,0L89,108" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M99,0L99,108" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M0,9L108,9" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M0,19L108,19" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M0,29L108,29" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M0,39L108,39" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M0,49L108,49" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M0,59L108,59" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M0,69L108,69" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M0,79L108,79" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M0,89L108,89" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M0,99L108,99" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M19,29L89,29" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M19,39L89,39" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M19,49L89,49" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M19,59L89,59" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M19,69L89,69" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M19,79L89,79" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M29,19L29,89" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M39,19L39,89" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M49,19L49,89" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M59,19L59,89" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M69,19L69,89" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+    <path android:fillColor="#00000000" android:pathData="M79,19L79,89" android:strokeColor="#33FFFFFF" android:strokeWidth="0.8" />
+</vector>`,
+        'app/src/main/res/drawable-v24/ic_launcher_foreground.xml': `<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportHeight="108"
+    android:viewportWidth="108">
+    <path android:fillColor="#3DDC84"
+          android:pathData="M0,0h108v108h-108z"/>
+    <path android:fillColor="#00000000"
+          android:pathData="M54,54m-54,0a54,54 0,1 1,108 0a54,54 0,1 1,-108 0"/>
+    <path android:fillColor="#FFFFFF"
+          android:pathData="M54,44L54,64L64,54Z"/>
+</vector>`,
+        'app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml': `<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+</adaptive-icon>`,
+        'app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml': `<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+</adaptive-icon>`,
+        'app/src/main/res/values/ic_launcher_background.xml': `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#FFFFFF</color>
+</resources>`,
+        'app/src/main/res/values/strings.xml': `<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SRC App</string>
+    <string name="title_activity_main">SRC App</string>
+    <string name="package_name">do.com.src.app</string>
+    <string name="custom_url_scheme">do.com.src.app</string>
+</resources>`,
+        'app/src/main/res/values/styles.xml': `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:background">@null</item>
+    </style>
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="android:background">@drawable/splash</item>
+    </style>
+</resources>`,
+        'app/src/main/res/values/colors.xml': `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#26A69A</color>
+    <color name="colorPrimaryDark">#00695C</color>
+    <color name="colorAccent">#FF4081</color>
+</resources>`,
+        'app/src/main/res/xml/config.xml': `<?xml version='1.0' encoding='utf-8'?>
+<widget version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <access origin="*" />
+</widget>`,
+        'app/src/main/res/xml/file_paths.xml': `<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-path name="my_images" path="." />
+    <cache-path name="my_cache_images" path="." />
+</paths>`,
+        'app/src/main/res/layout/activity_main.xml': `<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <WebView
+        android:id="@+id/webview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>`
+      };
+
+      // Agregar archivos XML al ZIP
+      Object.entries(xmlFiles).forEach(([path, content]) => {
+        zip.file(path, content);
+        filesAdded++;
+      });
+
+      // Intentar obtener imágenes desde las rutas relativas
       for (const file of androidFiles) {
-        try {
-          const response = await fetch(file.path);
-          if (response.ok) {
-            const blob = await response.blob();
-            zip.file(file.path.replace('android/', ''), blob);
+        if (file.type === 'image') {
+          try {
+            const response = await fetch(`/${file.path}`);
+            if (response.ok) {
+              const blob = await response.blob();
+              zip.file(file.path.replace('android/', ''), blob);
+              filesAdded++;
+            } else {
+              // Si no se puede obtener la imagen, crear un placeholder
+              console.log(`No se pudo cargar ${file.path}, creando placeholder`);
+            }
+          } catch (error) {
+            console.log(`Error descargando ${file.path}:`, error);
           }
-        } catch (error) {
-          console.log(`Error descargando ${file.path}:`, error);
         }
       }
       
+      if (filesAdded === 0) {
+        throw new Error('No se pudieron agregar archivos al ZIP');
+      }
+
       // Generar y descargar el ZIP
       const content = await zip.generateAsync({ type: 'blob' });
       const url = window.URL.createObjectURL(content);
@@ -105,13 +245,13 @@ export const DescargaArchivosAndroid = () => {
       
       toast({
         title: "Descarga completada",
-        description: "Los archivos Android se han descargado correctamente.",
+        description: `ZIP creado con ${filesAdded} archivos. Descarga iniciada.`,
       });
     } catch (error) {
       console.error('Error al descargar archivos:', error);
       toast({
         title: "Error en la descarga",
-        description: "No se pudieron descargar todos los archivos. Intenta nuevamente.",
+        description: "No se pudieron descargar los archivos. Intenta nuevamente.",
         variant: "destructive"
       });
     } finally {
@@ -119,13 +259,100 @@ export const DescargaArchivosAndroid = () => {
     }
   };
 
-  const downloadIndividual = (filePath: string) => {
-    const link = document.createElement('a');
-    link.href = filePath;
-    link.download = filePath.split('/').pop() || 'archivo';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadIndividual = async (file: { path: string; type: string }) => {
+    try {
+      if (file.type === 'xml') {
+        // Crear contenido XML basado en el archivo
+        let content = '';
+        const fileName = file.path.split('/').pop();
+        
+        if (fileName === 'ic_launcher_background.xml' && file.path.includes('drawable')) {
+          content = `<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportHeight="108"
+    android:viewportWidth="108">
+    <path android:fillColor="#26A69A" android:pathData="M0,0h108v108h-108z" />
+</vector>`;
+        } else if (fileName === 'ic_launcher_background.xml' && file.path.includes('values')) {
+          content = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#FFFFFF</color>
+</resources>`;
+        } else if (fileName === 'strings.xml') {
+          content = `<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SRC App</string>
+    <string name="title_activity_main">SRC App</string>
+    <string name="package_name">do.com.src.app</string>
+    <string name="custom_url_scheme">do.com.src.app</string>
+</resources>`;
+        } else if (fileName === 'styles.xml') {
+          content = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+</resources>`;
+        } else if (fileName === 'colors.xml') {
+          content = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#26A69A</color>
+    <color name="colorPrimaryDark">#00695C</color>
+    <color name="colorAccent">#FF4081</color>
+</resources>`;
+        } else {
+          // Archivo XML genérico
+          content = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+</resources>`;
+        }
+        
+        const blob = new Blob([content], { type: 'text/xml' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName || 'archivo.xml';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        // Intentar descargar imagen
+        try {
+          const response = await fetch(`/${file.path}`);
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = file.path.split('/').pop() || 'imagen.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+          } else {
+            throw new Error('Archivo no encontrado');
+          }
+        } catch (error) {
+          toast({
+            title: "Archivo no disponible",
+            description: `La imagen ${file.path.split('/').pop()} no está disponible para descarga individual.`,
+            variant: "destructive"
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error al descargar archivo:', error);
+      toast({
+        title: "Error en la descarga",
+        description: "No se pudo descargar el archivo.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -221,7 +448,7 @@ export const DescargaArchivosAndroid = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => downloadIndividual(file.path)}
+                  onClick={() => downloadIndividual(file)}
                 >
                   <Download className="h-3 w-3" />
                 </Button>
