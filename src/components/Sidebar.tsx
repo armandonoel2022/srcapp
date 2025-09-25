@@ -53,8 +53,7 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
   const adminItems = [
     { id: 'crear-cliente', label: 'Crear Usuario Cliente', icon: UserPlus },
     { id: 'mapa-ubicaciones', label: 'Mapa de Ubicaciones', icon: MapPin },
-    { id: 'revisar-fotos', label: 'Revisar Fotos Turnos', icon: Camera },
-    { id: 'descargar-android', label: 'Descargar Archivos Android', icon: Download }
+    { id: 'revisar-fotos', label: 'Revisar Fotos Turnos', icon: Camera }
   ];
 
   const menuItems = isClient ? clientItems : (authIsAdmin ? [...controlAccesoItems, ...turnosItems, ...adminItems] : [...controlAccesoItems, ...turnosItems]);
