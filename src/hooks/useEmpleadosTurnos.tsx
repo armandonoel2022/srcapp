@@ -14,6 +14,7 @@ export interface EmpleadoTurno {
   hora_entrada_programada?: string;
   hora_salida_programada?: string;
   username?: string;
+  tolerancia_ubicacion?: number;
   requires_password_change?: boolean;
   last_login?: string;
   active?: boolean;

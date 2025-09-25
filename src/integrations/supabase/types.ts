@@ -284,6 +284,7 @@ export type Database = {
           password_hash: string | null
           requires_password_change: boolean | null
           sexo: string | null
+          tolerancia_ubicacion: number | null
           updated_at: string
           username: string | null
         }
@@ -303,6 +304,7 @@ export type Database = {
           password_hash?: string | null
           requires_password_change?: boolean | null
           sexo?: string | null
+          tolerancia_ubicacion?: number | null
           updated_at?: string
           username?: string | null
         }
@@ -322,6 +324,7 @@ export type Database = {
           password_hash?: string | null
           requires_password_change?: boolean | null
           sexo?: string | null
+          tolerancia_ubicacion?: number | null
           updated_at?: string
           username?: string | null
         }

@@ -34,6 +34,7 @@ export const GestionEmpleadosTurnos = () => {
       hora_entrada_programada: empleado.hora_entrada_programada,
       hora_salida_programada: empleado.hora_salida_programada,
       username: empleado.username,
+      tolerancia_ubicacion: empleado.tolerancia_ubicacion || 100,
       active: empleado.active !== false
     });
     setIsEditModalOpen(true);
@@ -61,6 +62,7 @@ export const GestionEmpleadosTurnos = () => {
           hora_entrada_programada: editFormData.hora_entrada_programada,
           hora_salida_programada: editFormData.hora_salida_programada,
           username: editFormData.username,
+          tolerancia_ubicacion: editFormData.tolerancia_ubicacion || 100,
           active: editFormData.active !== false,
           updated_at: new Date().toISOString()
         })
@@ -364,6 +366,24 @@ export const GestionEmpleadosTurnos = () => {
                   value={editFormData.hora_salida_programada || ''}
                   onChange={(e) => setEditFormData({ ...editFormData, hora_salida_programada: e.target.value })}
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-tolerancia_ubicacion">Tolerancia de Ubicación (metros)</Label>
+                <Input
+                  id="edit-tolerancia_ubicacion"
+                  type="number"
+                  min="10"
+                  max="1000"
+                  value={editFormData.tolerancia_ubicacion || 100}
+                  onChange={(e) => setEditFormData({ ...editFormData, tolerancia_ubicacion: parseInt(e.target.value) || 100 })}
+                  placeholder="Tolerancia en metros (por defecto: 100m)"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Radio de tolerancia para validar la ubicación en todos los lugares asignados
+                </p>
               </div>
             </div>
 

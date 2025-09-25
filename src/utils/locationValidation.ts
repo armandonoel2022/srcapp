@@ -63,6 +63,15 @@ export const validateLocationForWork = async (
     // Usar Supabase para obtener las ubicaciones asignadas al empleado
     const { supabase } = await import('@/integrations/supabase/client');
     
+    // Obtener la tolerancia personalizada del empleado
+    const { data: empleadoData, error: errorEmpleado } = await supabase
+      .from('empleados_turnos')
+      .select('tolerancia_ubicacion')
+      .eq('id', empleadoId)
+      .single();
+
+    const toleranciaEmpleado = empleadoData?.tolerancia_ubicacion || TOLERANCIA_UBICACION;
+    
     // Permitir punch en cualquier ubicación activa, no solo asignadas
     const { data: ubicacionesTrabajo, error: errorUbicaciones } = await supabase
       .from('ubicaciones_trabajo')
@@ -96,7 +105,9 @@ export const validateLocationForWork = async (
       };
 
       const distance = calculateDistance(currentLocation, ubicacionObj);
-      const tolerancia = ubicacion.radio_tolerancia || TOLERANCIA_UBICACION;
+      // Usar la tolerancia del empleado o la ubicación, la que sea mayor para mayor flexibilidad
+      const toleranciaUbicacion = ubicacion.radio_tolerancia || TOLERANCIA_UBICACION;
+      const tolerancia = Math.max(toleranciaEmpleado, toleranciaUbicacion);
 
       // Si está dentro del rango de tolerancia, es válido
       if (distance <= tolerancia) {
