@@ -40,12 +40,7 @@ export const LocationDisplay = ({ empleadoLugarDesignado }: LocationDisplayProps
 
       if (!ubicaciones) return 'Ubicación no identificada';
 
-      console.log('🗺️ Buscando ubicación actual para:', { lat, lng });
-
-      // Encontrar la ubicación más cercana dentro del rango de tolerancia
-      let mejorCoincidencia = null;
-      let menorDistancia = Infinity;
-
+      // Encontrar la ubicación más cercana
       for (const ubicacion of ubicaciones) {
         const ubicacionCoordinates = ubicacion.coordenadas as string;
         const matches = ubicacionCoordinates.match(/\(([^,]+),([^)]+)\)/);
@@ -69,29 +64,12 @@ export const LocationDisplay = ({ empleadoLugarDesignado }: LocationDisplayProps
           const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
           const distance = R * c * 1000; // Convertir a metros
 
-          console.log(`📍 Distancia a ${ubicacion.nombre}: ${distance.toFixed(0)}m (tolerancia: ${ubicacion.radio_tolerancia}m)`);
-
-          // Usar tolerancia amplia (hasta 1000m) para mostrar ubicación más cercana
-          const toleranciaMaxima = Math.max(ubicacion.radio_tolerancia || 100, 1000);
+          const tolerancia = ubicacion.radio_tolerancia || 100;
           
-          if (distance <= toleranciaMaxima) {
-            return `${ubicacion.nombre} (${distance.toFixed(0)}m)`;
-          }
-
-          // Mantener registro de la ubicación más cercana
-          if (distance < menorDistancia) {
-            menorDistancia = distance;
-            mejorCoincidencia = {
-              nombre: ubicacion.nombre,
-              distancia: distance
-            };
+          if (distance <= tolerancia) {
+            return ubicacion.nombre;
           }
         }
-      }
-
-      // Si no encontramos coincidencia dentro de tolerancia, mostrar la más cercana
-      if (mejorCoincidencia) {
-        return `${mejorCoincidencia.nombre} (${mejorCoincidencia.distancia.toFixed(0)}m)`;
       }
 
       return 'Ubicación no identificada';
