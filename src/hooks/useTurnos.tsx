@@ -136,7 +136,8 @@ export const useTurnos = () => {
           empleados_turnos!turnos_empleados_empleado_id_fkey (
             nombres,
             apellidos,
-            funcion
+            funcion,
+            lugar_designado
           )
         `)
         .order('fecha', { ascending: false })

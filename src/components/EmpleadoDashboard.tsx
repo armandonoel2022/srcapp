@@ -7,6 +7,7 @@ import { Clock, MapPin, CheckCircle, LogOut, Key } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
 import { PunchButton } from '@/components/PunchButton';
 import { EmpleadoPasswordChangeModal } from '@/components/EmpleadoPasswordChangeModal';
+import { LocationDisplay } from '@/components/LocationDisplay';
 import { useToast } from '@/hooks/use-toast';
 import { useEmpleadoAuth, EmpleadoAuth } from '@/hooks/useEmpleadoAuth';
 
@@ -36,7 +37,8 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
   }, []);
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     verificarEstadoTurno(empleado.id, today).then(result => {
       const prevEstado = estadoTurno.estado;
       setEstadoTurno(result);
@@ -79,7 +81,8 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
   };
 
   const handleRegistroCompleto = async () => {
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     const prevEstado = estadoTurno.estado;
     const nuevoEstado = await verificarEstadoTurno(empleado.id, today);
     setEstadoTurno(nuevoEstado);
@@ -141,12 +144,7 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
                   Bienvenido/a, {empleado.nombres} {empleado.apellidos}
                 </CardTitle>
                 <p className="text-muted-foreground">{empleado.funcion}</p>
-                {empleado.lugar_designado && (
-                  <p className="text-sm text-muted-foreground">
-                    <MapPin className="h-3 w-3 inline mr-1" />
-                    {empleado.lugar_designado}
-                  </p>
-                )}
+                <LocationDisplay empleadoLugarDesignado={empleado.lugar_designado} />
               </div>
               <div className="flex gap-2">
                 {empleado.requires_password_change && (
@@ -232,7 +230,8 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
                 <Button 
                   variant="outline" 
                   onClick={async () => {
-                    const today = new Date().toISOString().split('T')[0];
+                    const now = new Date();
+                    const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                     const result = await eliminarTurnosPrueba(empleado.id, today);
                     
                     if (result.success) {

@@ -18,6 +18,8 @@ interface Turno {
   foto_salida?: string;
   ubicacion_entrada?: unknown;
   ubicacion_salida?: unknown;
+  ubicacion_entrada_nombre?: string;
+  ubicacion_salida_nombre?: string;
   empleados?: {
     nombres: string;
     apellidos: string;
@@ -66,10 +68,27 @@ export const ConsultaTurnos = () => {
   const cargarTurnos = async () => {
     const result = await obtenerTurnos();
     if (result.success && result.data) {
-      // Asegurar que los datos tienen la estructura correcta
-      const turnosFormatted = result.data.map((turno: any) => ({
-        ...turno,
-        empleados: turno.empleados || null
+      // Asegurar que los datos tienen la estructura correcta y agregar información de ubicación
+      const turnosFormatted = await Promise.all(result.data.map(async (turno: any) => {
+        let ubicacionEntradaNombre = '';
+        let ubicacionSalidaNombre = '';
+        
+        // Obtener nombre de ubicación de entrada
+        if (turno.ubicacion_entrada) {
+          ubicacionEntradaNombre = await obtenerNombreUbicacion(turno.ubicacion_entrada);
+        }
+        
+        // Obtener nombre de ubicación de salida
+        if (turno.ubicacion_salida) {
+          ubicacionSalidaNombre = await obtenerNombreUbicacion(turno.ubicacion_salida);
+        }
+        
+        return {
+          ...turno,
+          empleados: turno.empleados_turnos || turno.empleados || null,
+          ubicacion_entrada_nombre: ubicacionEntradaNombre,
+          ubicacion_salida_nombre: ubicacionSalidaNombre
+        };
       }));
       setTurnos(turnosFormatted);
     }
@@ -114,6 +133,60 @@ export const ConsultaTurnos = () => {
       };
     }
     return null;
+  };
+
+  const obtenerNombreUbicacion = async (ubicacionCoords: string): Promise<string> => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Obtener ubicaciones de trabajo activas
+      const { data: ubicaciones } = await supabase
+        .from('ubicaciones_trabajo')
+        .select('nombre, coordenadas, radio_tolerancia')
+        .eq('activa', true);
+
+      if (!ubicaciones) return 'Ubicación no identificada';
+
+      const coords = parseUbicacion(ubicacionCoords);
+      if (!coords) return 'Ubicación no identificada';
+
+      // Encontrar la ubicación más cercana
+      for (const ubicacion of ubicaciones) {
+        const ubicacionCoordinates = ubicacion.coordenadas as string;
+        const matches = ubicacionCoordinates.match(/\(([^,]+),([^)]+)\)/);
+        
+        if (matches) {
+          const ubicacionObj = {
+            lat: parseFloat(matches[1]),
+            lng: parseFloat(matches[2])
+          };
+
+          // Calcular distancia usando la función de Haversine
+          const R = 6371; // Radio de la Tierra en kilómetros
+          const dLat = (coords.lat - ubicacionObj.lat) * Math.PI / 180;
+          const dLng = (coords.lng - ubicacionObj.lng) * Math.PI / 180;
+          
+          const a = 
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(ubicacionObj.lat * Math.PI / 180) * Math.cos(coords.lat * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+          
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          const distance = R * c * 1000; // Convertir a metros
+
+          const tolerancia = ubicacion.radio_tolerancia || 100;
+          
+          if (distance <= tolerancia) {
+            return ubicacion.nombre;
+          }
+        }
+      }
+
+      return 'Ubicación no identificada';
+    } catch (error) {
+      console.error('Error obteniendo nombre de ubicación:', error);
+      return 'Error al identificar ubicación';
+    }
   };
 
   const openGoogleMaps = (ubicacion?: unknown) => {
@@ -207,23 +280,24 @@ export const ConsultaTurnos = () => {
                   <TableHead>Empleado</TableHead>
                   <TableHead>Función</TableHead>
                   <TableHead>Fecha</TableHead>
+                  <TableHead>Ubicación</TableHead>
                   <TableHead>Entrada</TableHead>
                   <TableHead>Salida</TableHead>
                   <TableHead>Horas</TableHead>
-                  <TableHead>Estado</TableHead>
+                  <TableHead>Estado del Turno</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell colSpan={9} className="text-center py-8">
                       Cargando turnos...
                     </TableCell>
                   </TableRow>
                 ) : filteredTurnos.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell colSpan={9} className="text-center py-8">
                       No se encontraron turnos
                     </TableCell>
                   </TableRow>
@@ -234,7 +308,26 @@ export const ConsultaTurnos = () => {
                         {turno.empleados ? `${turno.empleados.nombres} ${turno.empleados.apellidos}` : 'N/A'}
                       </TableCell>
                       <TableCell>{turno.empleados?.funcion || 'N/A'}</TableCell>
-                      <TableCell>{turno.fecha}</TableCell>
+                      <TableCell>{new Date(turno.fecha).toLocaleDateString('es-ES')}</TableCell>
+                      <TableCell>
+                        <div className="space-y-1 text-sm">
+                          {turno.ubicacion_entrada_nombre && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                              <span>E: {turno.ubicacion_entrada_nombre}</span>
+                            </div>
+                          )}
+                          {turno.ubicacion_salida_nombre && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                              <span>S: {turno.ubicacion_salida_nombre}</span>
+                            </div>
+                          )}
+                          {!turno.ubicacion_entrada_nombre && !turno.ubicacion_salida_nombre && (
+                            <span className="text-muted-foreground">Sin ubicación</span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {turno.hora_entrada || 'N/A'}
