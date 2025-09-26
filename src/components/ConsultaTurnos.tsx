@@ -150,7 +150,12 @@ export const ConsultaTurnos = () => {
       const coords = parseUbicacion(ubicacionCoords);
       if (!coords) return 'Ubicación no identificada';
 
-      // Encontrar la ubicación más cercana
+      console.log('🗺️ Buscando ubicación para coordenadas:', coords);
+
+      // Encontrar la ubicación más cercana dentro del rango de tolerancia
+      let mejorCoincidencia = null;
+      let menorDistancia = Infinity;
+
       for (const ubicacion of ubicaciones) {
         const ubicacionCoordinates = ubicacion.coordenadas as string;
         const matches = ubicacionCoordinates.match(/\(([^,]+),([^)]+)\)/);
@@ -174,12 +179,29 @@ export const ConsultaTurnos = () => {
           const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
           const distance = R * c * 1000; // Convertir a metros
 
-          const tolerancia = ubicacion.radio_tolerancia || 100;
+          console.log(`📍 Distancia a ${ubicacion.nombre}: ${distance.toFixed(0)}m (tolerancia: ${ubicacion.radio_tolerancia}m)`);
+
+          // Usar tolerancia amplia del empleado (hasta 1000m) o la tolerancia específica de la ubicación
+          const toleranciaMaxima = Math.max(ubicacion.radio_tolerancia || 100, 1000);
           
-          if (distance <= tolerancia) {
-            return ubicacion.nombre;
+          if (distance <= toleranciaMaxima) {
+            return `${ubicacion.nombre} (${distance.toFixed(0)}m)`;
+          }
+
+          // Mantener registro de la ubicación más cercana
+          if (distance < menorDistancia) {
+            menorDistancia = distance;
+            mejorCoincidencia = {
+              nombre: ubicacion.nombre,
+              distancia: distance
+            };
           }
         }
+      }
+
+      // Si no encontramos coincidencia dentro de tolerancia, mostrar la más cercana
+      if (mejorCoincidencia) {
+        return `${mejorCoincidencia.nombre} (${mejorCoincidencia.distancia.toFixed(0)}m - fuera de rango)`;
       }
 
       return 'Ubicación no identificada';
