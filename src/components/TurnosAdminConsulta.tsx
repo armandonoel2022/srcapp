@@ -486,35 +486,73 @@ export const TurnosAdminConsulta = () => {
                            </div>
                          </td>
                           <td className="p-3">
-                            {turno.hora_salida ? (
+                            {turno.hora_entrada ? (
                               <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                  <CheckCircle className="h-4 w-4 text-green-600" />
-                                  {turno.hora_salida}
+                                  {turno.minutos_tardanza && turno.minutos_tardanza > 0 ? (
+                                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                                  ) : (
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                  )}
+                                  {turno.hora_entrada}
                                 </div>
-                                {turno.hora_entrada && (
+                                 {turno.minutos_tardanza && turno.minutos_tardanza > 0 ? (
+                                   <div className="text-xs text-red-600">
+                                     {formatMinutesToHours(turno.minutos_tardanza)}
+                                   </div>
+                                 ) : (
+                                   <div className="inline-block">
+                                     <Badge 
+                                       className="bg-green-600 text-white hover:bg-green-700 text-xs px-2 py-1"
+                                     >
+                                       A tiempo
+                                     </Badge>
+                                   </div>
+                                 )}
+                                {turno.empleados_turnos?.hora_entrada_programada && (
                                   <div className="text-xs text-muted-foreground">
-                                    {calcularHorasTrabajadas(turno.hora_entrada, turno.hora_salida).toFixed(1)}h trabajadas
-                                  </div>
-                                )}
-                                {filteredTurnos.filter(t => t.empleado_id === turno.empleado_id && t.fecha === turno.fecha && t.hora_entrada && t.hora_salida).length > 1 && (
-                                  <div className="text-xs font-medium text-emerald-700 bg-emerald-100 inline-block px-2 py-0.5 rounded">
-                                    Total día: {getTotalHorasDia(turno.empleado_id, turno.fecha).toFixed(1)}h
-                                  </div>
-                                )}
-                                {turno.empleados_turnos?.hora_salida_programada && (
-                                  <div className="text-xs text-muted-foreground">
-                                    Prog: {turno.empleados_turnos.hora_salida_programada}
+                                    Prog: {turno.empleados_turnos.hora_entrada_programada}
                                   </div>
                                 )}
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                                Pendiente
+                                <AlertTriangle className="h-4 w-4 text-red-600" />
+                                Sin registro
                               </div>
                             )}
-                          </td>
+                           </td>
+                           <td className="p-3">
+                             {turno.hora_salida ? (
+                               <div className="space-y-1">
+                                 <div className="flex items-center gap-2">
+                                   <CheckCircle className="h-4 w-4 text-green-600" />
+                                   {turno.hora_salida}
+                                 </div>
+                                 {turno.hora_entrada && (
+                                   <div className="text-xs text-muted-foreground">
+                                     {calcularHorasTrabajadas(turno.hora_entrada, turno.hora_salida).toFixed(1)}h trabajadas
+                                   </div>
+                                 )}
+                                 {/* Total acumulado del día si hay varios registros */}
+                                 {filteredTurnos.filter(t => t.empleado_id === turno.empleado_id && t.fecha === turno.fecha && t.hora_entrada && t.hora_salida).length > 1 && (
+                                   <div className="text-xs font-medium text-emerald-700 bg-emerald-100 inline-block px-2 py-0.5 rounded">
+                                     Total día: {getTotalHorasDia(turno.empleado_id, turno.fecha).toFixed(1)}h
+                                   </div>
+                                 )}
+                                 {turno.empleados_turnos?.hora_salida_programada && (
+                                   <div className="text-xs text-muted-foreground">
+                                     Prog: {turno.empleados_turnos.hora_salida_programada}
+                                   </div>
+                                 )}
+                               </div>
+                             ) : (
+                               <div className="flex items-center gap-2">
+                                 <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                                 Pendiente
+                               </div>
+                             )}
+                           </td>
                         <td className="p-3">{getEstadoBadge(turno)}</td>
                         <td className="p-3">
                            <div className="flex items-center gap-2">
