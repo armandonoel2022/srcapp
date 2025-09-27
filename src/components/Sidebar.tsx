@@ -18,7 +18,7 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
   const { signOut, isAdmin: authIsAdmin } = useAuth();
   const navigate = useNavigate();
   
-  console.log('Sidebar Debug - authIsAdmin from useAuth:', authIsAdmin);
+  
 
   const handleNavigation = (section: string) => {
     onNavigate(section);
@@ -45,21 +45,19 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
 
   // Sistema de Turnos
   const turnosItems = [
-    { id: 'turnos', label: 'Control de Turnos', icon: CheckCircle },
+    { id: 'turnos', label: 'Consulta Administrativa de Turnos', icon: CheckCircle },
     { id: 'dashboard-turnos', label: 'Dashboard Turnos', icon: BarChart3 }
   ];
 
   // Funciones Administrativas
   const adminItems = [
-    { id: 'crear-cliente', label: 'Crear Usuario Cliente', icon: UserPlus },
-    { id: 'mapa-ubicaciones', label: 'Mapa de Ubicaciones', icon: MapPin },
+    { id: 'crear-usuario-cliente', label: 'Crear Usuario Cliente', icon: UserPlus },
+    { id: 'ubicaciones', label: 'Mapa de Ubicaciones', icon: MapPin },
     { id: 'revisar-fotos', label: 'Revisar Fotos Turnos', icon: Camera }
   ];
 
   const menuItems = isClient ? clientItems : (authIsAdmin ? [...controlAccesoItems, ...turnosItems, ...adminItems] : [...controlAccesoItems, ...turnosItems]);
   
-  console.log('Sidebar Debug - menuItems length:', menuItems.length);
-  console.log('Sidebar Debug - showing admin items:', authIsAdmin);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -68,11 +66,11 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
           <Menu className="h-4 w-4" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-80">
+      <SheetContent side="left" className="w-80 h-full overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{isClient ? 'Menú Cliente' : 'Menú de Administración'}</SheetTitle>
         </SheetHeader>
-        <div className="flex flex-col space-y-2 mt-6">
+        <div className="flex flex-col space-y-2 mt-6 pb-20">
           {/* Home button */}
           <Button
             variant="ghost"
@@ -153,7 +151,7 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
           
           {/* Configuration section is now handled in SettingsMenu */}
            
-          <div className="pt-4 border-t space-y-2">
+          <div className="pt-4 border-t space-y-2 sticky bottom-0 bg-background">
             <div className="px-2">
               <SettingsMenu />
             </div>

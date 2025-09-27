@@ -190,9 +190,13 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
       };
 
       const now = new Date();
-      // Asegurar que se use la fecha local correcta
-      const fecha = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-      const hora = now.toTimeString().split(' ')[0];
+      // Usar la fecha local actual sin ajustes de zona horaria
+      const fecha = now.getFullYear() + '-' + 
+        String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(now.getDate()).padStart(2, '0');
+      const hora = String(now.getHours()).padStart(2, '0') + ':' + 
+        String(now.getMinutes()).padStart(2, '0') + ':' + 
+        String(now.getSeconds()).padStart(2, '0');
 
       console.log('📝 Registrando turno en base de datos...');
 

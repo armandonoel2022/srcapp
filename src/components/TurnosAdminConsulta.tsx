@@ -10,6 +10,7 @@ import { Clock, Edit3, Eye, MapPin, Calendar, User, AlertTriangle, CheckCircle }
 import { useTurnos } from '@/hooks/useTurnos';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { formatMinutesToHours } from '@/utils/timeUtils';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Turno {
@@ -398,11 +399,11 @@ export const TurnosAdminConsulta = () => {
                                  )}
                                  {turno.hora_entrada}
                                </div>
-                               {turno.minutos_tardanza && turno.minutos_tardanza > 0 && (
-                                 <div className="text-xs text-red-600">
-                                   {turno.minutos_tardanza} min tarde
-                                 </div>
-                               )}
+                                {turno.minutos_tardanza && turno.minutos_tardanza > 0 && (
+                                  <div className="text-xs text-red-600">
+                                    {formatMinutesToHours(turno.minutos_tardanza)}
+                                  </div>
+                                )}
                                {turno.empleados_turnos?.hora_entrada_programada && (
                                  <div className="text-xs text-muted-foreground">
                                    Prog: {turno.empleados_turnos.hora_entrada_programada}

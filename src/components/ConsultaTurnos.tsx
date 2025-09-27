@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Calendar, Clock, MapPin, Camera, Search, Eye, Download } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
 import { useToast } from '@/hooks/use-toast';
+import { formatMinutesToHours } from '@/utils/timeUtils';
 
 interface Turno {
   id: string;
@@ -150,7 +151,10 @@ export const ConsultaTurnos = () => {
       const coords = parseUbicacion(ubicacionCoords);
       if (!coords) return 'Ubicación no identificada';
 
-      // Encontrar la ubicación más cercana
+      // Calcular distancias a todas las ubicaciones y encontrar la más cercana
+      let closestLocation = null;
+      let shortestDistance = Infinity;
+
       for (const ubicacion of ubicaciones) {
         const ubicacionCoordinates = ubicacion.coordenadas as string;
         const matches = ubicacionCoordinates.match(/\(([^,]+),([^)]+)\)/);
@@ -174,12 +178,23 @@ export const ConsultaTurnos = () => {
           const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
           const distance = R * c * 1000; // Convertir a metros
 
+          // Verificar si está dentro de la tolerancia normal
           const tolerancia = ubicacion.radio_tolerancia || 100;
-          
           if (distance <= tolerancia) {
             return ubicacion.nombre;
           }
+
+          // Guardar la ubicación más cercana para mostrar con distancia
+          if (distance < shortestDistance) {
+            shortestDistance = distance;
+            closestLocation = ubicacion;
+          }
         }
+      }
+
+      // Si no está dentro de ninguna tolerancia, mostrar la ubicación más cercana con distancia
+      if (closestLocation && shortestDistance <= 1000) { // Máximo 1km para considerar "cercana"
+        return `${closestLocation.nombre} (${Math.round(shortestDistance)}m)`;
       }
 
       return 'Ubicación no identificada';
@@ -308,7 +323,7 @@ export const ConsultaTurnos = () => {
                         {turno.empleados ? `${turno.empleados.nombres} ${turno.empleados.apellidos}` : 'N/A'}
                       </TableCell>
                       <TableCell>{turno.empleados?.funcion || 'N/A'}</TableCell>
-                      <TableCell>{new Date(turno.fecha).toLocaleDateString('es-ES')}</TableCell>
+                      <TableCell>{turno.fecha}</TableCell>
                       <TableCell>
                         <div className="space-y-1 text-sm">
                           {turno.ubicacion_entrada_nombre && (
@@ -379,14 +394,28 @@ export const ConsultaTurnos = () => {
                       </TableCell>
                       <TableCell>{getEstadoBadge(turno)}</TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedTurno(turno)}
-                        >
-                          <Eye className="h-3 w-3 mr-1" />
-                          Ver
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedTurno(turno)}
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            Ver
+                          </Button>
+                          {(turno.foto_entrada || turno.foto_salida) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                if (turno.foto_entrada) showImage(turno.foto_entrada, 'entrada');
+                                else if (turno.foto_salida) showImage(turno.foto_salida, 'salida');
+                              }}
+                            >
+                              <Camera className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

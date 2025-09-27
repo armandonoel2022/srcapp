@@ -158,6 +158,8 @@ export const Dashboard = () => {
         return <DashboardCumplimiento />;
       case 'turnos-enhanced':
         return <TurnosFormEnhanced />;
+      case 'turnos':
+        return <ConsultaTurnos />;
       case 'dashboard-turnos':
         return <DashboardTurnos />;
       case 'ubicaciones':

@@ -40,7 +40,10 @@ export const LocationDisplay = ({ empleadoLugarDesignado }: LocationDisplayProps
 
       if (!ubicaciones) return 'Ubicación no identificada';
 
-      // Encontrar la ubicación más cercana
+      // Calcular distancias a todas las ubicaciones y encontrar la más cercana
+      let closestLocation = null;
+      let shortestDistance = Infinity;
+
       for (const ubicacion of ubicaciones) {
         const ubicacionCoordinates = ubicacion.coordenadas as string;
         const matches = ubicacionCoordinates.match(/\(([^,]+),([^)]+)\)/);
@@ -64,12 +67,23 @@ export const LocationDisplay = ({ empleadoLugarDesignado }: LocationDisplayProps
           const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
           const distance = R * c * 1000; // Convertir a metros
 
+          // Verificar si está dentro de la tolerancia normal
           const tolerancia = ubicacion.radio_tolerancia || 100;
-          
           if (distance <= tolerancia) {
             return ubicacion.nombre;
           }
+
+          // Guardar la ubicación más cercana para mostrar con distancia
+          if (distance < shortestDistance) {
+            shortestDistance = distance;
+            closestLocation = ubicacion;
+          }
         }
+      }
+
+      // Si no está dentro de ninguna tolerancia, mostrar la ubicación más cercana con distancia
+      if (closestLocation && shortestDistance <= 1000) { // Máximo 1km para considerar "cercana"
+        return `${closestLocation.nombre} (${Math.round(shortestDistance)}m)`;
       }
 
       return 'Ubicación no identificada';
