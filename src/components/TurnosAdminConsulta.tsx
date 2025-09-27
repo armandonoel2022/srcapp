@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Clock, Edit3, Eye, MapPin, Calendar, User, AlertTriangle, CheckCircle, Camera } from 'lucide-react';
+import { Clock, Edit3, Eye, MapPin, Calendar, User, AlertTriangle, CheckCircle, Camera, X } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -634,11 +634,20 @@ export const TurnosAdminConsulta = () => {
 
       {/* Modal de fotos del turno */}
       <Dialog open={showPhotoModal} onOpenChange={setShowPhotoModal}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="relative">
             <DialogTitle>
               Fotos del Turno - {selectedTurnoForPhotos?.empleados_turnos ? `${selectedTurnoForPhotos.empleados_turnos.nombres} ${selectedTurnoForPhotos.empleados_turnos.apellidos || ''}` : 'N/A'}
             </DialogTitle>
+            {/* Botón de cerrar para móviles */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowPhotoModal(false)}
+              className="absolute right-0 top-0 h-8 w-8 p-0 hover:bg-muted"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </DialogHeader>
           
           {selectedTurnoForPhotos && (
@@ -684,13 +693,23 @@ export const TurnosAdminConsulta = () => {
                   </div>
                 )}
 
-                {/* Mensaje si no hay fotos */}
-                {!selectedTurnoForPhotos.foto_entrada && !selectedTurnoForPhotos.foto_salida && (
-                  <div className="col-span-2 text-center py-8 text-muted-foreground">
-                    No hay fotos disponibles para este turno
-                  </div>
-                )}
-              </div>
+                 {/* Mensaje si no hay fotos */}
+                 {!selectedTurnoForPhotos.foto_entrada && !selectedTurnoForPhotos.foto_salida && (
+                   <div className="col-span-2 text-center py-8 text-muted-foreground">
+                     No hay fotos disponibles para este turno
+                   </div>
+                 )}
+               </div>
+
+               {/* Botón de cerrar al final para móviles */}
+               <div className="flex justify-center pt-4 md:hidden">
+                 <Button
+                   onClick={() => setShowPhotoModal(false)}
+                   className="w-full max-w-xs"
+                 >
+                   Cerrar
+                 </Button>
+               </div>
             </div>
           )}
         </DialogContent>
