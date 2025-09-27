@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { PatternAlertDemo } from '@/components/PatternAlertDemo';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -196,8 +195,6 @@ export const Dashboard = () => {
             </div>
           </div>
         );
-      case 'demo-overlay':
-        return <PatternAlertDemo />;
     }
   };
 
