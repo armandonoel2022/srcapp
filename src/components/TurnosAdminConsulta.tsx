@@ -447,9 +447,16 @@ export const TurnosAdminConsulta = () => {
                            <div className="flex items-center gap-2">
                              <MapPin className="h-4 w-4 text-muted-foreground" />
                              <div className="flex flex-col">
-                               <span className="text-sm font-medium">
+                               <button
+                                 onClick={() => openGoogleMaps(turno.ubicacion_entrada || turno.ubicacion_salida)}
+                                 className="text-sm font-medium hover:text-primary hover:underline text-left cursor-pointer"
+                                 disabled={!turno.ubicacion_entrada && !turno.ubicacion_salida}
+                                 title={turno.ubicacion_entrada || turno.ubicacion_salida ? 
+                                   "Click para ver ubicación en el mapa" : 
+                                   "No hay coordenadas de ubicación disponibles"}
+                               >
                                  {turno.ubicacion_real_entrada || 'Ubicación no identificada'}
-                               </span>
+                               </button>
                                {turno.empleados_turnos?.lugar_designado && (
                                  <span className="text-xs text-muted-foreground">
                                    Designada: {turno.empleados_turnos.lugar_designado}
@@ -522,26 +529,16 @@ export const TurnosAdminConsulta = () => {
                              >
                                <Edit3 className="h-4 w-4" />
                              </Button>
-                             {(turno.ubicacion_entrada || turno.ubicacion_salida) && (
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 onClick={() => openGoogleMaps(turno.ubicacion_entrada || turno.ubicacion_salida)}
-                                 title="Ver ubicación exacta del punch en Google Maps"
-                               >
-                                 <Eye className="h-4 w-4" />
-                               </Button>
-                             )}
-                             {(turno.foto_entrada || turno.foto_salida) && (
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 onClick={() => showTurnoPhotos(turno)}
-                                 title="Ver fotos del turno"
-                               >
-                                 <Camera className="h-4 w-4" />
-                               </Button>
-                             )}
+                              {(turno.foto_entrada || turno.foto_salida) && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => showTurnoPhotos(turno)}
+                                  title="Ver fotos del turno"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              )}
                            </div>
                         </td>
                       </tr>
