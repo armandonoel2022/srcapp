@@ -22,6 +22,58 @@ export const useTurnos = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const verificarPatronRegistros = async (empleadoId: string, fecha: string): Promise<{
+    necesitaAlerta: boolean;
+    mensaje?: string;
+    tipo?: 'entrada_faltante' | 'salida_faltante' | 'normal';
+  }> => {
+    try {
+      // Obtener fecha anterior
+      const fechaAnterior = new Date(fecha);
+      fechaAnterior.setDate(fechaAnterior.getDate() - 1);
+      const fechaAnteriorStr = fechaAnterior.toISOString().split('T')[0];
+
+      // Verificar registros del día anterior
+      const { data: registrosAyer, error: errorAyer } = await supabase
+        .from('turnos_empleados')
+        .select('hora_entrada, hora_salida, created_at')
+        .eq('empleado_id', empleadoId)
+        .eq('fecha', fechaAnteriorStr)
+        .order('created_at', { ascending: false });
+
+      if (errorAyer) throw errorAyer;
+
+      // Verificar registros de hoy
+      const { data: registrosHoy, error: errorHoy } = await supabase
+        .from('turnos_empleados')
+        .select('hora_entrada, hora_salida, created_at')
+        .eq('empleado_id', empleadoId)
+        .eq('fecha', fecha)
+        .order('created_at', { ascending: false });
+
+      if (errorHoy) throw errorHoy;
+
+      // Si hay registros de ayer, verificar si tiene salidas pendientes
+      if (registrosAyer && registrosAyer.length > 0) {
+        const entradasSinSalida = registrosAyer.filter(r => r.hora_entrada && !r.hora_salida);
+        
+        if (entradasSinSalida.length > 0 && (!registrosHoy || registrosHoy.length === 0)) {
+          // Hay entradas sin salida de ayer y es el primer registro de hoy
+          return {
+            necesitaAlerta: true,
+            tipo: 'salida_faltante',
+            mensaje: `⚠️ DETECTADO: Tienes ${entradasSinSalida.length} entrada(s) del día anterior sin registrar salida. Si estás llegando hoy, esto debería ser una ENTRADA del nuevo día.`
+          };
+        }
+      }
+
+      return { necesitaAlerta: false, tipo: 'normal' };
+    } catch (error: any) {
+      console.error('Error verificando patrón de registros:', error);
+      return { necesitaAlerta: false, tipo: 'normal' };
+    }
+  };
+
   const registrarTurno = async (data: TurnoData): Promise<{ success: boolean; message?: string; turnoId?: string }> => {
     setLoading(true);
     try {
@@ -57,9 +109,19 @@ export const useTurnos = () => {
         throw new Error('No tienes una ubicación designada asignada. Contacta al administrador para configurar tu lugar de trabajo.');
       }
 
+      // Verificar patrones de registro entre días
+      const patron = await verificarPatronRegistros(data.empleado_id, data.fecha);
+      if (patron.necesitaAlerta && data.tipo_registro === 'salida') {
+        toast({
+          title: "⚠️ PATRÓN IRREGULAR DETECTADO",
+          description: patron.mensaje,
+          variant: "destructive",
+          duration: 8000
+        });
+      }
+
       if (data.tipo_registro === 'entrada') {
-        // Siempre permitir nuevos registros de entrada para múltiples punches durante el día
-        // Crear nuevo registro de entrada
+        // SIEMPRE permitir registros de entrada - sin restricciones
         const { data: turnoData, error } = await supabase
           .from('turnos_empleados')
           .insert({
@@ -78,10 +140,10 @@ export const useTurnos = () => {
         return { success: true, turnoId: turnoData.id };
 
       } else {
-        // Buscar el último registro de entrada sin salida para este empleado en esta fecha
+        // Para SALIDA: Buscar entrada sin salida del MISMO DÍA
         const { data: entradaSinSalida, error: searchError } = await supabase
           .from('turnos_empleados')
-          .select('id')
+          .select('id, created_at')
           .eq('empleado_id', data.empleado_id)
           .eq('fecha', data.fecha)
           .is('hora_salida', null)
@@ -92,27 +154,45 @@ export const useTurnos = () => {
         if (searchError) throw searchError;
 
         if (!entradaSinSalida) {
+          // No hay entrada pendiente del día actual
+          // Crear nuevo registro de salida independiente
+          const { data: turnoData, error } = await supabase
+            .from('turnos_empleados')
+            .insert({
+              empleado_id: data.empleado_id,
+              fecha: data.fecha,
+              hora_salida: data.hora_salida,
+              ubicacion_salida: data.ubicacion_salida ? 
+                `(${data.ubicacion_salida.lat},${data.ubicacion_salida.lng})` : null,
+              tipo_registro: data.tipo_registro
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+
           toast({
-            title: "Error",
-            description: "No hay registro de entrada pendiente para registrar la salida",
-            variant: "destructive"
+            title: "Salida registrada",
+            description: "Se registró una salida independiente (sin entrada previa del mismo día)",
+            variant: "default"
           });
-          return { success: false, message: "No hay entrada pendiente" };
+
+          return { success: true, turnoId: turnoData.id };
+        } else {
+          // Actualizar el registro de entrada con la salida
+          const { error } = await supabase
+            .from('turnos_empleados')
+            .update({
+              hora_salida: data.hora_salida,
+              ubicacion_salida: data.ubicacion_salida ? 
+                `(${data.ubicacion_salida.lat},${data.ubicacion_salida.lng})` : null
+            })
+            .eq('id', entradaSinSalida.id);
+
+          if (error) throw error;
+
+          return { success: true, turnoId: entradaSinSalida.id };
         }
-
-        // Actualizar el registro de entrada con la salida
-        const { error } = await supabase
-          .from('turnos_empleados')
-          .update({
-            hora_salida: data.hora_salida,
-            ubicacion_salida: data.ubicacion_salida ? 
-              `(${data.ubicacion_salida.lat},${data.ubicacion_salida.lng})` : null
-          })
-          .eq('id', entradaSinSalida.id);
-
-        if (error) throw error;
-
-        return { success: true, turnoId: entradaSinSalida.id };
       }
     } catch (error: any) {
       toast({

@@ -5,6 +5,7 @@ import { useTurnos } from '@/hooks/useTurnos';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { PatternAlert } from '@/components/PatternAlert';
 
 interface PunchButtonProps {
   empleadoId: string;
@@ -24,11 +25,59 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [geolocationError, setGeolocationError] = useState<string | null>(null);
+  const [showPatternAlert, setShowPatternAlert] = useState(false);
+  const [patternMessage, setPatternMessage] = useState('');
+  const [pendingTurnoData, setPendingTurnoData] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { registrarTurno } = useTurnos();
   const { getCurrentPosition, isLoading: isGeolocationLoading, error: geolocationErrorObj, getLocationSettingsInstructions } = useGeolocation();
   const { toast } = useToast();
+
+  // Función para verificar patrones de registro
+  const verificarPatronRegistros = async (empleadoId: string, fecha: string, tipoRegistro: 'entrada' | 'salida'): Promise<{
+    necesitaAlerta: boolean;
+    mensaje?: string;
+  }> => {
+    if (tipoRegistro === 'entrada') return { necesitaAlerta: false }; // Solo alertar en salidas
+
+    try {
+      // Obtener fecha anterior
+      const fechaAnterior = new Date(fecha);
+      fechaAnterior.setDate(fechaAnterior.getDate() - 1);
+      const fechaAnteriorStr = fechaAnterior.toISOString().split('T')[0];
+
+      // Verificar registros del día anterior
+      const { data: registrosAyer } = await supabase
+        .from('turnos_empleados')
+        .select('hora_entrada, hora_salida')
+        .eq('empleado_id', empleadoId)
+        .eq('fecha', fechaAnteriorStr);
+
+      // Verificar registros de hoy
+      const { data: registrosHoy } = await supabase
+        .from('turnos_empleados')
+        .select('hora_entrada, hora_salida')
+        .eq('empleado_id', empleadoId)
+        .eq('fecha', fecha);
+
+      if (registrosAyer && registrosAyer.length > 0) {
+        const entradasSinSalida = registrosAyer.filter(r => r.hora_entrada && !r.hora_salida);
+        
+        if (entradasSinSalida.length > 0 && (!registrosHoy || registrosHoy.length === 0)) {
+          return {
+            necesitaAlerta: true,
+            mensaje: `⚠️ DETECTADO: Tienes ${entradasSinSalida.length} entrada(s) del día anterior sin registrar salida. Si estás llegando HOY, esto debería ser una ENTRADA del nuevo día.`
+          };
+        }
+      }
+
+      return { necesitaAlerta: false };
+    } catch (error) {
+      console.error('Error verificando patrón:', error);
+      return { necesitaAlerta: false };
+    }
+  };
 
   const uploadPhoto = async (file: File, turnoId: string): Promise<string | null> => {
     try {
@@ -124,91 +173,9 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
     }
   };
 
-  const handlePunch = async () => {
-    if (!selectedFile) {
-      toast({
-        title: "Foto requerida",
-        description: "Debe seleccionar una foto antes de hacer el PUNCH.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsPunching(true);
-    setGeolocationError(null);
-    
+  const procesarRegistro = async (turnoData: any) => {
     try {
-      // Obtener geolocalización
-      console.log('📍 Solicitando ubicación...');
-      const locationData = await getCurrentPosition();
-      
-      if (!locationData) {
-        let errorMessage = 'No se pudo obtener la ubicación';
-        let errorType = '';
-        
-        if (geolocationErrorObj) {
-          errorMessage = geolocationErrorObj.message;
-          // Detectar tipo específico de error
-          if (errorMessage.includes('When I Share') || errorMessage.includes('insuficientes')) {
-            errorType = 'WHEN_IN_USE_PERMISSION';
-          }
-        }
-        
-        setGeolocationError(errorMessage);
-        
-        // Mostrar mensaje específico según el tipo de error
-        if (errorType === 'WHEN_IN_USE_PERMISSION') {
-          toast({
-            title: "Configuración de ubicación requerida",
-            description: errorMessage,
-            variant: "destructive",
-            duration: 10000
-          });
-        } else if (errorMessage.includes('Configuración') || errorMessage.includes('permiso')) {
-          toast({
-            title: "Permisos de ubicación requeridos",
-            description: `${errorMessage} ${getLocationSettingsInstructions()}`,
-            variant: "destructive",
-            duration: 8000
-          });
-        } else {
-          toast({
-            title: "Error de ubicación",
-            description: errorMessage,
-            variant: "destructive"
-          });
-        }
-        return;
-      }
-
-      console.log('📍 Ubicación obtenida:', locationData);
-
-      const ubicacion = {
-        lat: locationData.latitude,
-        lng: locationData.longitude,
-        accuracy: locationData.accuracy
-      };
-
-      const now = new Date();
-      // Crear fecha local sin problemas de zona horaria
-      const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
-      const fecha = localDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      const hora = String(now.getHours()).padStart(2, '0') + ':' + 
-        String(now.getMinutes()).padStart(2, '0') + ':' + 
-        String(now.getSeconds()).padStart(2, '0');
-
       console.log('📝 Registrando turno en base de datos...');
-
-      // Primero registrar el turno para obtener el ID
-      const turnoData = {
-        empleado_id: empleadoId,
-        fecha,
-        tipo_registro: tipoRegistro,
-        ubicacion_entrada: tipoRegistro === 'entrada' ? ubicacion : undefined,
-        ubicacion_salida: tipoRegistro === 'salida' ? ubicacion : undefined,
-        hora_entrada: tipoRegistro === 'entrada' ? hora : undefined,
-        hora_salida: tipoRegistro === 'salida' ? hora : undefined,
-      };
 
       const result = await registrarTurno(turnoData) as RegistrarTurnoResult;
       
@@ -217,7 +184,7 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
         
         // Subir la foto
         console.log('📤 Iniciando upload de foto...');
-        const photoPath = await uploadPhoto(selectedFile, result.turnoId);
+        const photoPath = await uploadPhoto(selectedFile!, result.turnoId);
         
         if (photoPath) {
           console.log('🖼️ Foto subida, actualizando registro con path:', photoPath);
@@ -264,10 +231,113 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
         
         onRegistroCompleto();
       } else {
-        // Usar la propiedad error si existe, o un mensaje por defecto
         const errorMessage = result.error || result.message || 'Error al registrar el turno en la base de datos';
         throw new Error(errorMessage);
       }
+    } catch (error: any) {
+      console.error('❌ Error en procesarRegistro:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Error al registrar el PUNCH. Intente nuevamente.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handlePunch = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "Foto requerida",
+        description: "Debe seleccionar una foto antes de hacer el PUNCH.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsPunching(true);
+    setGeolocationError(null);
+    
+    try {
+      // Obtener geolocalización
+      console.log('📍 Solicitando ubicación...');
+      const locationData = await getCurrentPosition();
+      
+      if (!locationData) {
+        let errorMessage = 'No se pudo obtener la ubicación';
+        let errorType = '';
+        
+        if (geolocationErrorObj) {
+          errorMessage = geolocationErrorObj.message;
+          if (errorMessage.includes('When I Share') || errorMessage.includes('insuficientes')) {
+            errorType = 'WHEN_IN_USE_PERMISSION';
+          }
+        }
+        
+        setGeolocationError(errorMessage);
+        
+        if (errorType === 'WHEN_IN_USE_PERMISSION') {
+          toast({
+            title: "Configuración de ubicación requerida",
+            description: errorMessage,
+            variant: "destructive",
+            duration: 10000
+          });
+        } else if (errorMessage.includes('Configuración') || errorMessage.includes('permiso')) {
+          toast({
+            title: "Permisos de ubicación requeridos",
+            description: `${errorMessage} ${getLocationSettingsInstructions()}`,
+            variant: "destructive",
+            duration: 8000
+          });
+        } else {
+          toast({
+            title: "Error de ubicación",
+            description: errorMessage,
+            variant: "destructive"
+          });
+        }
+        return;
+      }
+
+      console.log('📍 Ubicación obtenida:', locationData);
+
+      const ubicacion = {
+        lat: locationData.latitude,
+        lng: locationData.longitude,
+        accuracy: locationData.accuracy
+      };
+
+      const now = new Date();
+      const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+      const fecha = localDate.toISOString().split('T')[0];
+      const hora = String(now.getHours()).padStart(2, '0') + ':' + 
+        String(now.getMinutes()).padStart(2, '0') + ':' + 
+        String(now.getSeconds()).padStart(2, '0');
+
+      const turnoData = {
+        empleado_id: empleadoId,
+        fecha,
+        tipo_registro: tipoRegistro,
+        ubicacion_entrada: tipoRegistro === 'entrada' ? ubicacion : undefined,
+        ubicacion_salida: tipoRegistro === 'salida' ? ubicacion : undefined,
+        hora_entrada: tipoRegistro === 'entrada' ? hora : undefined,
+        hora_salida: tipoRegistro === 'salida' ? hora : undefined,
+      };
+
+      // Verificar patrones solo para salidas
+      if (tipoRegistro === 'salida') {
+        const patron = await verificarPatronRegistros(empleadoId, fecha, tipoRegistro);
+        if (patron.necesitaAlerta) {
+          // Mostrar alerta y guardar datos para procesamiento posterior
+          setPatternMessage(patron.mensaje || '');
+          setPendingTurnoData(turnoData);
+          setShowPatternAlert(true);
+          return; // No procesar hasta que el usuario confirme
+        }
+      }
+
+      // Procesar directamente si no hay alerta
+      await procesarRegistro(turnoData);
 
     } catch (error: any) {
       console.error('❌ Error en handlePunch:', error);
@@ -279,6 +349,23 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
     } finally {
       setIsPunching(false);
     }
+  };
+
+  const handlePatternConfirm = async () => {
+    setShowPatternAlert(false);
+    setIsPunching(true);
+    try {
+      await procesarRegistro(pendingTurnoData);
+    } finally {
+      setIsPunching(false);
+      setPendingTurnoData(null);
+    }
+  };
+
+  const handlePatternCancel = () => {
+    setShowPatternAlert(false);
+    setPendingTurnoData(null);
+    setIsPunching(false);
   };
 
   return (
@@ -366,6 +453,14 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
           : `Presiona PUNCH para registrar tu ${tipoRegistro === 'entrada' ? 'entrada' : 'salida'} con foto evidencia.`
         }
       </p>
+
+      {/* Alerta de patrón irregular */}
+      <PatternAlert
+        show={showPatternAlert}
+        mensaje={patternMessage}
+        onConfirm={handlePatternConfirm}
+        onCancel={handlePatternCancel}
+      />
     </div>
   );
 };
