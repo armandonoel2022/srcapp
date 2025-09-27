@@ -190,10 +190,9 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
       };
 
       const now = new Date();
-      // Usar la fecha local actual sin ajustes de zona horaria
-      const fecha = now.getFullYear() + '-' + 
-        String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(now.getDate()).padStart(2, '0');
+      // Crear fecha local sin problemas de zona horaria
+      const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+      const fecha = localDate.toISOString().split('T')[0]; // YYYY-MM-DD
       const hora = String(now.getHours()).padStart(2, '0') + ':' + 
         String(now.getMinutes()).padStart(2, '0') + ':' + 
         String(now.getSeconds()).padStart(2, '0');

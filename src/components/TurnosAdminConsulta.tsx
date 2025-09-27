@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Clock, Edit3, Eye, MapPin, Calendar, User, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Clock, Edit3, Eye, MapPin, Calendar, User, AlertTriangle, CheckCircle, Camera } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +51,9 @@ export const TurnosAdminConsulta = () => {
   const [editHoraSalida, setEditHoraSalida] = useState('');
   const [eliminarTardanza, setEliminarTardanza] = useState(false);
   const [ubicacionesTrabajo, setUbicacionesTrabajo] = useState<any[]>([]);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [selectedTurnoForPhotos, setSelectedTurnoForPhotos] = useState<Turno | null>(null);
+  const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({});
 
   const { obtenerTurnos, loading } = useTurnos();
   const { user } = useAuth();
@@ -92,12 +95,12 @@ export const TurnosAdminConsulta = () => {
   };
 
   const determinarUbicacionReal = (ubicacionPunch: unknown) => {
-    if (!ubicacionPunch || ubicacionesTrabajo.length === 0) return null;
+    if (!ubicacionPunch || ubicacionesTrabajo.length === 0) return 'Ubicación no identificada';
     
     const ubicacionStr = String(ubicacionPunch);
     const match = ubicacionStr.match(/\((-?\d+\.?\d*),(-?\d+\.?\d*)\)/);
     
-    if (!match) return null;
+    if (!match) return 'Ubicación no identificada';
     
     const punchCoords = {
       lat: parseFloat(match[1]),
@@ -121,13 +124,24 @@ export const TurnosAdminConsulta = () => {
       const distancia = calcularDistancia(punchCoords, ubicCoords);
       const tolerancia = ubicacion.radio_tolerancia || 100;
       
-      if (distancia <= tolerancia && distancia < menorDistancia) {
+      // Si está dentro de la tolerancia, devolver inmediatamente
+      if (distancia <= tolerancia) {
+        return ubicacion.nombre;
+      }
+      
+      // Guardar la ubicación más cercana
+      if (distancia < menorDistancia) {
         menorDistancia = distancia;
-        ubicacionMasCercana = ubicacion.nombre;
+        ubicacionMasCercana = ubicacion;
       }
     }
     
-    return ubicacionMasCercana;
+    // Si no hay ubicación dentro de tolerancia, mostrar la más cercana con distancia
+    if (ubicacionMasCercana && menorDistancia <= 1000) { // Máximo 1km para considerar "cercana"
+      return `${ubicacionMasCercana.nombre} (${Math.round(menorDistancia)}m)`;
+    }
+    
+    return 'Ubicación no identificada';
   };
 
   const calcularDistancia = (coord1: {lat: number, lng: number}, coord2: {lat: number, lng: number}) => {
@@ -308,6 +322,44 @@ export const TurnosAdminConsulta = () => {
     }
   };
 
+  const obtenerUrlFoto = async (photoPath: string) => {
+    if (!photoPath) return null;
+    
+    try {
+      const { data, error } = await supabase.storage
+        .from('turnos-fotos')
+        .createSignedUrl(photoPath, 60 * 60 * 24); // 24 horas
+      
+      if (error) {
+        console.error('Error obteniendo URL firmada:', error);
+        return null;
+      }
+      
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Error creando URL firmada:', error);
+      return null;
+    }
+  };
+
+  const showTurnoPhotos = async (turno: Turno) => {
+    setSelectedTurnoForPhotos(turno);
+    
+    // Cargar URLs de fotos
+    const urls: Record<string, string> = {};
+    if (turno.foto_entrada) {
+      const url = await obtenerUrlFoto(turno.foto_entrada);
+      if (url) urls[`entrada_${turno.id}`] = url;
+    }
+    if (turno.foto_salida) {
+      const url = await obtenerUrlFoto(turno.foto_salida);
+      if (url) urls[`salida_${turno.id}`] = url;
+    }
+    
+    setFotosUrls(urls);
+    setShowPhotoModal(true);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -391,21 +443,21 @@ export const TurnosAdminConsulta = () => {
                             {new Date(turno.fecha).toLocaleDateString('es-ES')}
                           </div>
                         </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">
-                                {turno.ubicacion_real_entrada || 'Ubicación no identificada'}
-                              </span>
-                              {turno.empleados_turnos?.lugar_designado && (
-                                <span className="text-xs text-muted-foreground">
-                                  Designada: {turno.empleados_turnos.lugar_designado}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </td>
+                         <td className="p-3">
+                           <div className="flex items-center gap-2">
+                             <MapPin className="h-4 w-4 text-muted-foreground" />
+                             <div className="flex flex-col">
+                               <span className="text-sm font-medium">
+                                 {turno.ubicacion_real_entrada || 'Ubicación no identificada'}
+                               </span>
+                               {turno.empleados_turnos?.lugar_designado && (
+                                 <span className="text-xs text-muted-foreground">
+                                   Designada: {turno.empleados_turnos.lugar_designado}
+                                 </span>
+                               )}
+                             </div>
+                           </div>
+                         </td>
                          <td className="p-3">
                            {turno.hora_entrada ? (
                              <div className="space-y-1">
@@ -462,25 +514,35 @@ export const TurnosAdminConsulta = () => {
                          </td>
                         <td className="p-3">{getEstadoBadge(turno)}</td>
                         <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openEditModal(turno)}
-                            >
-                              <Edit3 className="h-4 w-4" />
-                            </Button>
-                              {(turno.ubicacion_entrada || turno.ubicacion_salida) && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => openGoogleMaps(turno.ubicacion_entrada || turno.ubicacion_salida)}
-                                  title="Ver ubicación exacta del punch en Google Maps"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              )}
-                          </div>
+                           <div className="flex items-center gap-2">
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => openEditModal(turno)}
+                             >
+                               <Edit3 className="h-4 w-4" />
+                             </Button>
+                             {(turno.ubicacion_entrada || turno.ubicacion_salida) && (
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => openGoogleMaps(turno.ubicacion_entrada || turno.ubicacion_salida)}
+                                 title="Ver ubicación exacta del punch en Google Maps"
+                               >
+                                 <Eye className="h-4 w-4" />
+                               </Button>
+                             )}
+                             {(turno.foto_entrada || turno.foto_salida) && (
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => showTurnoPhotos(turno)}
+                                 title="Ver fotos del turno"
+                               >
+                                 <Camera className="h-4 w-4" />
+                               </Button>
+                             )}
+                           </div>
                         </td>
                       </tr>
                     ))
@@ -567,6 +629,70 @@ export const TurnosAdminConsulta = () => {
                 <Button onClick={handleSaveEdit}>
                   Guardar Cambios
                 </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de fotos del turno */}
+      <Dialog open={showPhotoModal} onOpenChange={setShowPhotoModal}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>
+              Fotos del Turno - {selectedTurnoForPhotos?.empleados_turnos ? `${selectedTurnoForPhotos.empleados_turnos.nombres} ${selectedTurnoForPhotos.empleados_turnos.apellidos || ''}` : 'N/A'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedTurnoForPhotos && (
+            <div className="space-y-6">
+              <div className="text-sm text-muted-foreground">
+                <p><strong>Fecha:</strong> {selectedTurnoForPhotos.fecha}</p>
+                <p><strong>Empleado:</strong> {selectedTurnoForPhotos.empleados_turnos ? `${selectedTurnoForPhotos.empleados_turnos.nombres} ${selectedTurnoForPhotos.empleados_turnos.apellidos || ''}` : 'N/A'}</p>
+                <p><strong>Función:</strong> {selectedTurnoForPhotos.empleados_turnos?.funcion || 'N/A'}</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Foto de entrada */}
+                {selectedTurnoForPhotos.foto_entrada && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-center">Foto de Entrada</h4>
+                    <div className="border rounded-lg overflow-hidden">
+                      <img
+                        src={fotosUrls[`entrada_${selectedTurnoForPhotos.id}`] || ''}
+                        alt="Foto de entrada"
+                        className="w-full h-auto max-h-96 object-contain"
+                      />
+                    </div>
+                    <div className="text-center text-sm text-muted-foreground">
+                      <p><strong>Hora:</strong> {selectedTurnoForPhotos.hora_entrada || 'N/A'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Foto de salida */}
+                {selectedTurnoForPhotos.foto_salida && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-center">Foto de Salida</h4>
+                    <div className="border rounded-lg overflow-hidden">
+                      <img
+                        src={fotosUrls[`salida_${selectedTurnoForPhotos.id}`] || ''}
+                        alt="Foto de salida"
+                        className="w-full h-auto max-h-96 object-contain"
+                      />
+                    </div>
+                    <div className="text-center text-sm text-muted-foreground">
+                      <p><strong>Hora:</strong> {selectedTurnoForPhotos.hora_salida || 'N/A'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mensaje si no hay fotos */}
+                {!selectedTurnoForPhotos.foto_entrada && !selectedTurnoForPhotos.foto_salida && (
+                  <div className="col-span-2 text-center py-8 text-muted-foreground">
+                    No hay fotos disponibles para este turno
+                  </div>
+                )}
               </div>
             </div>
           )}
