@@ -40,6 +40,9 @@ export const ConsultaTurnos = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
   const [imageType, setImageType] = useState<'entrada' | 'salida'>('entrada');
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [selectedTurnoForPhotos, setSelectedTurnoForPhotos] = useState<Turno | null>(null);
+  const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({});
 
   const { obtenerTurnos, loading } = useTurnos();
   const { toast } = useToast();
@@ -224,6 +227,45 @@ export const ConsultaTurnos = () => {
     setShowImageModal(true);
   };
 
+  const obtenerUrlFoto = async (photoPath: string) => {
+    if (!photoPath) return null;
+    
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.storage
+        .from('turnos-fotos')
+        .createSignedUrl(photoPath, 60 * 60 * 24); // 24 horas
+      
+      if (error) {
+        console.error('Error obteniendo URL firmada:', error);
+        return null;
+      }
+      
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Error creando URL firmada:', error);
+      return null;
+    }
+  };
+
+  const showTurnoPhotos = async (turno: Turno) => {
+    setSelectedTurnoForPhotos(turno);
+    
+    // Cargar URLs de fotos
+    const urls: Record<string, string> = {};
+    if (turno.foto_entrada) {
+      const url = await obtenerUrlFoto(turno.foto_entrada);
+      if (url) urls[`entrada_${turno.id}`] = url;
+    }
+    if (turno.foto_salida) {
+      const url = await obtenerUrlFoto(turno.foto_salida);
+      if (url) urls[`salida_${turno.id}`] = url;
+    }
+    
+    setFotosUrls(urls);
+    setShowPhotoModal(true);
+  };
+
   const exportarCSV = () => {
     const csvData = filteredTurnos.map(turno => ({
       'Empleado': turno.empleados ? `${turno.empleados.nombres} ${turno.empleados.apellidos}` : 'N/A',
@@ -395,26 +437,24 @@ export const ConsultaTurnos = () => {
                       <TableCell>{getEstadoBadge(turno)}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedTurno(turno)}
-                          >
-                            <Eye className="h-3 w-3 mr-1" />
-                            Ver
-                          </Button>
-                          {(turno.foto_entrada || turno.foto_salida) && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                if (turno.foto_entrada) showImage(turno.foto_entrada, 'entrada');
-                                else if (turno.foto_salida) showImage(turno.foto_salida, 'salida');
-                              }}
-                            >
-                              <Camera className="h-3 w-3" />
-                            </Button>
-                          )}
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => setSelectedTurno(turno)}
+                           >
+                             <Eye className="h-3 w-3 mr-1" />
+                             Ver
+                           </Button>
+                           {(turno.foto_entrada || turno.foto_salida) && (
+                             <Button
+                               size="sm"
+                               variant="outline"
+                               onClick={() => showTurnoPhotos(turno)}
+                               title="Ver fotos del turno"
+                             >
+                               <Camera className="h-3 w-3" />
+                             </Button>
+                           )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -532,6 +572,70 @@ export const ConsultaTurnos = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Modal de fotos del turno */}
+      <Dialog open={showPhotoModal} onOpenChange={setShowPhotoModal}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>
+              Fotos del Turno - {selectedTurnoForPhotos?.empleados ? `${selectedTurnoForPhotos.empleados.nombres} ${selectedTurnoForPhotos.empleados.apellidos}` : 'N/A'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedTurnoForPhotos && (
+            <div className="space-y-6">
+              <div className="text-sm text-muted-foreground">
+                <p><strong>Fecha:</strong> {selectedTurnoForPhotos.fecha}</p>
+                <p><strong>Empleado:</strong> {selectedTurnoForPhotos.empleados ? `${selectedTurnoForPhotos.empleados.nombres} ${selectedTurnoForPhotos.empleados.apellidos}` : 'N/A'}</p>
+                <p><strong>Función:</strong> {selectedTurnoForPhotos.empleados?.funcion || 'N/A'}</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Foto de entrada */}
+                {selectedTurnoForPhotos.foto_entrada && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-center">Foto de Entrada</h4>
+                    <div className="border rounded-lg overflow-hidden">
+                      <img
+                        src={fotosUrls[`entrada_${selectedTurnoForPhotos.id}`] || ''}
+                        alt="Foto de entrada"
+                        className="w-full h-auto max-h-96 object-contain"
+                      />
+                    </div>
+                    <div className="text-center text-sm text-muted-foreground">
+                      <p><strong>Hora:</strong> {selectedTurnoForPhotos.hora_entrada || 'N/A'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Foto de salida */}
+                {selectedTurnoForPhotos.foto_salida && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-center">Foto de Salida</h4>
+                    <div className="border rounded-lg overflow-hidden">
+                      <img
+                        src={fotosUrls[`salida_${selectedTurnoForPhotos.id}`] || ''}
+                        alt="Foto de salida"
+                        className="w-full h-auto max-h-96 object-contain"
+                      />
+                    </div>
+                    <div className="text-center text-sm text-muted-foreground">
+                      <p><strong>Hora:</strong> {selectedTurnoForPhotos.hora_salida || 'N/A'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mensaje si no hay fotos */}
+                {!selectedTurnoForPhotos.foto_entrada && !selectedTurnoForPhotos.foto_salida && (
+                  <div className="col-span-2 text-center py-8 text-muted-foreground">
+                    No hay fotos disponibles para este turno
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Clock, Edit3, Eye, MapPin, Calendar, User, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
@@ -48,6 +49,7 @@ export const TurnosAdminConsulta = () => {
   const [editObservaciones, setEditObservaciones] = useState('');
   const [editHoraEntrada, setEditHoraEntrada] = useState('');
   const [editHoraSalida, setEditHoraSalida] = useState('');
+  const [eliminarTardanza, setEliminarTardanza] = useState(false);
   const [ubicacionesTrabajo, setUbicacionesTrabajo] = useState<any[]>([]);
 
   const { obtenerTurnos, loading } = useTurnos();
@@ -208,6 +210,7 @@ export const TurnosAdminConsulta = () => {
     setEditObservaciones(turno.observaciones || '');
     setEditHoraEntrada(turno.hora_entrada || '');
     setEditHoraSalida(turno.hora_salida || '');
+    setEliminarTardanza(false);
     setIsEditModalOpen(true);
   };
 
@@ -244,9 +247,24 @@ export const TurnosAdminConsulta = () => {
         updateData.hora_salida = editHoraSalida || null;
       }
 
-      // Agregar información del administrador que hizo la modificación
-      if (editObservaciones.trim()) {
-        updateData.observaciones = `[Modificado por ${user.username} el ${new Date().toLocaleString('es-ES')}] ${editObservaciones}`;
+      // Manejar eliminación de tardanza
+      if (eliminarTardanza) {
+        updateData.minutos_tardanza = 0;
+        updateData.estado_cumplimiento = 'a_tiempo';
+        updateData.alerta_temprana = false;
+        
+        // Agregar mensaje automático sobre eliminación de tardanza
+        const mensajeTardanza = 'Tardanza eliminada por corrección administrativa.';
+        if (editObservaciones.trim()) {
+          updateData.observaciones = `[Modificado por ${user.username} el ${new Date().toLocaleString('es-ES')}] ${editObservaciones} - ${mensajeTardanza}`;
+        } else {
+          updateData.observaciones = `[Modificado por ${user.username} el ${new Date().toLocaleString('es-ES')}] ${mensajeTardanza}`;
+        }
+      } else {
+        // Agregar información del administrador que hizo la modificación
+        if (editObservaciones.trim()) {
+          updateData.observaciones = `[Modificado por ${user.username} el ${new Date().toLocaleString('es-ES')}] ${editObservaciones}`;
+        }
       }
 
       const { error } = await supabase
@@ -524,6 +542,23 @@ export const TurnosAdminConsulta = () => {
                   * Requerido cuando se modifican horarios
                 </p>
               </div>
+
+              {/* Checkbox para eliminar tardanza */}
+              {selectedTurno?.minutos_tardanza && selectedTurno.minutos_tardanza > 0 && (
+                <div className="flex items-center space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <Checkbox
+                    id="eliminarTardanza"
+                    checked={eliminarTardanza}
+                    onCheckedChange={(checked) => setEliminarTardanza(checked as boolean)}
+                  />
+                  <Label htmlFor="eliminarTardanza" className="text-sm">
+                    Eliminar tardanza ({formatMinutesToHours(selectedTurno.minutos_tardanza)})
+                  </Label>
+                  <div className="text-xs text-muted-foreground ml-2">
+                    Se registrará automáticamente en observaciones
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
