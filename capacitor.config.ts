@@ -23,6 +23,9 @@ const config: CapacitorConfig = {
     Geolocation: {
       permissions: ['location']
     },
+    BiometricAuth: {
+      allowDeviceCredential: true
+    },
   },
 };
 

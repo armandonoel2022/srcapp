@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';  
 import { Settings, Palette, MapPin, Shield, Fingerprint } from 'lucide-react';  
 import { useSettings } from '@/contexts/SettingsContext';
-import { useBiometricAuth } from '@/hooks/useBiometricAuth';
+import { useBiometricAuthCapacitor } from '@/hooks/useBiometricAuthCapacitor';
 import { useToast } from '@/hooks/use-toast';
   
 export const SettingsMenu = () => {
@@ -21,7 +21,7 @@ export const SettingsMenu = () => {
     biometricEnabled,  
     setBiometricEnabled  
   } = useSettings();
-  const { registerBiometric, capabilities } = useBiometricAuth();
+  const { registerBiometric, capabilities } = useBiometricAuthCapacitor();
   const { toast } = useToast();
   
   const handleBiometricToggle = async (enabled: boolean) => {

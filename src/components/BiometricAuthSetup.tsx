@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Fingerprint, Shield, CheckCircle, AlertTriangle } from 'lucide-react';
-import { useBiometricAuth } from '@/hooks/useBiometricAuth';
+import { useBiometricAuthCapacitor } from '@/hooks/useBiometricAuthCapacitor';
 
 export const BiometricAuthSetup = () => {
   const [isSettingUp, setIsSettingUp] = useState(false);
@@ -14,7 +14,7 @@ export const BiometricAuthSetup = () => {
     registerBiometric, 
     authenticateWithBiometric,
     capabilities 
-  } = useBiometricAuth();
+  } = useBiometricAuthCapacitor();
 
   const handleRegister = async () => {
     setIsSettingUp(true);
