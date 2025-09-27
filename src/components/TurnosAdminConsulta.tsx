@@ -144,16 +144,36 @@ export const TurnosAdminConsulta = () => {
     return 'Ubicación no identificada';
   };
 
-  const calcularDistancia = (coord1: {lat: number, lng: number}, coord2: {lat: number, lng: number}) => {
-    const R = 6371000; // Radio de la Tierra en metros
-    const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
-    const dLng = (coord2.lng - coord1.lng) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(coord1.lat * Math.PI / 180) * Math.cos(coord2.lat * Math.PI / 180) *
-      Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
+   const calcularDistancia = (coord1: {lat: number, lng: number}, coord2: {lat: number, lng: number}) => {
+     const R = 6371000; // Radio de la Tierra en metros
+     const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
+     const dLng = (coord2.lng - coord1.lng) * Math.PI / 180;
+     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+       Math.cos(coord1.lat * Math.PI / 180) * Math.cos(coord2.lat * Math.PI / 180) *
+       Math.sin(dLng/2) * Math.sin(dLng/2);
+     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+     return R * c;
+   };
+ 
+   // Formatear fecha YYYY-MM-DD sin afectar por zona horaria
+   const formatFechaES = (fechaYMD: string) => {
+     if (!fechaYMD || !fechaYMD.includes('-')) return fechaYMD;
+     const [y, m, d] = fechaYMD.split('-');
+     return `${Number(d)}/${Number(m)}/${y}`;
+   };
+ 
+   // Total de horas trabajadas en el día (consolidado) para un empleado
+   const getTotalHorasDia = (empleadoId: string, fecha: string) => {
+     const registros = filteredTurnos.filter(t => t.empleado_id === empleadoId && t.fecha === fecha);
+     return registros.reduce((acc, t) => {
+       const h = calcularHorasTrabajadas(t.hora_entrada || undefined, t.hora_salida || undefined);
+       const match = /([0-9]+\.?[0-9]*)h/.exec(String(h));
+       const horas = match ? parseFloat(match[1]) : (typeof h === 'number' ? h : 0);
+       // Si calcularHorasTrabajadas devuelve string "Xh Ym" en otros componentes, aquí usamos la otra función local:
+       if (typeof h === 'number') return acc + h;
+       return acc + (isNaN(horas) ? 0 : horas);
+     }, 0);
+   };
 
   const filterTurnos = () => {
     let filtered = [...turnos];
@@ -437,12 +457,12 @@ export const TurnosAdminConsulta = () => {
                           </div>
                         </td>
                         <td className="p-3">{turno.empleados_turnos?.funcion}</td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {new Date(turno.fecha).toLocaleDateString('es-ES')}
-                          </div>
-                        </td>
+                         <td className="p-3">
+                           <div className="flex items-center gap-2">
+                             <Calendar className="h-4 w-4 text-muted-foreground" />
+                             {formatFechaES(turno.fecha)}
+                           </div>
+                         </td>
                          <td className="p-3">
                            <div className="flex items-center gap-2">
                              <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -466,67 +486,35 @@ export const TurnosAdminConsulta = () => {
                            </div>
                          </td>
                           <td className="p-3">
-                            {turno.hora_entrada ? (
+                            {turno.hora_salida ? (
                               <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                  {turno.minutos_tardanza && turno.minutos_tardanza > 0 ? (
-                                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                                  ) : (
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
-                                  )}
-                                  {turno.hora_entrada}
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                  {turno.hora_salida}
                                 </div>
-                                 {turno.minutos_tardanza && turno.minutos_tardanza > 0 ? (
-                                   <div className="text-xs text-red-600">
-                                     {formatMinutesToHours(turno.minutos_tardanza)}
-                                   </div>
-                                 ) : (
-                                   <div className="inline-block">
-                                     <Badge 
-                                       className="bg-green-600 text-white hover:bg-green-700 text-xs px-2 py-1"
-                                     >
-                                       A tiempo
-                                     </Badge>
-                                   </div>
-                                 )}
-                                {turno.empleados_turnos?.hora_entrada_programada && (
+                                {turno.hora_entrada && (
                                   <div className="text-xs text-muted-foreground">
-                                    Prog: {turno.empleados_turnos.hora_entrada_programada}
+                                    {calcularHorasTrabajadas(turno.hora_entrada, turno.hora_salida).toFixed(1)}h trabajadas
+                                  </div>
+                                )}
+                                {filteredTurnos.filter(t => t.empleado_id === turno.empleado_id && t.fecha === turno.fecha && t.hora_entrada && t.hora_salida).length > 1 && (
+                                  <div className="text-xs font-medium text-emerald-700 bg-emerald-100 inline-block px-2 py-0.5 rounded">
+                                    Total día: {getTotalHorasDia(turno.empleado_id, turno.fecha).toFixed(1)}h
+                                  </div>
+                                )}
+                                {turno.empleados_turnos?.hora_salida_programada && (
+                                  <div className="text-xs text-muted-foreground">
+                                    Prog: {turno.empleados_turnos.hora_salida_programada}
                                   </div>
                                 )}
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <AlertTriangle className="h-4 w-4 text-red-600" />
-                                Sin registro
+                                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                                Pendiente
                               </div>
                             )}
                           </td>
-                         <td className="p-3">
-                           {turno.hora_salida ? (
-                             <div className="space-y-1">
-                               <div className="flex items-center gap-2">
-                                 <CheckCircle className="h-4 w-4 text-green-600" />
-                                 {turno.hora_salida}
-                               </div>
-                               {turno.hora_entrada && (
-                                 <div className="text-xs text-muted-foreground">
-                                   {calcularHorasTrabajadas(turno.hora_entrada, turno.hora_salida).toFixed(1)}h trabajadas
-                                 </div>
-                               )}
-                               {turno.empleados_turnos?.hora_salida_programada && (
-                                 <div className="text-xs text-muted-foreground">
-                                   Prog: {turno.empleados_turnos.hora_salida_programada}
-                                 </div>
-                               )}
-                             </div>
-                           ) : (
-                             <div className="flex items-center gap-2">
-                               <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                               Pendiente
-                             </div>
-                           )}
-                         </td>
                         <td className="p-3">{getEstadoBadge(turno)}</td>
                         <td className="p-3">
                            <div className="flex items-center gap-2">
