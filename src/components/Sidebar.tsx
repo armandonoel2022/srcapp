@@ -49,6 +49,11 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
     { id: 'dashboard-turnos', label: 'Dashboard Turnos', icon: BarChart3 }
   ];
 
+  // Demo items - temporal para mostrar overlay
+  const demoItems = [
+    { id: 'demo-overlay', label: '🔴 Ver Overlay de Alerta', icon: Camera }
+  ];
+
   // Funciones Administrativas
   const adminItems = [
     { id: 'crear-usuario-cliente', label: 'Crear Usuario Cliente', icon: UserPlus },
@@ -146,6 +151,25 @@ export const Sidebar = ({ onNavigate, currentSection, isClient = false }: Sideba
                   ))}
                 </div>
               )}
+
+              {/* Demo Section */}
+              <div className="pt-4 border-t space-y-1">
+                <p className="px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Demo</p>
+                {demoItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Button
+                      key={item.id}
+                      variant={currentSection === item.id ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => handleNavigation(item.id)}
+                    >
+                      <Icon className="mr-2 h-4 w-4" />
+                      {item.label}
+                    </Button>
+                  );
+                })}
+              </div>
             </>
           )}
           
