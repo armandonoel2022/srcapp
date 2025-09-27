@@ -465,35 +465,43 @@ export const TurnosAdminConsulta = () => {
                              </div>
                            </div>
                          </td>
-                         <td className="p-3">
-                           {turno.hora_entrada ? (
-                             <div className="space-y-1">
-                               <div className="flex items-center gap-2">
+                          <td className="p-3">
+                            {turno.hora_entrada ? (
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  {turno.minutos_tardanza && turno.minutos_tardanza > 0 ? (
+                                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                                  ) : (
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                  )}
+                                  {turno.hora_entrada}
+                                </div>
                                  {turno.minutos_tardanza && turno.minutos_tardanza > 0 ? (
-                                   <AlertTriangle className="h-4 w-4 text-red-600" />
+                                   <div className="text-xs text-red-600">
+                                     {formatMinutesToHours(turno.minutos_tardanza)}
+                                   </div>
                                  ) : (
-                                   <CheckCircle className="h-4 w-4 text-green-600" />
+                                   <div className="inline-block">
+                                     <Badge 
+                                       className="bg-green-600 text-white hover:bg-green-700 text-xs px-2 py-1"
+                                     >
+                                       A tiempo
+                                     </Badge>
+                                   </div>
                                  )}
-                                 {turno.hora_entrada}
-                               </div>
-                                {turno.minutos_tardanza && turno.minutos_tardanza > 0 && (
-                                  <div className="text-xs text-red-600">
-                                    {formatMinutesToHours(turno.minutos_tardanza)}
+                                {turno.empleados_turnos?.hora_entrada_programada && (
+                                  <div className="text-xs text-muted-foreground">
+                                    Prog: {turno.empleados_turnos.hora_entrada_programada}
                                   </div>
                                 )}
-                               {turno.empleados_turnos?.hora_entrada_programada && (
-                                 <div className="text-xs text-muted-foreground">
-                                   Prog: {turno.empleados_turnos.hora_entrada_programada}
-                                 </div>
-                               )}
-                             </div>
-                           ) : (
-                             <div className="flex items-center gap-2">
-                               <AlertTriangle className="h-4 w-4 text-red-600" />
-                               Sin registro
-                             </div>
-                           )}
-                         </td>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <AlertTriangle className="h-4 w-4 text-red-600" />
+                                Sin registro
+                              </div>
+                            )}
+                          </td>
                          <td className="p-3">
                            {turno.hora_salida ? (
                              <div className="space-y-1">
