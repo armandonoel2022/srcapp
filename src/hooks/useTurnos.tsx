@@ -23,6 +23,7 @@ export const useTurnos = () => {
   const [patternMessage, setPatternMessage] = useState('');
   const [pendingRegistro, setPendingRegistro] = useState<TurnoData | null>(null);
   const [pendingEntryInfo, setPendingEntryInfo] = useState<any>(null);
+  const [processingPattern, setProcessingPattern] = useState(false);
   const { toast } = useToast();
 
   const verificarPatronRegistros = async (empleadoId: string, fecha: string): Promise<{
@@ -253,29 +254,51 @@ export const useTurnos = () => {
   };
 
   const confirmarPatronRegistro = async () => {
-    if (!pendingRegistro) return { success: false, message: 'No hay registro pendiente' };
+    if (!pendingRegistro || processingPattern) return { success: false, message: 'No hay registro pendiente o ya se está procesando' };
     
-    setShowPatternAlert(false);
-    const data = pendingRegistro;
-    setPendingRegistro(null);
+    setProcessingPattern(true);
     
-    // Buscar entrada sin salida de CUALQUIER día (no solo hoy)
-    const { data: entradaSinSalida } = await supabase
-      .from('turnos_empleados')
-      .select('id, fecha, created_at')
-      .eq('empleado_id', data.empleado_id)
-      .is('hora_salida', null)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    
-    const tipoRegistro = !entradaSinSalida ? 'entrada' : 'salida';
-    return await procesarRegistroInterno(data, tipoRegistro, entradaSinSalida);
+    try {
+      const data = pendingRegistro;
+      
+      // Buscar entrada sin salida de CUALQUIER día (no solo hoy)
+      const { data: entradaSinSalida } = await supabase
+        .from('turnos_empleados')
+        .select('id, fecha, created_at')
+        .eq('empleado_id', data.empleado_id)
+        .is('hora_salida', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      const tipoRegistro = !entradaSinSalida ? 'entrada' : 'salida';
+      const result = await procesarRegistroInterno(data, tipoRegistro, entradaSinSalida);
+      
+      // Solo cerrar el overlay si el procesamiento fue exitoso
+      if (result.success) {
+        setShowPatternAlert(false);
+        setPendingRegistro(null);
+        setPendingEntryInfo(null);
+      }
+      
+      return result;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `Error al procesar registro: ${error.message}`,
+        variant: "destructive"
+      });
+      return { success: false, message: error.message };
+    } finally {
+      setProcessingPattern(false);
+    }
   };
 
   const cancelarPatronRegistro = () => {
     setShowPatternAlert(false);
     setPendingRegistro(null);
+    setPendingEntryInfo(null);
+    setProcessingPattern(false);
   };
 
   const obtenerTurnos = async (fecha?: string) => {
@@ -394,6 +417,7 @@ export const useTurnos = () => {
     showPatternAlert,
     patternMessage,
     pendingEntryInfo,
+    processingPattern,
     confirmarPatronRegistro,
     cancelarPatronRegistro
   };

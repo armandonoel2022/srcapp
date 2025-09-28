@@ -1,12 +1,13 @@
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, Calendar, Clock } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, Loader2 } from 'lucide-react';
 
 interface PatternAlertProps {
   show: boolean;
   onConfirm: () => void;
   onCancel: () => void;
   mensaje: string;
+  processing?: boolean;
   pendingEntryInfo?: {
     foto_entrada?: string;
     fechaFormateada?: string;
@@ -14,7 +15,7 @@ interface PatternAlertProps {
   };
 }
 
-export const PatternAlert = ({ show, onConfirm, onCancel, mensaje, pendingEntryInfo }: PatternAlertProps) => {
+export const PatternAlert = ({ show, onConfirm, onCancel, mensaje, processing = false, pendingEntryInfo }: PatternAlertProps) => {
   if (!show) return null;
 
   return (
@@ -69,14 +70,33 @@ export const PatternAlert = ({ show, onConfirm, onCancel, mensaje, pendingEntryI
         <div className="flex gap-3">
           <button
             onClick={onConfirm}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            disabled={processing}
+            className={`flex-1 ${
+              processing 
+                ? 'bg-green-400 cursor-not-allowed' 
+                : 'bg-green-600 hover:bg-green-700'
+            } text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2`}
           >
-            <Clock className="h-4 w-4" />
-            Continuar Registro
+            {processing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Procesando...
+              </>
+            ) : (
+              <>
+                <Clock className="h-4 w-4" />
+                Continuar Registro
+              </>
+            )}
           </button>
           <button
             onClick={onCancel}
-            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+            disabled={processing}
+            className={`flex-1 ${
+              processing 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-gray-600 hover:bg-gray-700'
+            } text-white font-semibold py-3 px-4 rounded-lg transition-colors`}
           >
             Cancelar
           </button>

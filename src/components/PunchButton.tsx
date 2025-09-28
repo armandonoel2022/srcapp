@@ -32,6 +32,7 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
     showPatternAlert, 
     patternMessage,
     pendingEntryInfo,
+    processingPattern,
     confirmarPatronRegistro, 
     cancelarPatronRegistro 
   } = useTurnos();
@@ -390,6 +391,7 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
         show={showPatternAlert}
         mensaje={patternMessage}
         pendingEntryInfo={pendingEntryInfo}
+        processing={processingPattern}
         onConfirm={confirmarPatronRegistro}
         onCancel={cancelarPatronRegistro}
       />
