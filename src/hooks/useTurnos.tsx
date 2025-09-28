@@ -64,7 +64,7 @@ export const useTurnos = () => {
           return {
             necesitaAlerta: true,
             tipo: 'salida_faltante',
-            mensaje: `Se detectó una ENTRADA previa sin SALIDA. Se registrará la SALIDA pendiente ahora. Si en realidad estás ingresando, primero registra una ENTRADA del nuevo día.`
+            mensaje: `A continuacion se registrara la salida`
           };
         }
       }
@@ -125,7 +125,7 @@ export const useTurnos = () => {
 
       if (entradaPendiente) {
         // Mostrar overlay indicando que se registrará la SALIDA pendiente
-        setPatternMessage('Se detectó una ENTRADA previa sin SALIDA. Se registrará la SALIDA pendiente ahora. Si en realidad estás ingresando, primero registra una ENTRADA del nuevo día.');
+        setPatternMessage('A continuacion se registrara la salida');
         setPendingRegistro(data);
         setShowPatternAlert(true);
         return { success: false, message: 'Salida pendiente detectada. Confirma para continuar.' };
@@ -154,7 +154,38 @@ export const useTurnos = () => {
   const procesarRegistroInterno = async (data: TurnoData, tipoRegistro: 'entrada' | 'salida', entradaSinSalida?: any) => {
     try {
       if (tipoRegistro === 'entrada') {
-        // REGISTRAR ENTRADA
+        // SALVAGUARDA: si existe una ENTRADA pendiente, registrar SALIDA en su lugar
+        const { data: pendiente } = await supabase
+          .from('turnos_empleados')
+          .select('id, fecha, created_at')
+          .eq('empleado_id', data.empleado_id)
+          .is('hora_salida', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (pendiente) {
+          const { error: updError } = await supabase
+            .from('turnos_empleados')
+            .update({
+              hora_salida: data.hora_salida,
+              ubicacion_salida: data.ubicacion_salida ? 
+                `(${data.ubicacion_salida.lat},${data.ubicacion_salida.lng})` : null
+            })
+            .eq('id', pendiente.id);
+
+          if (updError) throw updError;
+
+          toast({
+            title: "Salida registrada",
+            description: "Se registró tu salida correctamente",
+            variant: "default"
+          });
+
+          return { success: true, turnoId: pendiente.id };
+        }
+
+        // REGISTRAR ENTRADA (no hay pendiente)
         const { data: turnoData, error } = await supabase
           .from('turnos_empleados')
           .insert({

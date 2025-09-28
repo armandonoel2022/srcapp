@@ -33,8 +33,7 @@ export const PatternAlert = ({ show, onConfirm, onCancel, mensaje }: PatternAler
             <span className="font-semibold text-sm">Recomendación:</span>
           </div>
           <p className="text-sm">
-            Se registrará la <strong>SALIDA</strong> pendiente detectada.
-            Si en realidad esta acción es una <strong>ENTRADA</strong>, cancela y registra primero la <strong>ENTRADA</strong> del nuevo día.
+            A continuacion se registrara la salida
           </p>
         </div>
 
