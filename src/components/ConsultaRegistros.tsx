@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Download, FileText, ArrowLeft, LogOut } from 'lucide-react';
+import { Download, FileText, ArrowLeft, LogOut, X } from 'lucide-react';
 import { PrintLayout } from './PrintLayout';
 import { exportToCSV } from '@/utils/csvExport';
 import { useRegistros } from '@/hooks/useRegistros';
@@ -142,6 +142,35 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
       title: "Exportación exitosa",
       description: "El archivo CSV se ha descargado correctamente",
     });
+  };
+
+  const handleEliminarRegistro = async (registroId: string) => {
+    if (!confirm('¿Está seguro de que desea eliminar este registro?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('registros')
+        .delete()
+        .eq('id', registroId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Registro eliminado",
+        description: "El registro ha sido eliminado exitosamente",
+      });
+
+      // Recargar los registros
+      cargarRegistros();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `Error al eliminar registro: ${error.message}`,
+        variant: "destructive"
+      });
+    }
   };
 
   const handleRegistrarSalida = async (registro: Registro) => {
@@ -342,17 +371,28 @@ export const ConsultaRegistros = ({ onNavigateToForm }: ConsultaRegistrosProps) 
                     <TableCell>{formatearHora(registro.hora)}</TableCell>
                     <TableCell>{registro.tipo}</TableCell>
                     <TableCell>
-                      {registro.tipo === 'entrada' && (
+                      <div className="flex items-center gap-2">
+                        {registro.tipo === 'entrada' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRegistrarSalida(registro)}
+                            className="flex items-center gap-1 text-xs"
+                          >
+                            <LogOut className="w-3 h-3" />
+                            Registrar Salida
+                          </Button>
+                        )}
                         <Button
                           size="sm"
-                          variant="outline"
-                          onClick={() => handleRegistrarSalida(registro)}
+                          variant="destructive"
+                          onClick={() => handleEliminarRegistro(registro.id)}
                           className="flex items-center gap-1 text-xs"
                         >
-                          <LogOut className="w-3 h-3" />
-                          Registrar Salida
+                          <X className="w-3 h-3" />
+                          Eliminar
                         </Button>
-                      )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

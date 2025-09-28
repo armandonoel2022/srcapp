@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Clock, Edit3, Eye, MapPin, Calendar, User, AlertTriangle, CheckCircle, Camera, X } from 'lucide-react';
+import { Clock, Edit3, Eye, MapPin, Calendar, User, AlertTriangle, CheckCircle, Camera, X, Trash2 } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -362,6 +362,35 @@ export const TurnosAdminConsulta = () => {
     }
   };
 
+  const handleEliminarTurno = async (turnoId: string) => {
+    if (!confirm('¿Está seguro de que desea eliminar este turno?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('turnos_empleados')
+        .delete()
+        .eq('id', turnoId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Turno eliminado",
+        description: "El turno ha sido eliminado exitosamente",
+      });
+
+      // Recargar los turnos
+      cargarTurnos();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `Error al eliminar turno: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  };
+
   const showTurnoPhotos = async (turno: Turno) => {
     setSelectedTurnoForPhotos(turno);
     
@@ -555,25 +584,33 @@ export const TurnosAdminConsulta = () => {
                            </td>
                         <td className="p-3">{getEstadoBadge(turno)}</td>
                         <td className="p-3">
-                           <div className="flex items-center gap-2">
-                             <Button
-                               variant="outline"
-                               size="sm"
-                               onClick={() => openEditModal(turno)}
-                             >
-                               <Edit3 className="h-4 w-4" />
-                             </Button>
-                              {(turno.foto_entrada || turno.foto_salida) && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => showTurnoPhotos(turno)}
-                                  title="Ver fotos del turno"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              )}
-                           </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openEditModal(turno)}
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                               {(turno.foto_entrada || turno.foto_salida) && (
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   onClick={() => showTurnoPhotos(turno)}
+                                   title="Ver fotos del turno"
+                                 >
+                                   <Eye className="h-4 w-4" />
+                                 </Button>
+                               )}
+                               <Button
+                                 variant="destructive"
+                                 size="sm"
+                                 onClick={() => handleEliminarTurno(turno.id)}
+                                 title="Eliminar turno"
+                               >
+                                 <Trash2 className="h-4 w-4" />
+                               </Button>
+                            </div>
                         </td>
                       </tr>
                     ))
