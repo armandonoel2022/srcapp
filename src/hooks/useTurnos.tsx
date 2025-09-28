@@ -22,6 +22,7 @@ export const useTurnos = () => {
   const [showPatternAlert, setShowPatternAlert] = useState(false);
   const [patternMessage, setPatternMessage] = useState('');
   const [pendingRegistro, setPendingRegistro] = useState<TurnoData | null>(null);
+  const [pendingEntryInfo, setPendingEntryInfo] = useState<any>(null);
   const { toast } = useToast();
 
   const verificarPatronRegistros = async (empleadoId: string, fecha: string): Promise<{
@@ -114,7 +115,7 @@ export const useTurnos = () => {
       // Determinar si existe una ENTRADA sin SALIDA de cualquier día (prioridad alta)
       const { data: entradaPendiente, error: searchError } = await supabase
         .from('turnos_empleados')
-        .select('id, fecha, created_at')
+        .select('id, fecha, created_at, hora_entrada, foto_entrada')
         .eq('empleado_id', data.empleado_id)
         .is('hora_salida', null)
         .order('created_at', { ascending: false })
@@ -124,8 +125,23 @@ export const useTurnos = () => {
       if (searchError) throw searchError;
 
       if (entradaPendiente) {
+        // Formatear fecha y hora para mostrar
+        const fechaEntrada = new Date(entradaPendiente.fecha).toLocaleDateString('es-ES', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const horaEntrada = entradaPendiente.hora_entrada;
+        
         // Mostrar overlay indicando que se registrará la SALIDA pendiente
-        setPatternMessage('A continuacion se registrara la salida');
+        setPatternMessage(`Tienes 1 entrada del día anterior sin registrar salida. Si estás llegando hoy, esto debería ser una ENTRADA del nuevo día.`);
+        setPendingEntryInfo({
+          ...entradaPendiente,
+          fechaFormateada: fechaEntrada,
+          horaEntrada: horaEntrada
+        });
         setPendingRegistro(data);
         setShowPatternAlert(true);
         return { success: false, message: 'Salida pendiente detectada. Confirma para continuar.' };
@@ -376,6 +392,7 @@ export const useTurnos = () => {
     loading,
     showPatternAlert,
     patternMessage,
+    pendingEntryInfo,
     confirmarPatronRegistro,
     cancelarPatronRegistro
   };
