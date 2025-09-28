@@ -64,7 +64,7 @@ export const useTurnos = () => {
           return {
             necesitaAlerta: true,
             tipo: 'salida_faltante',
-            mensaje: `⚠️ DETECTADO: Tienes ${entradasSinSalida.length} entrada(s) del día anterior sin registrar salida. Si estás llegando hoy, esto debería ser una ENTRADA del nuevo día.`
+            mensaje: `Se detectó una ENTRADA previa sin SALIDA. Se registrará la SALIDA pendiente ahora. Si en realidad estás ingresando, primero registra una ENTRADA del nuevo día.`
           };
         }
       }
@@ -111,13 +111,11 @@ export const useTurnos = () => {
         throw new Error('No tienes una ubicación designada asignada. Contacta al administrador para configurar tu lugar de trabajo.');
       }
 
-      // DETERMINAR AUTOMÁTICAMENTE SI ES ENTRADA O SALIDA
-      // Buscar última entrada sin salida del MISMO DÍA
-      const { data: entradaSinSalida, error: searchError } = await supabase
+      // Determinar si existe una ENTRADA sin SALIDA de cualquier día (prioridad alta)
+      const { data: entradaPendiente, error: searchError } = await supabase
         .from('turnos_empleados')
-        .select('id, created_at')
+        .select('id, fecha, created_at')
         .eq('empleado_id', data.empleado_id)
-        .eq('fecha', data.fecha)
         .is('hora_salida', null)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -125,29 +123,21 @@ export const useTurnos = () => {
 
       if (searchError) throw searchError;
 
-      // Verificar patrones de registro entre días antes de cualquier registro
-      const patron = await verificarPatronRegistros(data.empleado_id, data.fecha);
-      
-      let tipoRegistroDetectado: 'entrada' | 'salida';
-      
-      if (!entradaSinSalida) {
-        // No hay entrada pendiente del día actual = ES ENTRADA
-        tipoRegistroDetectado = 'entrada';
-        
-        // Mostrar alerta si hay patrón irregular ANTES de procesar
-        if (patron.necesitaAlerta) {
-          setPatternMessage(patron.mensaje || '');
-          setPendingRegistro(data);
-          setShowPatternAlert(true);
-          return { success: false, message: 'Patrón irregular detectado. Confirma para continuar.' };
-        }
-      } else {
-        // Hay entrada pendiente del día actual = ES SALIDA
-        tipoRegistroDetectado = 'salida';
+      if (entradaPendiente) {
+        // Mostrar overlay indicando que se registrará la SALIDA pendiente
+        setPatternMessage('Se detectó una ENTRADA previa sin SALIDA. Se registrará la SALIDA pendiente ahora. Si en realidad estás ingresando, primero registra una ENTRADA del nuevo día.');
+        setPendingRegistro(data);
+        setShowPatternAlert(true);
+        return { success: false, message: 'Salida pendiente detectada. Confirma para continuar.' };
       }
 
-      // Procesar registro directamente si no hay alerta
-      return await procesarRegistroInterno(data, tipoRegistroDetectado, entradaSinSalida);
+      // Si no hay pendiente global, continuar como ENTRADA nueva
+      const patron = await verificarPatronRegistros(data.empleado_id, data.fecha);
+      
+      let tipoRegistroDetectado: 'entrada' | 'salida' = 'entrada';
+      
+      // Procesar registro directamente
+      return await procesarRegistroInterno(data, tipoRegistroDetectado, undefined);
 
     } catch (error: any) {
       toast({

@@ -33,8 +33,8 @@ export const PatternAlert = ({ show, onConfirm, onCancel, mensaje }: PatternAler
             <span className="font-semibold text-sm">Recomendación:</span>
           </div>
           <p className="text-sm">
-            Si estás <strong>LLEGANDO HOY</strong>, registra una <strong>ENTRADA</strong> del nuevo día.
-            Si estás <strong>SALIENDO TARDÍAMENTE</strong> del día anterior, registra la <strong>SALIDA</strong> pendiente.
+            Se registrará la <strong>SALIDA</strong> pendiente detectada.
+            Si en realidad esta acción es una <strong>ENTRADA</strong>, cancela y registra primero la <strong>ENTRADA</strong> del nuevo día.
           </p>
         </div>
 
@@ -44,7 +44,7 @@ export const PatternAlert = ({ show, onConfirm, onCancel, mensaje }: PatternAler
             className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <Clock className="h-4 w-4" />
-            Continuar Registro
+            Registrar salida pendiente
           </button>
           <button
             onClick={onCancel}
