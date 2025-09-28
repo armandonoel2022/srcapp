@@ -112,12 +112,13 @@ export const useTurnos = () => {
         throw new Error('No tienes una ubicación designada asignada. Contacta al administrador para configurar tu lugar de trabajo.');
       }
 
-      // Determinar si existe una ENTRADA sin SALIDA de cualquier día (prioridad alta)
+      // Determinar si existe una ENTRADA sin SALIDA de días anteriores (no del mismo día)
       const { data: entradaPendiente, error: searchError } = await supabase
         .from('turnos_empleados')
         .select('id, fecha, created_at, hora_entrada, foto_entrada')
         .eq('empleado_id', data.empleado_id)
         .is('hora_salida', null)
+        .lt('fecha', data.fecha) // Solo considerar fechas anteriores al día actual
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
