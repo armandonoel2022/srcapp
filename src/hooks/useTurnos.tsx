@@ -221,13 +221,13 @@ export const useTurnos = () => {
     const data = pendingRegistro;
     setPendingRegistro(null);
     
-    // Determinar tipo de registro y procesar
+    // Buscar entrada sin salida de CUALQUIER día (no solo hoy)
     const { data: entradaSinSalida } = await supabase
       .from('turnos_empleados')
-      .select('id')
+      .select('id, fecha, created_at')
       .eq('empleado_id', data.empleado_id)
-      .eq('fecha', data.fecha)
       .is('hora_salida', null)
+      .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
     
