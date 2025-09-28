@@ -10,7 +10,6 @@ interface TurnoData {
   hora_salida?: string;
   ubicacion_entrada?: { lat: number; lng: number };
   ubicacion_salida?: { lat: number; lng: number };
-  tipo_registro: 'entrada' | 'salida';
 }
 
 interface EstadoTurno {
@@ -20,6 +19,9 @@ interface EstadoTurno {
 
 export const useTurnos = () => {
   const [loading, setLoading] = useState(false);
+  const [showPatternAlert, setShowPatternAlert] = useState(false);
+  const [patternMessage, setPatternMessage] = useState('');
+  const [pendingRegistro, setPendingRegistro] = useState<TurnoData | null>(null);
   const { toast } = useToast();
 
   const verificarPatronRegistros = async (empleadoId: string, fecha: string): Promise<{
@@ -109,69 +111,44 @@ export const useTurnos = () => {
         throw new Error('No tienes una ubicación designada asignada. Contacta al administrador para configurar tu lugar de trabajo.');
       }
 
-      // Verificar patrones de registro entre días
+      // DETERMINAR AUTOMÁTICAMENTE SI ES ENTRADA O SALIDA
+      // Buscar última entrada sin salida del MISMO DÍA
+      const { data: entradaSinSalida, error: searchError } = await supabase
+        .from('turnos_empleados')
+        .select('id, created_at')
+        .eq('empleado_id', data.empleado_id)
+        .eq('fecha', data.fecha)
+        .is('hora_salida', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (searchError) throw searchError;
+
+      // Verificar patrones de registro entre días antes de cualquier registro
       const patron = await verificarPatronRegistros(data.empleado_id, data.fecha);
-      if (patron.necesitaAlerta && data.tipo_registro === 'salida') {
-        toast({
-          title: "⚠️ PATRÓN IRREGULAR DETECTADO",
-          description: patron.mensaje,
-          variant: "destructive",
-          duration: 8000
-        });
-      }
-
-      if (data.tipo_registro === 'entrada') {
-        // SIEMPRE permitir registros de entrada - sin restricciones
-        const { data: turnoData, error } = await supabase
-          .from('turnos_empleados')
-          .insert({
-            empleado_id: data.empleado_id,
-            fecha: data.fecha,
-            hora_entrada: data.hora_entrada,
-            ubicacion_entrada: data.ubicacion_entrada ? 
-              `(${data.ubicacion_entrada.lat},${data.ubicacion_entrada.lng})` : null,
-            tipo_registro: data.tipo_registro
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        return { success: true, turnoId: turnoData.id };
-
-      } else {
-        // Para SALIDA: Buscar entrada sin salida del MISMO DÍA
-        const { data: entradaSinSalida, error: searchError } = await supabase
-          .from('turnos_empleados')
-          .select('id, created_at')
-          .eq('empleado_id', data.empleado_id)
-          .eq('fecha', data.fecha)
-          .is('hora_salida', null)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (searchError) throw searchError;
-
-        if (!entradaSinSalida) {
-          // No se puede registrar salida sin entrada previa
-          throw new Error('No puedes registrar una salida sin haber registrado una entrada primero.');
-        } else {
-          // Actualizar el registro de entrada con la salida
-          const { error } = await supabase
-            .from('turnos_empleados')
-            .update({
-              hora_salida: data.hora_salida,
-              ubicacion_salida: data.ubicacion_salida ? 
-                `(${data.ubicacion_salida.lat},${data.ubicacion_salida.lng})` : null
-            })
-            .eq('id', entradaSinSalida.id);
-
-          if (error) throw error;
-
-          return { success: true, turnoId: entradaSinSalida.id };
+      
+      let tipoRegistroDetectado: 'entrada' | 'salida';
+      
+      if (!entradaSinSalida) {
+        // No hay entrada pendiente del día actual = ES ENTRADA
+        tipoRegistroDetectado = 'entrada';
+        
+        // Mostrar alerta si hay patrón irregular ANTES de procesar
+        if (patron.necesitaAlerta) {
+          setPatternMessage(patron.mensaje || '');
+          setPendingRegistro(data);
+          setShowPatternAlert(true);
+          return { success: false, message: 'Patrón irregular detectado. Confirma para continuar.' };
         }
+      } else {
+        // Hay entrada pendiente del día actual = ES SALIDA
+        tipoRegistroDetectado = 'salida';
       }
+
+      // Procesar registro directamente si no hay alerta
+      return await procesarRegistroInterno(data, tipoRegistroDetectado, entradaSinSalida);
+
     } catch (error: any) {
       toast({
         title: "Error",
@@ -182,6 +159,85 @@ export const useTurnos = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const procesarRegistroInterno = async (data: TurnoData, tipoRegistro: 'entrada' | 'salida', entradaSinSalida?: any) => {
+    try {
+      if (tipoRegistro === 'entrada') {
+        // REGISTRAR ENTRADA
+        const { data: turnoData, error } = await supabase
+          .from('turnos_empleados')
+          .insert({
+            empleado_id: data.empleado_id,
+            fecha: data.fecha,
+            hora_entrada: data.hora_entrada,
+            ubicacion_entrada: data.ubicacion_entrada ? 
+              `(${data.ubicacion_entrada.lat},${data.ubicacion_entrada.lng})` : null,
+            tipo_registro: 'entrada'
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        toast({
+          title: "Entrada registrada",
+          description: "Se registró tu entrada correctamente",
+          variant: "default"
+        });
+
+        return { success: true, turnoId: turnoData.id };
+
+      } else {
+        // REGISTRAR SALIDA - Actualizar el registro de entrada existente
+        const { error } = await supabase
+          .from('turnos_empleados')
+          .update({
+            hora_salida: data.hora_salida,
+            ubicacion_salida: data.ubicacion_salida ? 
+              `(${data.ubicacion_salida.lat},${data.ubicacion_salida.lng})` : null
+          })
+          .eq('id', entradaSinSalida!.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Salida registrada",
+          description: "Se registró tu salida correctamente",
+          variant: "default"
+        });
+
+        return { success: true, turnoId: entradaSinSalida!.id };
+      }
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  const confirmarPatronRegistro = async () => {
+    if (!pendingRegistro) return { success: false, message: 'No hay registro pendiente' };
+    
+    setShowPatternAlert(false);
+    const data = pendingRegistro;
+    setPendingRegistro(null);
+    
+    // Determinar tipo de registro y procesar
+    const { data: entradaSinSalida } = await supabase
+      .from('turnos_empleados')
+      .select('id')
+      .eq('empleado_id', data.empleado_id)
+      .eq('fecha', data.fecha)
+      .is('hora_salida', null)
+      .limit(1)
+      .maybeSingle();
+    
+    const tipoRegistro = !entradaSinSalida ? 'entrada' : 'salida';
+    return await procesarRegistroInterno(data, tipoRegistro, entradaSinSalida);
+  };
+
+  const cancelarPatronRegistro = () => {
+    setShowPatternAlert(false);
+    setPendingRegistro(null);
   };
 
   const obtenerTurnos = async (fecha?: string) => {
@@ -296,6 +352,10 @@ export const useTurnos = () => {
     obtenerTurnos,
     verificarEstadoTurno,
     eliminarTurnosPrueba,
-    loading
+    loading,
+    showPatternAlert,
+    patternMessage,
+    confirmarPatronRegistro,
+    cancelarPatronRegistro
   };
 };
