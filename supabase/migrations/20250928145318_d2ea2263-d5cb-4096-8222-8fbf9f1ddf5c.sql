@@ -1,0 +1,1 @@
+DELETE FROM turnos_empleados WHERE id = '729548bc-dbc0-427a-ba8c-af5e37ff2fc3';
