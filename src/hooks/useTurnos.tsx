@@ -154,30 +154,8 @@ export const useTurnos = () => {
         if (searchError) throw searchError;
 
         if (!entradaSinSalida) {
-          // No hay entrada pendiente del día actual
-          // Crear nuevo registro de salida independiente
-          const { data: turnoData, error } = await supabase
-            .from('turnos_empleados')
-            .insert({
-              empleado_id: data.empleado_id,
-              fecha: data.fecha,
-              hora_salida: data.hora_salida,
-              ubicacion_salida: data.ubicacion_salida ? 
-                `(${data.ubicacion_salida.lat},${data.ubicacion_salida.lng})` : null,
-              tipo_registro: data.tipo_registro
-            })
-            .select()
-            .single();
-
-          if (error) throw error;
-
-          toast({
-            title: "Salida registrada",
-            description: "Se registró una salida independiente (sin entrada previa del mismo día)",
-            variant: "default"
-          });
-
-          return { success: true, turnoId: turnoData.id };
+          // No se puede registrar salida sin entrada previa
+          throw new Error('No puedes registrar una salida sin haber registrado una entrada primero.');
         } else {
           // Actualizar el registro de entrada con la salida
           const { error } = await supabase
