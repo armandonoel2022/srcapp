@@ -62,6 +62,14 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
     }
   }, [empleado.requires_password_change]);
 
+  // Auto-cerrar el modal de "Turno Completo" después de 3s con animación de salida
+  useEffect(() => {
+    if (showCompletionModal) {
+      const timer = setTimeout(() => setShowCompletionModal(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showCompletionModal]);
+
   const formatTime12Hour = (date: Date) => {
     return date.toLocaleTimeString('es-ES', {
       hour: 'numeric',
