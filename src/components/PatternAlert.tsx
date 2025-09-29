@@ -22,6 +22,22 @@ export const PatternAlert = ({ show, onConfirm, onCancel, mensaje, processing = 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-red-600 text-white rounded-lg shadow-xl max-w-lg w-full p-6 animate-pulse border-4 border-red-400">
         
+        {/* Foto de entrada anterior */}
+        {pendingEntryInfo?.foto_entrada && (
+          <div className="mb-4 text-center">
+            <img 
+              src={pendingEntryInfo.foto_entrada} 
+              alt="Foto de entrada anterior" 
+              className="w-24 h-24 rounded-full mx-auto mb-2 border-4 border-yellow-300"
+            />
+            <p className="text-sm text-yellow-200">
+              Esta es la imagen de tu registro anterior
+            </p>
+            <p className="text-xs text-yellow-100">
+              Entrada: {pendingEntryInfo.fechaFormateada} a las {pendingEntryInfo.horaEntrada}
+            </p>
+          </div>
+        )}
 
         <div className="flex items-center gap-3 mb-4">
           <AlertTriangle className="h-8 w-8 text-yellow-300" />
