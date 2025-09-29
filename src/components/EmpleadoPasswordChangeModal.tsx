@@ -42,6 +42,8 @@ export const EmpleadoPasswordChangeModal = ({ isOpen, onClose, isRequired = fals
       const result = await changePassword(newPassword);
       
       if (result && result.success) {
+        // Refrescar el estado del empleado inmediatamente
+        await checkAuth();
         setNewPassword('');
         setConfirmPassword('');
         onClose();

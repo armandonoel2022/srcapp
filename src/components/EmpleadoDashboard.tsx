@@ -26,7 +26,7 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
   }>({ estado: 'sin_entrada', turno: null });
 
   const { verificarEstadoTurno, eliminarTurnosPrueba } = useTurnos();
-  const { logout } = useEmpleadoAuth();
+  const { logout, empleado: empleadoUpdated } = useEmpleadoAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,10 +57,14 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
   }, [empleado.id, verificarEstadoTurno]);
 
   useEffect(() => {
-    if (empleado.requires_password_change) {
+    // Usar el empleado actualizado del hook para reflejar cambios inmediatos
+    const currentEmpleado = empleadoUpdated || empleado;
+    if (currentEmpleado.requires_password_change) {
       setShowPasswordModal(true);
+    } else {
+      setShowPasswordModal(false);
     }
-  }, [empleado.requires_password_change]);
+  }, [empleado.requires_password_change, empleadoUpdated?.requires_password_change]);
 
   // Auto-cerrar el modal de "Turno Completo" después de 3s con animación de salida
   useEffect(() => {
@@ -155,7 +159,7 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
                 <LocationDisplay empleadoLugarDesignado={empleado.lugar_designado} />
               </div>
               <div className="flex gap-2">
-                {empleado.requires_password_change && (
+                {(empleadoUpdated?.requires_password_change || empleado.requires_password_change) && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -215,7 +219,7 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
         <EmpleadoPasswordChangeModal
           isOpen={showPasswordModal}
           onClose={() => setShowPasswordModal(false)}
-          isRequired={empleado.requires_password_change}
+          isRequired={empleadoUpdated?.requires_password_change || empleado.requires_password_change}
         />
 
         {/* Completion Modal */}
