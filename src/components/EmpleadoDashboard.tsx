@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 import { Clock, MapPin, CheckCircle, LogOut, Key } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
 import { PunchButton } from '@/components/PunchButton';
@@ -18,7 +18,6 @@ interface EmpleadoDashboardProps {
 export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [tipoRegistro, setTipoRegistro] = useState<'entrada' | 'salida'>('entrada');
   const [estadoTurno, setEstadoTurno] = useState<{
     estado: 'sin_entrada' | 'entrada_registrada' | 'completo' | 'error';
@@ -40,13 +39,7 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
     const now = new Date();
     const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     verificarEstadoTurno(empleado.id, today).then(result => {
-      const prevEstado = estadoTurno.estado;
       setEstadoTurno(result);
-      
-      // Mostrar modal solo cuando cambia a completo
-      if (result.estado === 'completo' && prevEstado !== 'completo') {
-        setShowCompletionModal(true);
-      }
       
       if (result.estado === 'sin_entrada') {
         setTipoRegistro('entrada');
@@ -66,13 +59,6 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
     }
   }, [empleado.requires_password_change, empleadoUpdated?.requires_password_change]);
 
-  // Auto-cerrar el modal de "Turno Completo" después de 3s con animación de salida
-  useEffect(() => {
-    if (showCompletionModal) {
-      const timer = setTimeout(() => setShowCompletionModal(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showCompletionModal]);
 
   const formatTime12Hour = (date: Date) => {
     return date.toLocaleTimeString('es-ES', {
@@ -95,14 +81,8 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
   const handleRegistroCompleto = async () => {
     const now = new Date();
     const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-    const prevEstado = estadoTurno.estado;
     const nuevoEstado = await verificarEstadoTurno(empleado.id, today);
     setEstadoTurno(nuevoEstado);
-    
-    // Mostrar modal si se completó el turno
-    if (nuevoEstado.estado === 'completo' && prevEstado !== 'completo') {
-      setShowCompletionModal(true);
-    }
     
     if (tipoRegistro === 'entrada') {
       setTipoRegistro('salida');
@@ -221,45 +201,6 @@ export const EmpleadoDashboard = ({ empleado }: EmpleadoDashboardProps) => {
           onClose={() => setShowPasswordModal(false)}
           isRequired={empleadoUpdated?.requires_password_change || empleado.requires_password_change}
         />
-
-        {/* Completion Modal */}
-        <AlertDialog open={showCompletionModal} onOpenChange={setShowCompletionModal}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                Turno Completo Registrado
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {empleado.nombres === 'Usuario' && empleado.apellidos === 'Prueba' 
-                  ? "Turno completo. Como usuario de prueba, puedes hacer un nuevo registro usando el botón 'Nuevo Registro de Prueba' que aparecerá abajo."
-                  : 'Ya tienes registradas tanto la entrada como la salida para hoy.'
-                }
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              {empleado.nombres === 'Usuario' && empleado.apellidos === 'Prueba' && (
-                <Button 
-                  variant="outline" 
-                  onClick={async () => {
-                    const now = new Date();
-                    const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-                    const result = await eliminarTurnosPrueba(empleado.id, today);
-                    
-                    if (result.success) {
-                      setEstadoTurno({ estado: 'sin_entrada', turno: null });
-                      setTipoRegistro('entrada');
-                      setShowCompletionModal(false);
-                    }
-                  }}
-                >
-                  Nuevo Registro de Prueba
-                </Button>
-              )}
-              <AlertDialogAction>OK</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </div>
   );
