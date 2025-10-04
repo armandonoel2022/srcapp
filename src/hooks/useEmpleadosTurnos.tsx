@@ -20,6 +20,9 @@ export interface EmpleadoTurno {
   active?: boolean;
   created_at: string;
   updated_at: string;
+  consent_accepted?: boolean;
+  consent_date?: string;
+  consent_version?: string;
 }
 
 interface NuevoEmpleadoTurno {

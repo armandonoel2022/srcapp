@@ -249,6 +249,37 @@ export const GestionEmpleadosTurnos = () => {
                 <Label>Fecha de Registro</Label>
                 <p className="text-sm font-medium">{formatDate(selectedEmpleado.created_at)}</p>
               </div>
+              
+              {/* Sección de Términos y Condiciones */}
+              <div className="col-span-2 border-t pt-4 mt-4">
+                <h3 className="text-lg font-semibold mb-3">Términos y Condiciones</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Estado de Consentimiento</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      {selectedEmpleado.consent_accepted ? (
+                        <Badge variant="default" className="bg-green-600">Aceptado</Badge>
+                      ) : (
+                        <Badge variant="destructive">Pendiente</Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Fecha de Aceptación</Label>
+                    <p className="text-sm font-medium">
+                      {selectedEmpleado.consent_date 
+                        ? formatDate(selectedEmpleado.consent_date) 
+                        : 'No ha aceptado'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label>Versión de Términos</Label>
+                    <p className="text-sm font-medium">
+                      {selectedEmpleado.consent_version || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>
