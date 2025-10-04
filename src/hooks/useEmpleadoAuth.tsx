@@ -110,6 +110,42 @@ export const useEmpleadoAuth = () => {
     }
   };
 
+  const resetPassword = async (username: string, cedula: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('reset_empleado_turno_password', {
+        p_username: username,
+        p_cedula: cedula
+      });
+
+      if (error) throw error;
+
+      if (data === true) {
+        toast({
+          title: "Contraseña restablecida",
+          description: "Tu contraseña ha sido restablecida a: SRC_Agente2025",
+        });
+        return { success: true };
+      } else {
+        toast({
+          title: "Error",
+          description: "Usuario o cédula incorrectos",
+          variant: "destructive"
+        });
+        return { success: false, error: "Usuario o cédula incorrectos" };
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setEmpleado(null);
     localStorage.removeItem('empleado_auth');
@@ -140,6 +176,7 @@ export const useEmpleadoAuth = () => {
     loading,
     loginEmpleado,
     changePassword,
+    resetPassword,
     logout,
     checkAuth
   };

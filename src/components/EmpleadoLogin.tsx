@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useEmpleadoAuth } from '@/hooks/useEmpleadoAuth';
-import { Eye, EyeOff, LogIn, Lock } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Lock, KeyRound } from 'lucide-react';
 
 interface EmpleadoLoginProps {
   onSuccess: () => void;
@@ -14,7 +15,10 @@ export const EmpleadoLogin = ({ onSuccess }: EmpleadoLoginProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { loginEmpleado, loading } = useEmpleadoAuth();
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetUsername, setResetUsername] = useState('');
+  const [resetCedula, setResetCedula] = useState('');
+  const { loginEmpleado, resetPassword, loading } = useEmpleadoAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +28,19 @@ export const EmpleadoLogin = ({ onSuccess }: EmpleadoLoginProps) => {
     const result = await loginEmpleado(username, password);
     if (result.success) {
       onSuccess();
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetUsername || !resetCedula) return;
+
+    const result = await resetPassword(resetUsername, resetCedula);
+    if (result.success) {
+      setShowResetDialog(false);
+      setResetUsername('');
+      setResetCedula('');
     }
   };
 
@@ -89,6 +106,15 @@ export const EmpleadoLogin = ({ onSuccess }: EmpleadoLoginProps) => {
               {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </form>
+
+          <Button
+            variant="link"
+            className="w-full mt-2"
+            onClick={() => setShowResetDialog(true)}
+          >
+            <KeyRound className="mr-2 h-4 w-4" />
+            ¿Olvidaste tu contraseña?
+          </Button>
           
           <div className="mt-4 p-3 bg-muted rounded-lg text-sm text-center">
             <p className="font-medium">Credenciales por defecto:</p>
@@ -96,6 +122,63 @@ export const EmpleadoLogin = ({ onSuccess }: EmpleadoLoginProps) => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recuperar Contraseña</DialogTitle>
+            <DialogDescription>
+              Ingresa tu usuario y cédula para restablecer tu contraseña
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div>
+              <Label htmlFor="reset-username">Usuario</Label>
+              <Input
+                id="reset-username"
+                value={resetUsername}
+                onChange={(e) => setResetUsername(e.target.value)}
+                placeholder="Tu nombre de usuario"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="reset-cedula">Cédula</Label>
+              <Input
+                id="reset-cedula"
+                value={resetCedula}
+                onChange={(e) => setResetCedula(e.target.value)}
+                placeholder="Tu número de cédula"
+                required
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => {
+                  setShowResetDialog(false);
+                  setResetUsername('');
+                  setResetCedula('');
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                className="flex-1"
+                disabled={loading || !resetUsername || !resetCedula}
+              >
+                Restablecer
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

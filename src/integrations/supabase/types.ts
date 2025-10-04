@@ -787,6 +787,10 @@ export type Database = {
           total_dias: number
         }[]
       }
+      reset_empleado_turno_password: {
+        Args: { p_cedula: string; p_username: string }
+        Returns: boolean
+      }
       set_empleado_turno_password: {
         Args: { p_empleado_id: string; p_password?: string; p_username: string }
         Returns: boolean
