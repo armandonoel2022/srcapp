@@ -113,7 +113,7 @@ export const useEmpleadoAuth = () => {
   const resetPassword = async (username: string, cedula: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('reset_empleado_turno_password', {
+      const { data, error } = await (supabase.rpc as any)('reset_empleado_turno_password', {
         p_username: username,
         p_cedula: cedula
       });
