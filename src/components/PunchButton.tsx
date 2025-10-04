@@ -50,9 +50,10 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
         .from('empleados_turnos')
         .select('consent_accepted')
         .eq('id', empleadoId)
-        .single();
+        .maybeSingle();
       
-      if (!error && data && !data.consent_accepted) {
+      const accepted = (data as any)?.consent_accepted;
+      if (!error && data && accepted === false) {
         setNeedsConsent(true);
       }
     };
@@ -233,7 +234,7 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
           consent_accepted: true,
           consent_date: new Date().toISOString(),
           consent_version: '1.0'
-        })
+        } as any)
         .eq('id', empleadoId);
 
       if (error) throw error;
