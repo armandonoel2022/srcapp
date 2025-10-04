@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, Loader2, Shield, Camera } from 'lucide-react';
 import { useTurnos } from '@/hooks/useTurnos';
@@ -6,6 +6,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { PatternAlert } from '@/components/PatternAlert';
+import { TermsConsentModal } from '@/components/TermsConsentModal';
 
 interface PunchButtonProps {
   empleadoId: string;
@@ -25,6 +26,9 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [geolocationError, setGeolocationError] = useState<string | null>(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [pendingPunchData, setPendingPunchData] = useState<any>(null);
+  const [needsConsent, setNeedsConsent] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { 
@@ -38,6 +42,23 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
   } = useTurnos();
   const { getCurrentPosition, isLoading: isGeolocationLoading, error: geolocationErrorObj, getLocationSettingsInstructions } = useGeolocation();
   const { toast } = useToast();
+
+  // Check if employee needs to accept consent
+  useEffect(() => {
+    const checkConsent = async () => {
+      const { data, error } = await supabase
+        .from('empleados_turnos')
+        .select('consent_accepted')
+        .eq('id', empleadoId)
+        .single();
+      
+      if (!error && data && !data.consent_accepted) {
+        setNeedsConsent(true);
+      }
+    };
+
+    checkConsent();
+  }, [empleadoId]);
 
   const uploadPhoto = async (file: File, turnoId: string): Promise<string | null> => {
     try {
@@ -204,6 +225,37 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
     }
   };
 
+  const handleAcceptTerms = async () => {
+    try {
+      const { error } = await supabase
+        .from('empleados_turnos')
+        .update({
+          consent_accepted: true,
+          consent_date: new Date().toISOString(),
+          consent_version: '1.0'
+        })
+        .eq('id', empleadoId);
+
+      if (error) throw error;
+
+      setNeedsConsent(false);
+      setShowTermsModal(false);
+      
+      // Continue with pending punch if exists
+      if (pendingPunchData) {
+        await procesarRegistro(pendingPunchData);
+        setPendingPunchData(null);
+      }
+    } catch (error) {
+      console.error('Error al guardar consentimiento:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el consentimiento. Intente nuevamente.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handlePunch = async () => {
     if (!selectedFile) {
       toast({
@@ -211,6 +263,13 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
         description: "Debe seleccionar una foto antes de hacer el PUNCH.",
         variant: "destructive"
       });
+      return;
+    }
+
+    // Check if consent is needed before proceeding
+    if (needsConsent) {
+      console.log('Requiere aceptar términos primero');
+      setShowTermsModal(true);
       return;
     }
 
@@ -283,6 +342,14 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
         hora_entrada: hora,
         hora_salida: hora,
       };
+
+      // If consent needed, save data and show modal
+      if (needsConsent) {
+        setPendingPunchData(turnoData);
+        setShowTermsModal(true);
+        setIsPunching(false);
+        return;
+      }
 
       // Procesar directamente - el hook maneja la detección automática y alertas
       await procesarRegistro(turnoData);
@@ -394,6 +461,13 @@ export const PunchButton = ({ empleadoId, tipoRegistro, onRegistroCompleto }: Pu
         processing={processingPattern}
         onConfirm={confirmarPatronRegistro}
         onCancel={cancelarPatronRegistro}
+      />
+
+      {/* Modal de términos y condiciones */}
+      <TermsConsentModal 
+        open={showTermsModal}
+        onAccept={handleAcceptTerms}
+        isLoading={isPunching}
       />
     </div>
   );

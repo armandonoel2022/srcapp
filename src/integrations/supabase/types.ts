@@ -272,6 +272,9 @@ export type Database = {
           active: boolean
           apellidos: string
           cedula: string | null
+          consent_accepted: boolean | null
+          consent_date: string | null
+          consent_version: string | null
           created_at: string
           fecha_nacimiento: string | null
           funcion: string
@@ -292,6 +295,9 @@ export type Database = {
           active?: boolean
           apellidos: string
           cedula?: string | null
+          consent_accepted?: boolean | null
+          consent_date?: string | null
+          consent_version?: string | null
           created_at?: string
           fecha_nacimiento?: string | null
           funcion: string
@@ -312,6 +318,9 @@ export type Database = {
           active?: boolean
           apellidos?: string
           cedula?: string | null
+          consent_accepted?: boolean | null
+          consent_date?: string | null
+          consent_version?: string | null
           created_at?: string
           fecha_nacimiento?: string | null
           funcion?: string
