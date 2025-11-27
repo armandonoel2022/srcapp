@@ -423,6 +423,241 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_notifications: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          day_of_week: number
+          description: string | null
+          id: string
+          is_active: boolean
+          metadata: Json | null
+          name: string
+          notification_type: string
+          target_audience: string | null
+          time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          day_of_week: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          name: string
+          notification_type?: string
+          target_audience?: string | null
+          time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          day_of_week?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          name?: string
+          notification_type?: string
+          target_audience?: string | null
+          time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sync_metadata: {
+        Row: {
+          created_at: string | null
+          devices_count: number | null
+          error_message: string | null
+          id: string
+          last_sync: string
+          positions_count: number | null
+          sync_duration: number | null
+          sync_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          devices_count?: number | null
+          error_message?: string | null
+          id?: string
+          last_sync?: string
+          positions_count?: number | null
+          sync_duration?: number | null
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          devices_count?: number | null
+          error_message?: string | null
+          id?: string
+          last_sync?: string
+          positions_count?: number | null
+          sync_duration?: number | null
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      traccar_devices: {
+        Row: {
+          contact: string | null
+          created_at: string | null
+          data: Json | null
+          id: number
+          last_update: string | null
+          model: string | null
+          name: string
+          phone: string | null
+          position_id: number | null
+          status: string | null
+          unique_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          contact?: string | null
+          created_at?: string | null
+          data?: Json | null
+          id: number
+          last_update?: string | null
+          model?: string | null
+          name: string
+          phone?: string | null
+          position_id?: number | null
+          status?: string | null
+          unique_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          contact?: string | null
+          created_at?: string | null
+          data?: Json | null
+          id?: number
+          last_update?: string | null
+          model?: string | null
+          name?: string
+          phone?: string | null
+          position_id?: number | null
+          status?: string | null
+          unique_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      traccar_history: {
+        Row: {
+          accuracy: number | null
+          address: string | null
+          altitude: number | null
+          attributes: Json | null
+          course: number | null
+          created_at: string | null
+          device_id: number
+          device_name: string | null
+          device_time: string | null
+          device_unique_id: string | null
+          id: string
+          latitude: number
+          longitude: number
+          server_time: string | null
+          speed: number | null
+          synced_at: string | null
+        }
+        Insert: {
+          accuracy?: number | null
+          address?: string | null
+          altitude?: number | null
+          attributes?: Json | null
+          course?: number | null
+          created_at?: string | null
+          device_id: number
+          device_name?: string | null
+          device_time?: string | null
+          device_unique_id?: string | null
+          id: string
+          latitude: number
+          longitude: number
+          server_time?: string | null
+          speed?: number | null
+          synced_at?: string | null
+        }
+        Update: {
+          accuracy?: number | null
+          address?: string | null
+          altitude?: number | null
+          attributes?: Json | null
+          course?: number | null
+          created_at?: string | null
+          device_id?: number
+          device_name?: string | null
+          device_time?: string | null
+          device_unique_id?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          server_time?: string | null
+          speed?: number | null
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_device"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "traccar_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traccar_positions: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          data: Json | null
+          device_id: number | null
+          device_time: string | null
+          id: number
+          latitude: number | null
+          longitude: number | null
+          speed: number | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          data?: Json | null
+          device_id?: number | null
+          device_time?: string | null
+          id: number
+          latitude?: number | null
+          longitude?: number | null
+          speed?: number | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          data?: Json | null
+          device_id?: number | null
+          device_time?: string | null
+          id?: number
+          latitude?: number | null
+          longitude?: number | null
+          speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traccar_positions_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "traccar_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       turnos_empleados: {
         Row: {
           alerta_temprana: boolean | null
@@ -440,8 +675,8 @@ export type Database = {
           observaciones: string | null
           registro_automatico: boolean | null
           tipo_registro: string | null
-          ubicacion_entrada: unknown | null
-          ubicacion_salida: unknown | null
+          ubicacion_entrada: unknown
+          ubicacion_salida: unknown
         }
         Insert: {
           alerta_temprana?: boolean | null
@@ -459,8 +694,8 @@ export type Database = {
           observaciones?: string | null
           registro_automatico?: boolean | null
           tipo_registro?: string | null
-          ubicacion_entrada?: unknown | null
-          ubicacion_salida?: unknown | null
+          ubicacion_entrada?: unknown
+          ubicacion_salida?: unknown
         }
         Update: {
           alerta_temprana?: boolean | null
@@ -478,8 +713,8 @@ export type Database = {
           observaciones?: string | null
           registro_automatico?: boolean | null
           tipo_registro?: string | null
-          ubicacion_entrada?: unknown | null
-          ubicacion_salida?: unknown | null
+          ubicacion_entrada?: unknown
+          ubicacion_salida?: unknown
         }
         Relationships: [
           {
@@ -738,9 +973,9 @@ export type Database = {
         Args: { p_empleado_id: string; p_new_password: string }
         Returns: boolean
       }
-      create_empleado_with_password: {
-        Args:
-          | {
+      create_empleado_with_password:
+        | {
+            Args: {
               p_apellidos: string
               p_cedula?: string
               p_direccion?: string
@@ -752,7 +987,10 @@ export type Database = {
               p_telefono?: string
               p_ubicacion?: string
             }
-          | {
+            Returns: string
+          }
+        | {
+            Args: {
               p_apellidos: string
               p_cedula?: string
               p_funcion: string
@@ -760,8 +998,8 @@ export type Database = {
               p_password?: string
               p_ubicacion?: string
             }
-        Returns: string
-      }
+            Returns: string
+          }
       exec_sql: {
         Args: { params?: string[]; query: string }
         Returns: {
@@ -769,7 +1007,7 @@ export type Database = {
         }[]
       }
       get_current_user_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
       obtener_estadisticas_empleado: {
@@ -795,10 +1033,7 @@ export type Database = {
         Args: { p_empleado_id: string; p_password?: string; p_username: string }
         Returns: boolean
       }
-      setup_initial_users: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      setup_initial_users: { Args: never; Returns: string }
       setup_user_profile: {
         Args: {
           p_email: string
