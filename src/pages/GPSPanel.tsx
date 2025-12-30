@@ -18,23 +18,44 @@ import {
   WifiOff,
   Gauge
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
 import { useGPSDevices } from '@/hooks/useGPSDevices';
 import { toast } from '@/hooks/use-toast';
 
+interface GPSSession {
+  type: string;
+  user: string;
+  name?: string;
+  timestamp: number;
+}
+
 export const GPSPanel = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
   const { devices, loading, error, refetch, lastSync } = useGPSDevices();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [gpsSession, setGpsSession] = useState<GPSSession | null>(null);
 
-  // Redirect if not logged in
+  // Check for GPS session
   useEffect(() => {
-    if (!user) {
+    const sessionData = localStorage.getItem('gps_session');
+    if (!sessionData) {
+      navigate('/gps-login', { replace: true });
+      return;
+    }
+    
+    try {
+      const session = JSON.parse(sessionData) as GPSSession;
+      // Check if session is less than 24 hours old
+      if (Date.now() - session.timestamp > 24 * 60 * 60 * 1000) {
+        localStorage.removeItem('gps_session');
+        navigate('/gps-login', { replace: true });
+        return;
+      }
+      setGpsSession(session);
+    } catch {
       navigate('/gps-login', { replace: true });
     }
-  }, [user, navigate]);
+  }, [navigate]);
 
   // Auto refresh every 30 seconds
   useEffect(() => {
@@ -45,8 +66,12 @@ export const GPSPanel = () => {
     return () => clearInterval(interval);
   }, [autoRefresh, refetch]);
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleSignOut = () => {
+    localStorage.removeItem('gps_session');
+    toast({
+      title: "Sesión cerrada",
+      description: "Has salido del sistema GPS",
+    });
     navigate('/');
   };
 
@@ -69,7 +94,7 @@ export const GPSPanel = () => {
     ? Math.round(devices.reduce((acc, d) => acc + (d.speed || 0), 0) / devices.length)
     : 0;
 
-  if (!user) return null;
+  if (!gpsSession) return null;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -125,7 +150,7 @@ export const GPSPanel = () => {
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-blue-800">
           <div className="text-sm text-blue-300 mb-2">
-            {user.email}
+            {gpsSession.name || gpsSession.user}
           </div>
           <Button
             variant="ghost"
