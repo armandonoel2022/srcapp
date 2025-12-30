@@ -46,7 +46,6 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
   const [speed, setSpeed] = useState(1); // 1x, 2x, 4x
   const animationRef = useRef<number | null>(null);
   const vehicleMarkerRef = useRef<mapboxgl.Marker | null>(null);
-  const trailSourceRef = useRef<boolean>(false);
 
   const currentPoint = history[currentIndex];
   const prevPoint = currentIndex > 0 ? history[currentIndex - 1] : null;
@@ -61,9 +60,27 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
     ? calculateTotalElapsed(startPoint.deviceTime, currentPoint.deviceTime)
     : '--';
 
+  // Calculate bearing between two points
+  const calculateBearing = (from: HistoryPoint, to: HistoryPoint): number => {
+    const lat1 = (from.latitude * Math.PI) / 180;
+    const lat2 = (to.latitude * Math.PI) / 180;
+    const dLng = ((to.longitude - from.longitude) * Math.PI) / 180;
+
+    const y = Math.sin(dLng) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+    const bearing = (Math.atan2(y, x) * 180) / Math.PI;
+
+    return (bearing + 360) % 360;
+  };
+
   // Create/update vehicle marker with SRC badge
-  const updateVehicleMarker = useCallback((point: HistoryPoint, bearing?: number) => {
+  const updateVehicleMarker = useCallback((point: HistoryPoint) => {
     if (!map) return;
+
+    // Remove existing marker and create fresh one
+    if (vehicleMarkerRef.current) {
+      vehicleMarkerRef.current.remove();
+    }
 
     const el = document.createElement('div');
     el.innerHTML = `
@@ -77,8 +94,6 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
         justify-content: center;
         box-shadow: 0 4px 14px rgba(59, 130, 246, 0.6);
         border: 4px solid white;
-        transform: rotate(${bearing || 0}deg);
-        transition: transform 0.3s ease;
         position: relative;
       ">
         <span style="
@@ -90,102 +105,26 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
       </div>
     `;
 
-    if (vehicleMarkerRef.current) {
-      vehicleMarkerRef.current.setLngLat([point.longitude, point.latitude]);
-    } else {
-      vehicleMarkerRef.current = new mapboxgl.Marker({ element: el })
-        .setLngLat([point.longitude, point.latitude])
-        .addTo(map);
-    }
-
-    // Update popup content
-    vehicleMarkerRef.current.setPopup(
-      new mapboxgl.Popup({ offset: 25 }).setHTML(`
-        <div style="padding: 12px; min-width: 220px;">
-          <div style="font-weight: bold; color: #3b82f6; margin-bottom: 8px; font-size: 14px;">
-            🚗 Recorrido en Vivo
+    vehicleMarkerRef.current = new mapboxgl.Marker({ element: el })
+      .setLngLat([point.longitude, point.latitude])
+      .setPopup(
+        new mapboxgl.Popup({ offset: 25 }).setHTML(`
+          <div style="padding: 12px; min-width: 220px;">
+            <div style="font-weight: bold; color: #3b82f6; margin-bottom: 8px; font-size: 14px;">
+              🚗 Recorrido en Vivo
+            </div>
+            <p style="margin: 4px 0; font-size: 13px;">
+              <strong>Hora:</strong> ${new Date(point.deviceTime).toLocaleString()}
+            </p>
+            <p style="margin: 4px 0; font-size: 13px;">
+              <strong>Velocidad:</strong> ${point.speed} km/h
+            </p>
+            ${point.address ? `<p style="margin: 4px 0; font-size: 12px; color: #666;">${point.address}</p>` : ''}
           </div>
-          <p style="margin: 4px 0; font-size: 13px;">
-            <strong>Hora:</strong> ${new Date(point.deviceTime).toLocaleString()}
-          </p>
-          <p style="margin: 4px 0; font-size: 13px;">
-            <strong>Velocidad:</strong> ${point.speed} km/h
-          </p>
-          ${point.address ? `<p style="margin: 4px 0; font-size: 12px; color: #666;">${point.address}</p>` : ''}
-        </div>
-      `)
-    );
-
-    // Center map on vehicle
-    map.easeTo({
-      center: [point.longitude, point.latitude],
-      duration: 300,
-    });
+        `)
+      )
+      .addTo(map);
   }, [map]);
-
-  // Update trail line
-  const updateTrail = useCallback((upToIndex: number) => {
-    if (!map || upToIndex < 1) return;
-
-    const coordinates = history.slice(0, upToIndex + 1).map(p => [p.longitude, p.latitude]);
-
-    if (trailSourceRef.current) {
-      const source = map.getSource('simulation-trail') as mapboxgl.GeoJSONSource;
-      if (source) {
-        source.setData({
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates,
-          },
-        });
-      }
-    } else {
-      if (!map.getSource('simulation-trail')) {
-        map.addSource('simulation-trail', {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates,
-            },
-          },
-        });
-
-        map.addLayer({
-          id: 'simulation-trail',
-          type: 'line',
-          source: 'simulation-trail',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#3b82f6',
-            'line-width': 5,
-            'line-opacity': 0.9,
-          },
-        });
-      }
-      trailSourceRef.current = true;
-    }
-  }, [map, history]);
-
-  // Calculate bearing between two points
-  const calculateBearing = (from: HistoryPoint, to: HistoryPoint): number => {
-    const lat1 = (from.latitude * Math.PI) / 180;
-    const lat2 = (to.latitude * Math.PI) / 180;
-    const dLng = ((to.longitude - from.longitude) * Math.PI) / 180;
-
-    const y = Math.sin(dLng) * Math.cos(lat2);
-    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
-    const bearing = (Math.atan2(y, x) * 180) / Math.PI;
-
-    return (bearing + 360) % 360;
-  };
 
   // Animation loop
   useEffect(() => {
@@ -213,16 +152,11 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
     };
   }, [isPlaying, speed, history.length]);
 
-  // Update marker and trail when index changes
+  // Update marker when index changes
   useEffect(() => {
     if (!currentPoint) return;
-
-    const prevPointCalc = history[currentIndex - 1];
-    const bearing = prevPointCalc ? calculateBearing(prevPointCalc, currentPoint) : 0;
-
-    updateVehicleMarker(currentPoint, bearing);
-    updateTrail(currentIndex);
-  }, [currentIndex, currentPoint, history, updateVehicleMarker, updateTrail]);
+    updateVehicleMarker(currentPoint);
+  }, [currentIndex, currentPoint, updateVehicleMarker]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -231,15 +165,10 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
         vehicleMarkerRef.current.remove();
         vehicleMarkerRef.current = null;
       }
-      if (map && trailSourceRef.current) {
-        if (map.getLayer('simulation-trail')) map.removeLayer('simulation-trail');
-        if (map.getSource('simulation-trail')) map.removeSource('simulation-trail');
-        trailSourceRef.current = false;
-      }
     };
   }, [map]);
 
-  // Reset and auto-start on history change
+  // Reset on history change and auto-start
   useEffect(() => {
     setCurrentIndex(0);
     setIsPlaying(false);
@@ -247,19 +176,14 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
       vehicleMarkerRef.current.remove();
       vehicleMarkerRef.current = null;
     }
-    if (map && trailSourceRef.current) {
-      if (map.getLayer('simulation-trail')) map.removeLayer('simulation-trail');
-      if (map.getSource('simulation-trail')) map.removeSource('simulation-trail');
-      trailSourceRef.current = false;
-    }
     
     // Auto-start playback when history is loaded
     if (history.length >= 2) {
       setTimeout(() => {
         setIsPlaying(true);
-      }, 500);
+      }, 800);
     }
-  }, [history, map]);
+  }, [history]);
 
   if (history.length < 2) return null;
 
@@ -274,11 +198,6 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
       vehicleMarkerRef.current.remove();
       vehicleMarkerRef.current = null;
     }
-    if (map && trailSourceRef.current) {
-      if (map.getLayer('simulation-trail')) map.removeLayer('simulation-trail');
-      if (map.getSource('simulation-trail')) map.removeSource('simulation-trail');
-      trailSourceRef.current = false;
-    }
   };
 
   const cycleSpeed = () => {
@@ -290,10 +209,10 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
   };
 
   return (
-    <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-2xl p-4 w-80 border border-gray-200">
+    <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-2xl p-4 w-80 border border-gray-200 z-10">
       <div className="flex items-center justify-between mb-3">
         <h4 className="font-bold text-gray-800 flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">SRC</div>
+          <span className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">SRC</span>
           Recorrido
         </h4>
         <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
