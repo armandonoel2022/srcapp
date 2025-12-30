@@ -14,7 +14,8 @@ import {
   History,
   RefreshCw,
   Play,
-  AlertTriangle
+  AlertTriangle,
+  PlayCircle
 } from 'lucide-react';
 import { useGPSDevices } from '@/hooks/useGPSDevices';
 import { useGPSHistory } from '@/hooks/useGPSHistory';
@@ -56,6 +57,7 @@ export const GPSMapa = () => {
   const [showOriginalRoute, setShowOriginalRoute] = useState(true);
   const [showAdjustedRoute, setShowAdjustedRoute] = useState(true);
   const [autoCenter, setAutoCenter] = useState(true);
+  const [showSimulation, setShowSimulation] = useState(false);
   
   // History filters
   const [startDate, setStartDate] = useState(
@@ -213,179 +215,153 @@ export const GPSMapa = () => {
   };
 
   // Draw history routes on map
-  // Draw history routes on map
   useEffect(() => {
     if (!map.current || mode !== 'history') return;
 
-    // Wait for map to be fully loaded before drawing
-    const drawRoutes = () => {
-      if (!map.current) return;
+    // Remove existing route layers
+    ['original-route', 'adjusted-route'].forEach(id => {
+      if (map.current?.getLayer(id)) map.current.removeLayer(id);
+      if (map.current?.getSource(id)) map.current.removeSource(id);
+    });
+
+    // Clear markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    if (history.length === 0) return;
+
+    // Draw original route (dashed purple line like PHP)
+    if (showOriginalRoute && history.length > 1) {
+      const coordinates = history.map(p => [p.longitude, p.latitude]);
       
-      // Remove existing route layers
-      ['original-route', 'adjusted-route'].forEach(id => {
-        if (map.current?.getLayer(id)) map.current.removeLayer(id);
-        if (map.current?.getSource(id)) map.current.removeSource(id);
+      map.current.addSource('original-route', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates,
+          },
+        },
       });
 
-      // Clear markers
-      markersRef.current.forEach(marker => marker.remove());
-      markersRef.current = [];
+      map.current.addLayer({
+        id: 'original-route',
+        type: 'line',
+        source: 'original-route',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#8b5cf6', // Purple like PHP
+          'line-width': 4,
+          'line-opacity': 0.6,
+          'line-dasharray': [2, 2],
+        },
+      });
+    }
 
-      if (history.length === 0) return;
+    // Draw adjusted route (solid blue line like PHP)
+    if (showAdjustedRoute && adjustedRoute.length > 1) {
+      map.current.addSource('adjusted-route', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: adjustedRoute,
+          },
+        },
+      });
 
-      // Draw original route (dashed purple line) - connects all GPS points
-      if (showOriginalRoute && history.length > 1) {
-        const coordinates = history.map(p => [p.longitude, p.latitude]);
-        
-        try {
-          map.current.addSource('original-route', {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              properties: {},
-              geometry: {
-                type: 'LineString',
-                coordinates,
-              },
-            },
-          });
+      map.current.addLayer({
+        id: 'adjusted-route',
+        type: 'line',
+        source: 'adjusted-route',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#3b82f6', // Blue like PHP
+          'line-width': 6,
+          'line-opacity': 0.8,
+        },
+      });
+    }
 
-          map.current.addLayer({
-            id: 'original-route',
-            type: 'line',
-            source: 'original-route',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-            },
-            paint: {
-              'line-color': '#8b5cf6',
-              'line-width': 5,
-              'line-opacity': 0.8,
-              'line-dasharray': [2, 1],
-            },
-          });
-          console.log('Original route drawn with', coordinates.length, 'points');
-        } catch (err) {
-          console.error('Error drawing original route:', err);
-        }
-      }
+    // Add start and end markers (like PHP)
+    if (history.length > 0) {
+      const start = history[0];
+      const end = history[history.length - 1];
 
-      // Draw adjusted route (solid blue line)
-      if (showAdjustedRoute && adjustedRoute.length > 1) {
-        try {
-          map.current.addSource('adjusted-route', {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              properties: {},
-              geometry: {
-                type: 'LineString',
-                coordinates: adjustedRoute,
-              },
-            },
-          });
+      // Start marker (green)
+      const startEl = document.createElement('div');
+      startEl.innerHTML = `
+        <div style="
+          width: 32px;
+          height: 32px;
+          background: #10b981;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 14px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          border: 3px solid white;
+        ">A</div>
+      `;
+      const startMarker = new mapboxgl.Marker({ element: startEl })
+        .setLngLat([start.longitude, start.latitude])
+        .setPopup(new mapboxgl.Popup().setHTML(`
+          <div style="padding: 8px;">
+            <p style="font-weight: bold; color: #10b981;">INICIO</p>
+            <p style="font-size: 12px;">Hora: ${new Date(start.deviceTime).toLocaleString()}</p>
+            <p style="font-size: 12px;">Velocidad: ${start.speed} km/h</p>
+          </div>
+        `))
+        .addTo(map.current);
+      markersRef.current.push(startMarker);
 
-          map.current.addLayer({
-            id: 'adjusted-route',
-            type: 'line',
-            source: 'adjusted-route',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-            },
-            paint: {
-              'line-color': '#3b82f6',
-              'line-width': 6,
-              'line-opacity': 0.8,
-            },
-          });
-          console.log('Adjusted route drawn with', adjustedRoute.length, 'points');
-        } catch (err) {
-          console.error('Error drawing adjusted route:', err);
-        }
-      }
+      // End marker (red)
+      const endEl = document.createElement('div');
+      endEl.innerHTML = `
+        <div style="
+          width: 32px;
+          height: 32px;
+          background: #ef4444;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 14px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          border: 3px solid white;
+        ">B</div>
+      `;
+      const endMarker = new mapboxgl.Marker({ element: endEl })
+        .setLngLat([end.longitude, end.latitude])
+        .setPopup(new mapboxgl.Popup().setHTML(`
+          <div style="padding: 8px;">
+            <p style="font-weight: bold; color: #ef4444;">FIN</p>
+            <p style="font-size: 12px;">Hora: ${new Date(end.deviceTime).toLocaleString()}</p>
+            <p style="font-size: 12px;">Velocidad: ${end.speed} km/h</p>
+          </div>
+        `))
+        .addTo(map.current);
+      markersRef.current.push(endMarker);
 
-      // Add start and end markers
-      if (history.length > 0) {
-        const start = history[0];
-        const end = history[history.length - 1];
-
-        // Start marker (green)
-        const startEl = document.createElement('div');
-        startEl.innerHTML = `
-          <div style="
-            width: 28px;
-            height: 28px;
-            background: #10b981;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            border: 2px solid white;
-          ">A</div>
-        `;
-        const startMarker = new mapboxgl.Marker({ element: startEl })
-          .setLngLat([start.longitude, start.latitude])
-          .setPopup(new mapboxgl.Popup().setHTML(`
-            <div style="padding: 8px;">
-              <p style="font-weight: bold; color: #10b981;">INICIO</p>
-              <p style="font-size: 12px;">Hora: ${new Date(start.deviceTime).toLocaleString()}</p>
-              <p style="font-size: 12px;">Velocidad: ${start.speed} km/h</p>
-            </div>
-          `))
-          .addTo(map.current);
-        markersRef.current.push(startMarker);
-
-        // End marker (red)
-        const endEl = document.createElement('div');
-        endEl.innerHTML = `
-          <div style="
-            width: 28px;
-            height: 28px;
-            background: #ef4444;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            border: 2px solid white;
-          ">B</div>
-        `;
-        const endMarker = new mapboxgl.Marker({ element: endEl })
-          .setLngLat([end.longitude, end.latitude])
-          .setPopup(new mapboxgl.Popup().setHTML(`
-            <div style="padding: 8px;">
-              <p style="font-weight: bold; color: #ef4444;">FIN</p>
-              <p style="font-size: 12px;">Hora: ${new Date(end.deviceTime).toLocaleString()}</p>
-              <p style="font-size: 12px;">Velocidad: ${end.speed} km/h</p>
-            </div>
-          `))
-          .addTo(map.current);
-        markersRef.current.push(endMarker);
-
-        // Fit bounds to route with good padding and max zoom to see streets
-        const bounds = new mapboxgl.LngLatBounds();
-        history.forEach(p => bounds.extend([p.longitude, p.latitude]));
-        map.current.fitBounds(bounds, { 
-          padding: { top: 80, bottom: 80, left: 80, right: 280 },
-          maxZoom: 16
-        });
-      }
-    };
-
-    // Check if map style is loaded
-    if (map.current.isStyleLoaded()) {
-      drawRoutes();
-    } else {
-      map.current.once('load', drawRoutes);
+      // Fit bounds to route
+      const bounds = new mapboxgl.LngLatBounds();
+      history.forEach(p => bounds.extend([p.longitude, p.latitude]));
+      map.current.fitBounds(bounds, { padding: 50 });
     }
   }, [history, adjustedRoute, mode, showOriginalRoute, showAdjustedRoute]);
 
@@ -612,6 +588,17 @@ export const GPSMapa = () => {
                           onCheckedChange={setShowAdjustedRoute}
                         />
                       </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <PlayCircle className="w-4 h-4 text-orange-500" />
+                          <span className="text-sm">Simular Recorrido</span>
+                        </div>
+                        <Switch 
+                          checked={showSimulation} 
+                          onCheckedChange={setShowSimulation}
+                        />
+                      </div>
                     </div>
 
                     <Card className="bg-purple-50">
@@ -629,14 +616,16 @@ export const GPSMapa = () => {
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-blue-50 border-blue-200">
-                      <CardContent className="p-3 text-sm text-blue-800">
-                        <p className="flex items-center gap-2">
-                          <span className="w-6 h-6 bg-blue-500 rounded-full inline-flex items-center justify-center text-white text-xs font-bold">SRC</span>
-                          Recorrido automático - usa los controles en el mapa
-                        </p>
-                      </CardContent>
-                    </Card>
+                    {showSimulation && (
+                      <Card className="bg-orange-50 border-orange-200">
+                        <CardContent className="p-3 text-sm text-orange-800">
+                          <p className="flex items-center gap-2">
+                            <PlayCircle className="h-4 w-4" />
+                            Simulación activa - usa los controles en el mapa
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
                   </>
                 )}
 
@@ -656,36 +645,44 @@ export const GPSMapa = () => {
         <div className="flex-1 relative">
           <div ref={mapContainer} className="absolute inset-0" />
           
-          {/* Route Simulation Controls - auto-shows when history is loaded */}
-          {mode === 'history' && history.length >= 2 && (
+          {/* Route Simulation Controls */}
+          {mode === 'history' && (
             <RouteSimulation
               map={map.current}
               history={history}
+              isVisible={showSimulation}
             />
           )}
           
-          {/* Compact map legend */}
+          {/* Map legend */}
           {mode === 'history' && history.length > 0 && (
-            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg shadow-md px-3 py-2 text-xs">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                  <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-[8px] font-bold">A</div>
+            <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-sm">
+              <h4 className="font-medium mb-2">Leyenda</h4>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">A</div>
                   <span>Inicio</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[8px] font-bold">B</div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">B</div>
                   <span>Fin</span>
                 </div>
                 {showOriginalRoute && (
-                  <div className="flex items-center gap-1">
-                    <div className="w-4 h-0.5 border-t-2 border-dashed border-purple-500" />
-                    <span>GPS</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-0.5 border-t-2 border-dashed border-purple-500" />
+                    <span>Puntos Históricos</span>
                   </div>
                 )}
                 {showAdjustedRoute && adjustedRoute.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    <div className="w-4 h-1 bg-blue-500 rounded" />
-                    <span>Ruta</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-1 bg-blue-500" />
+                    <span>Ruta Ajustada</span>
+                  </div>
+                )}
+                {showSimulation && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-1 bg-orange-500" />
+                    <span>Simulación</span>
                   </div>
                 )}
               </div>
