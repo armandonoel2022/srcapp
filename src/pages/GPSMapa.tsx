@@ -372,6 +372,34 @@ export const GPSMapa = () => {
     }
   }, [history, adjustedRoute, mode, showOriginalRoute, showAdjustedRoute]);
 
+  // Clean up history routes when switching to live mode
+  useEffect(() => {
+    if (mode !== 'live' || !map.current) return;
+
+    // Remove history route layers
+    ['original-route', 'adjusted-route', 'simulation-trail'].forEach(id => {
+      if (map.current?.getLayer(id)) map.current.removeLayer(id);
+      if (map.current?.getSource(id)) map.current.removeSource(id);
+    });
+
+    // Clear history markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    // Center on selected device or first available device
+    const targetDevice = selectedDevice 
+      ? devices.find(d => d.id === selectedDevice)
+      : devices.find(d => d.latitude && d.longitude);
+
+    if (targetDevice?.latitude && targetDevice?.longitude) {
+      map.current.flyTo({
+        center: [targetDevice.longitude, targetDevice.latitude],
+        zoom: 15,
+        duration: 1000,
+      });
+    }
+  }, [mode, devices, selectedDevice]);
+
   // Auto refresh for live mode
   useEffect(() => {
     if (mode !== 'live') return;
