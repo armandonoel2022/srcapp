@@ -17,10 +17,30 @@ interface HistoryPoint {
 interface RouteSimulationProps {
   map: mapboxgl.Map | null;
   history: HistoryPoint[];
-  isVisible: boolean;
 }
 
-export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProps) => {
+// Calculate time difference between two dates
+const calculateTimeDiff = (from: string, to: string): string => {
+  const diffMs = new Date(to).getTime() - new Date(from).getTime();
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${seconds}s`;
+  } else if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+  return `${seconds}s`;
+};
+
+// Calculate total elapsed time from start
+const calculateTotalElapsed = (start: string, current: string): string => {
+  return calculateTimeDiff(start, current);
+};
+
+export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [speed, setSpeed] = useState(1); // 1x, 2x, 4x
@@ -29,30 +49,44 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
   const trailSourceRef = useRef<boolean>(false);
 
   const currentPoint = history[currentIndex];
+  const prevPoint = currentIndex > 0 ? history[currentIndex - 1] : null;
+  const startPoint = history[0];
   const progress = history.length > 0 ? (currentIndex / (history.length - 1)) * 100 : 0;
 
-  // Create/update vehicle marker
+  // Time calculations
+  const timeFromPrev = prevPoint && currentPoint 
+    ? calculateTimeDiff(prevPoint.deviceTime, currentPoint.deviceTime) 
+    : '--';
+  const totalElapsed = startPoint && currentPoint 
+    ? calculateTotalElapsed(startPoint.deviceTime, currentPoint.deviceTime)
+    : '--';
+
+  // Create/update vehicle marker with SRC badge
   const updateVehicleMarker = useCallback((point: HistoryPoint, bearing?: number) => {
     if (!map) return;
 
     const el = document.createElement('div');
     el.innerHTML = `
       <div style="
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, #f97316, #ea580c);
+        width: 52px;
+        height: 52px;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.5);
+        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.6);
         border: 4px solid white;
         transform: rotate(${bearing || 0}deg);
         transition: transform 0.3s ease;
+        position: relative;
       ">
-        <svg style="width: 28px; height: 28px; fill: white;" viewBox="0 0 24 24">
-          <path d="M5 11l1.5-4.5h11L19 11m-1.5 5a1.5 1.5 0 01-1.5-1.5 1.5 1.5 0 011.5-1.5 1.5 1.5 0 011.5 1.5 1.5 1.5 0 01-1.5 1.5m-11 0a1.5 1.5 0 01-1.5-1.5A1.5 1.5 0 017.5 13a1.5 1.5 0 011.5 1.5A1.5 1.5 0 017.5 16M5 11v5a1 1 0 001 1h1a2 2 0 002-2V11H5zm10 0v4a2 2 0 002 2h1a1 1 0 001-1v-5h-4z"/>
-        </svg>
+        <span style="
+          color: white;
+          font-weight: bold;
+          font-size: 14px;
+          letter-spacing: 0.5px;
+        ">SRC</span>
       </div>
     `;
 
@@ -68,8 +102,8 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
     vehicleMarkerRef.current.setPopup(
       new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <div style="padding: 12px; min-width: 220px;">
-          <div style="font-weight: bold; color: #f97316; margin-bottom: 8px; font-size: 14px;">
-            🚗 Simulación en Vivo
+          <div style="font-weight: bold; color: #3b82f6; margin-bottom: 8px; font-size: 14px;">
+            🚗 Recorrido en Vivo
           </div>
           <p style="margin: 4px 0; font-size: 13px;">
             <strong>Hora:</strong> ${new Date(point.deviceTime).toLocaleString()}
@@ -130,7 +164,7 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
             'line-cap': 'round',
           },
           paint: {
-            'line-color': '#f97316',
+            'line-color': '#3b82f6',
             'line-width': 5,
             'line-opacity': 0.9,
           },
@@ -183,14 +217,14 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
   useEffect(() => {
     if (!currentPoint) return;
 
-    const prevPoint = history[currentIndex - 1];
-    const bearing = prevPoint ? calculateBearing(prevPoint, currentPoint) : 0;
+    const prevPointCalc = history[currentIndex - 1];
+    const bearing = prevPointCalc ? calculateBearing(prevPointCalc, currentPoint) : 0;
 
     updateVehicleMarker(currentPoint, bearing);
     updateTrail(currentIndex);
   }, [currentIndex, currentPoint, history, updateVehicleMarker, updateTrail]);
 
-  // Cleanup on unmount or when not visible
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (vehicleMarkerRef.current) {
@@ -205,7 +239,7 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
     };
   }, [map]);
 
-  // Reset on history change
+  // Reset and auto-start on history change
   useEffect(() => {
     setCurrentIndex(0);
     setIsPlaying(false);
@@ -218,9 +252,16 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
       if (map.getSource('simulation-trail')) map.removeSource('simulation-trail');
       trailSourceRef.current = false;
     }
+    
+    // Auto-start playback when history is loaded
+    if (history.length >= 2) {
+      setTimeout(() => {
+        setIsPlaying(true);
+      }, 500);
+    }
   }, [history, map]);
 
-  if (!isVisible || history.length < 2) return null;
+  if (history.length < 2) return null;
 
   const handleSliderChange = (value: number[]) => {
     setCurrentIndex(Math.round((value[0] / 100) * (history.length - 1)));
@@ -252,16 +293,17 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
     <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-2xl p-4 w-80 border border-gray-200">
       <div className="flex items-center justify-between mb-3">
         <h4 className="font-bold text-gray-800 flex items-center gap-2">
-          <span className="text-orange-500">▶</span> Simulación de Recorrido
+          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">SRC</div>
+          Recorrido
         </h4>
-        <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">
+        <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
           {speed}x
         </Badge>
       </div>
 
-      {/* Current point info */}
+      {/* Current point info with time elapsed */}
       {currentPoint && (
-        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-3 mb-3 text-sm">
+        <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg p-3 mb-3 text-sm">
           <div className="flex justify-between mb-1">
             <span className="text-gray-600">Punto:</span>
             <span className="font-medium">{currentIndex + 1} / {history.length}</span>
@@ -272,9 +314,19 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
               {new Date(currentPoint.deviceTime).toLocaleTimeString()}
             </span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between mb-1">
             <span className="text-gray-600">Velocidad:</span>
-            <span className="font-bold text-orange-600">{currentPoint.speed} km/h</span>
+            <span className="font-bold text-blue-600">{currentPoint.speed} km/h</span>
+          </div>
+          <div className="border-t border-blue-200 mt-2 pt-2">
+            <div className="flex justify-between mb-1">
+              <span className="text-gray-600">⏱ Desde anterior:</span>
+              <span className="font-medium text-blue-700">{timeFromPrev}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">⏱ Tiempo total:</span>
+              <span className="font-bold text-blue-800">{totalElapsed}</span>
+            </div>
           </div>
         </div>
       )}
@@ -308,7 +360,7 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
         <Button
           size="sm"
           variant={isPlaying ? 'destructive' : 'default'}
-          className={!isPlaying ? 'bg-orange-500 hover:bg-orange-600' : ''}
+          className={!isPlaying ? 'bg-blue-500 hover:bg-blue-600' : ''}
           onClick={() => setIsPlaying(!isPlaying)}
         >
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
