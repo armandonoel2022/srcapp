@@ -27,9 +27,22 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
   const animationRef = useRef<number | null>(null);
   const vehicleMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const trailSourceRef = useRef<boolean>(false);
+  const hasAutoStarted = useRef(false);
 
   const currentPoint = history[currentIndex];
   const progress = history.length > 0 ? (currentIndex / (history.length - 1)) * 100 : 0;
+
+  // Auto-start simulation when visible and history is loaded
+  useEffect(() => {
+    if (isVisible && history.length >= 2 && !hasAutoStarted.current) {
+      hasAutoStarted.current = true;
+      // Small delay to let the map render first
+      const timer = setTimeout(() => {
+        setIsPlaying(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, history.length]);
 
   // Create/update vehicle marker
   const updateVehicleMarker = useCallback((point: HistoryPoint, bearing?: number) => {
@@ -209,6 +222,7 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
   useEffect(() => {
     setCurrentIndex(0);
     setIsPlaying(false);
+    hasAutoStarted.current = false; // Reset auto-start flag for new history
     if (vehicleMarkerRef.current) {
       vehicleMarkerRef.current.remove();
       vehicleMarkerRef.current = null;
@@ -249,12 +263,17 @@ export const RouteSimulation = ({ map, history, isVisible }: RouteSimulationProp
   };
 
   return (
-    <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-2xl p-4 w-80 border border-gray-200">
+    <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-4 w-72 border border-gray-200">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-bold text-gray-800 flex items-center gap-2">
-          <span className="text-orange-500">▶</span> Simulación de Recorrido
+        <h4 className="font-semibold text-gray-700 text-sm flex items-center gap-2">
+          {isPlaying ? (
+            <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+          ) : (
+            <span className="w-2 h-2 bg-gray-400 rounded-full" />
+          )}
+          Recorrido
         </h4>
-        <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">
+        <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200 text-xs">
           {speed}x
         </Badge>
       </div>

@@ -14,8 +14,7 @@ import {
   History,
   RefreshCw,
   Play,
-  AlertTriangle,
-  PlayCircle
+  AlertTriangle
 } from 'lucide-react';
 import { useGPSDevices } from '@/hooks/useGPSDevices';
 import { useGPSHistory } from '@/hooks/useGPSHistory';
@@ -57,7 +56,6 @@ export const GPSMapa = () => {
   const [showOriginalRoute, setShowOriginalRoute] = useState(true);
   const [showAdjustedRoute, setShowAdjustedRoute] = useState(true);
   const [autoCenter, setAutoCenter] = useState(true);
-  const [showSimulation, setShowSimulation] = useState(false);
   
   // History filters
   const [startDate, setStartDate] = useState(
@@ -589,16 +587,6 @@ export const GPSMapa = () => {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <PlayCircle className="w-4 h-4 text-orange-500" />
-                          <span className="text-sm">Simular Recorrido</span>
-                        </div>
-                        <Switch 
-                          checked={showSimulation} 
-                          onCheckedChange={setShowSimulation}
-                        />
-                      </div>
                     </div>
 
                     <Card className="bg-purple-50">
@@ -615,17 +603,6 @@ export const GPSMapa = () => {
                         )}
                       </CardContent>
                     </Card>
-
-                    {showSimulation && (
-                      <Card className="bg-orange-50 border-orange-200">
-                        <CardContent className="p-3 text-sm text-orange-800">
-                          <p className="flex items-center gap-2">
-                            <PlayCircle className="h-4 w-4" />
-                            Simulación activa - usa los controles en el mapa
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
                   </>
                 )}
 
@@ -645,12 +622,12 @@ export const GPSMapa = () => {
         <div className="flex-1 relative">
           <div ref={mapContainer} className="absolute inset-0" />
           
-          {/* Route Simulation Controls */}
-          {mode === 'history' && (
+          {/* Route Simulation Controls - Auto-starts when history loaded */}
+          {mode === 'history' && history.length >= 2 && (
             <RouteSimulation
               map={map.current}
               history={history}
-              isVisible={showSimulation}
+              isVisible={true}
             />
           )}
           
@@ -679,12 +656,10 @@ export const GPSMapa = () => {
                     <span>Ruta Ajustada</span>
                   </div>
                 )}
-                {showSimulation && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-1 bg-orange-500" />
-                    <span>Simulación</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-1 bg-orange-500" />
+                  <span>Recorrido</span>
+                </div>
               </div>
             </div>
           )}
