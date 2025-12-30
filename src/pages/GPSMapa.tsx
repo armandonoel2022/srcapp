@@ -438,14 +438,14 @@ export const GPSMapa = () => {
             <div>
               <Label>Vehículo</Label>
               <Select 
-                value={selectedDevice?.toString() || ''} 
-                onValueChange={(v) => setSelectedDevice(v ? parseInt(v) : null)}
+                value={selectedDevice ? selectedDevice.toString() : 'all'}
+                onValueChange={(v) => setSelectedDevice(v === 'all' ? null : parseInt(v))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar vehículo" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Todos los vehículos</SelectItem>
+                <SelectContent className="z-50 bg-popover">
+                  <SelectItem value="all">Todos los vehículos</SelectItem>
                   {devices.map((device) => (
                     <SelectItem key={device.id} value={device.id.toString()}>
                       <div className="flex items-center gap-2">
