@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,26 +8,75 @@ import { MapPin, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
+// Credenciales especiales para GPS (mismas que Traccar)
+const GPS_ADMIN_CREDENTIALS = {
+  username: 'admin',
+  password: 'x24kvd5p'
+};
+
 export const GPSLogin = () => {
   const navigate = useNavigate();
   const { signIn, user, loading } = useAuth();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // If already logged in, redirect to GPS panel
-  if (!loading && user) {
-    navigate('/gps-panel', { replace: true });
-    return null;
-  }
+  // Check for GPS session on mount
+  useEffect(() => {
+    const gpsSession = localStorage.getItem('gps_session');
+    if (gpsSession) {
+      navigate('/gps-panel', { replace: true });
+    }
+  }, [navigate]);
+
+  // If already logged in with Supabase auth, redirect to GPS panel
+  useEffect(() => {
+    if (!loading && user) {
+      // Set GPS session for Supabase authenticated users
+      localStorage.setItem('gps_session', JSON.stringify({
+        type: 'supabase',
+        user: user.email,
+        timestamp: Date.now()
+      }));
+      navigate('/gps-panel', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
+      // Check if it's the special GPS admin credentials (Traccar credentials)
+      if (username === GPS_ADMIN_CREDENTIALS.username && password === GPS_ADMIN_CREDENTIALS.password) {
+        // Store GPS session
+        localStorage.setItem('gps_session', JSON.stringify({
+          type: 'gps_admin',
+          user: 'admin',
+          name: 'Administrador GPS',
+          timestamp: Date.now()
+        }));
+        
+        toast({
+          title: "Bienvenido",
+          description: "Acceso al panel GPS exitoso",
+        });
+        
+        navigate('/gps-panel');
+        return;
+      }
+
+      // Try Supabase authentication for other users
+      await signIn(username, password);
+      
+      // Store GPS session for Supabase users
+      localStorage.setItem('gps_session', JSON.stringify({
+        type: 'supabase',
+        user: username,
+        timestamp: Date.now()
+      }));
+      
       toast({
         title: "Bienvenido",
         description: "Acceso al panel GPS exitoso",
@@ -76,13 +125,13 @@ export const GPSLogin = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Usuario / Email</Label>
+                <Label htmlFor="username">Usuario</Label>
                 <Input
-                  id="email"
+                  id="username"
                   type="text"
-                  placeholder="usuario@ejemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 />

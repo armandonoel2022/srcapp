@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,18 +10,12 @@ import { Switch } from '@/components/ui/switch';
 import { 
   ArrowLeft, 
   Car, 
-  Clock, 
   MapPin,
   History,
   RefreshCw,
-  Eye,
-  EyeOff,
   Play,
-  Gauge,
-  Calendar,
   AlertTriangle
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
 import { useGPSDevices } from '@/hooks/useGPSDevices';
 import { useGPSHistory } from '@/hooks/useGPSHistory';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -29,22 +23,29 @@ import { toast } from '@/hooks/use-toast';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
+interface GPSSession {
+  type: string;
+  user: string;
+  name?: string;
+  timestamp: number;
+}
+
 export const GPSMapa = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
   const { devices, refetch: refetchDevices } = useGPSDevices();
   const { mapboxToken } = useSettings();
   
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<{ [key: number]: mapboxgl.Marker }>({});
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
   
   // URL params
   const deviceIdParam = searchParams.get('device');
   const modeParam = searchParams.get('mode');
   
   // State
+  const [gpsSession, setGpsSession] = useState<GPSSession | null>(null);
   const [selectedDevice, setSelectedDevice] = useState<number | null>(
     deviceIdParam ? parseInt(deviceIdParam) : null
   );
@@ -72,9 +73,30 @@ export const GPSMapa = () => {
     fetchHistory 
   } = useGPSHistory();
 
+  // Check for GPS session
+  useEffect(() => {
+    const sessionData = localStorage.getItem('gps_session');
+    if (!sessionData) {
+      navigate('/gps-login', { replace: true });
+      return;
+    }
+    
+    try {
+      const session = JSON.parse(sessionData) as GPSSession;
+      if (Date.now() - session.timestamp > 24 * 60 * 60 * 1000) {
+        localStorage.removeItem('gps_session');
+        navigate('/gps-login', { replace: true });
+        return;
+      }
+      setGpsSession(session);
+    } catch {
+      navigate('/gps-login', { replace: true });
+    }
+  }, [navigate]);
+
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+    if (!mapContainer.current || !mapboxToken || !gpsSession) return;
     
     mapboxgl.accessToken = mapboxToken;
     
@@ -91,32 +113,51 @@ export const GPSMapa = () => {
     return () => {
       map.current?.remove();
     };
-  }, [mapboxToken]);
+  }, [mapboxToken, gpsSession]);
 
   // Update markers for live mode
   useEffect(() => {
     if (!map.current || mode !== 'live') return;
 
     // Clear old markers
-    Object.values(markersRef.current).forEach(marker => marker.remove());
-    markersRef.current = {};
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
 
     // Add markers for each device
     devices.forEach((device) => {
       if (!device.latitude || !device.longitude) return;
 
       const el = document.createElement('div');
-      el.className = 'vehicle-marker';
       el.innerHTML = `
-        <div class="relative">
-          <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white ${device.status === 'online' ? 'animate-pulse' : 'opacity-60'}">
-            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+        <div style="position: relative;">
+          <div style="
+            width: 40px;
+            height: 40px;
+            background: ${device.status === 'online' ? '#10b981' : '#ef4444'};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 3px solid white;
+          ">
+            <svg style="width: 24px; height: 24px; fill: white;" viewBox="0 0 24 24">
               <path d="M5 11l1.5-4.5h11L19 11m-1.5 5a1.5 1.5 0 01-1.5-1.5 1.5 1.5 0 011.5-1.5 1.5 1.5 0 011.5 1.5 1.5 1.5 0 01-1.5 1.5m-11 0a1.5 1.5 0 01-1.5-1.5A1.5 1.5 0 017.5 13a1.5 1.5 0 011.5 1.5A1.5 1.5 0 017.5 16M5 11v5a1 1 0 001 1h1a2 2 0 002-2V11H5zm10 0v4a2 2 0 002 2h1a1 1 0 001-1v-5h-4z"/>
             </svg>
           </div>
-          <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-white px-1 rounded text-xs font-medium shadow truncate max-w-20">
-            ${device.name}
-          </div>
+          <div style="
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+          ">${device.name}</div>
         </div>
       `;
 
@@ -124,17 +165,17 @@ export const GPSMapa = () => {
         .setLngLat([device.longitude, device.latitude])
         .setPopup(
           new mapboxgl.Popup({ offset: 25 }).setHTML(`
-            <div class="p-2">
-              <h3 class="font-bold">${device.name}</h3>
-              <p class="text-sm text-gray-600">${device.address || 'Sin dirección'}</p>
-              <p class="text-sm">Velocidad: ${Math.round(device.speed || 0)} km/h</p>
-              <p class="text-sm">Estado: ${device.status === 'online' ? '🟢 En línea' : '🔴 Fuera de línea'}</p>
+            <div style="padding: 8px; min-width: 200px;">
+              <h3 style="font-weight: bold; color: #1e3a8a; margin-bottom: 8px;">${device.name}</h3>
+              <p style="margin: 4px 0;"><strong>Estado:</strong> ${device.status === 'online' ? '🟢 En línea' : '🔴 Fuera de línea'}</p>
+              <p style="margin: 4px 0;"><strong>Velocidad:</strong> ${Math.round(device.speed || 0)} km/h</p>
+              <p style="margin: 4px 0; font-size: 12px; color: #666;">${device.address || 'Sin dirección'}</p>
             </div>
           `)
         )
         .addTo(map.current!);
 
-      markersRef.current[device.id] = marker;
+      markersRef.current.push(marker);
 
       // Center on selected device
       if (selectedDevice === device.id && autoCenter) {
@@ -175,18 +216,18 @@ export const GPSMapa = () => {
     if (!map.current || mode !== 'history') return;
 
     // Remove existing route layers
-    ['original-route', 'adjusted-route', 'history-points'].forEach(id => {
+    ['original-route', 'adjusted-route'].forEach(id => {
       if (map.current?.getLayer(id)) map.current.removeLayer(id);
       if (map.current?.getSource(id)) map.current.removeSource(id);
     });
 
     // Clear markers
-    Object.values(markersRef.current).forEach(marker => marker.remove());
-    markersRef.current = {};
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
 
     if (history.length === 0) return;
 
-    // Draw original route
+    // Draw original route (dashed purple line like PHP)
     if (showOriginalRoute && history.length > 1) {
       const coordinates = history.map(p => [p.longitude, p.latitude]);
       
@@ -211,14 +252,15 @@ export const GPSMapa = () => {
           'line-cap': 'round',
         },
         paint: {
-          'line-color': '#ef4444',
-          'line-width': 3,
+          'line-color': '#8b5cf6', // Purple like PHP
+          'line-width': 4,
+          'line-opacity': 0.6,
           'line-dasharray': [2, 2],
         },
       });
     }
 
-    // Draw adjusted route
+    // Draw adjusted route (solid blue line like PHP)
     if (showAdjustedRoute && adjustedRoute.length > 1) {
       map.current.addSource('adjusted-route', {
         type: 'geojson',
@@ -241,50 +283,77 @@ export const GPSMapa = () => {
           'line-cap': 'round',
         },
         paint: {
-          'line-color': '#22c55e',
-          'line-width': 4,
+          'line-color': '#3b82f6', // Blue like PHP
+          'line-width': 6,
+          'line-opacity': 0.8,
         },
       });
     }
 
-    // Add start and end markers
+    // Add start and end markers (like PHP)
     if (history.length > 0) {
       const start = history[0];
       const end = history[history.length - 1];
 
-      // Start marker
+      // Start marker (green)
       const startEl = document.createElement('div');
       startEl.innerHTML = `
-        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg border-2 border-white">
-          A
-        </div>
+        <div style="
+          width: 32px;
+          height: 32px;
+          background: #10b981;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 14px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          border: 3px solid white;
+        ">A</div>
       `;
-      new mapboxgl.Marker({ element: startEl })
+      const startMarker = new mapboxgl.Marker({ element: startEl })
         .setLngLat([start.longitude, start.latitude])
         .setPopup(new mapboxgl.Popup().setHTML(`
-          <div class="p-2">
-            <p class="font-bold">Inicio</p>
-            <p class="text-sm">${new Date(start.deviceTime).toLocaleString()}</p>
+          <div style="padding: 8px;">
+            <p style="font-weight: bold; color: #10b981;">INICIO</p>
+            <p style="font-size: 12px;">Hora: ${new Date(start.deviceTime).toLocaleString()}</p>
+            <p style="font-size: 12px;">Velocidad: ${start.speed} km/h</p>
           </div>
         `))
         .addTo(map.current);
+      markersRef.current.push(startMarker);
 
-      // End marker
+      // End marker (red)
       const endEl = document.createElement('div');
       endEl.innerHTML = `
-        <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg border-2 border-white">
-          B
-        </div>
+        <div style="
+          width: 32px;
+          height: 32px;
+          background: #ef4444;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 14px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          border: 3px solid white;
+        ">B</div>
       `;
-      new mapboxgl.Marker({ element: endEl })
+      const endMarker = new mapboxgl.Marker({ element: endEl })
         .setLngLat([end.longitude, end.latitude])
         .setPopup(new mapboxgl.Popup().setHTML(`
-          <div class="p-2">
-            <p class="font-bold">Fin</p>
-            <p class="text-sm">${new Date(end.deviceTime).toLocaleString()}</p>
+          <div style="padding: 8px;">
+            <p style="font-weight: bold; color: #ef4444;">FIN</p>
+            <p style="font-size: 12px;">Hora: ${new Date(end.deviceTime).toLocaleString()}</p>
+            <p style="font-size: 12px;">Velocidad: ${end.speed} km/h</p>
           </div>
         `))
         .addTo(map.current);
+      markersRef.current.push(endMarker);
 
       // Fit bounds to route
       const bounds = new mapboxgl.LngLatBounds();
@@ -300,10 +369,7 @@ export const GPSMapa = () => {
     return () => clearInterval(interval);
   }, [mode, refetchDevices]);
 
-  if (!user) {
-    navigate('/gps-login');
-    return null;
-  }
+  if (!gpsSession) return null;
 
   if (!mapboxToken) {
     return (
@@ -354,7 +420,7 @@ export const GPSMapa = () => {
             <Button
               variant={mode === 'history' ? 'default' : 'ghost'}
               size="sm"
-              className={mode === 'history' ? 'bg-orange-600 hover:bg-orange-700' : 'text-white hover:bg-blue-800'}
+              className={mode === 'history' ? 'bg-purple-600 hover:bg-purple-700' : 'text-white hover:bg-blue-800'}
               onClick={() => setMode('history')}
             >
               <History className="h-4 w-4 mr-1" />
@@ -467,16 +533,16 @@ export const GPSMapa = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="10">Cada 10 segundos</SelectItem>
                       <SelectItem value="30">Cada 30 segundos</SelectItem>
                       <SelectItem value="60">Cada 1 minuto</SelectItem>
                       <SelectItem value="300">Cada 5 minutos</SelectItem>
-                      <SelectItem value="600">Cada 10 minutos</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <Button 
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-purple-600 hover:bg-purple-700"
                   onClick={handleLoadHistory}
                   disabled={historyLoading || !selectedDevice}
                 >
@@ -488,7 +554,7 @@ export const GPSMapa = () => {
                   ) : (
                     <>
                       <Play className="h-4 w-4 mr-2" />
-                      Cargar Historial
+                      Ver Historial
                     </>
                   )}
                 </Button>
@@ -500,7 +566,7 @@ export const GPSMapa = () => {
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-4 h-1 bg-red-500" style={{ borderStyle: 'dashed' }} />
+                          <div className="w-4 h-1 bg-purple-500" style={{ borderStyle: 'dashed' }} />
                           <span className="text-sm">Ruta Original (GPS)</span>
                         </div>
                         <Switch 
@@ -511,7 +577,7 @@ export const GPSMapa = () => {
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-4 h-1 bg-green-500" />
+                          <div className="w-4 h-1 bg-blue-500" />
                           <span className="text-sm">Ruta Ajustada</span>
                         </div>
                         <Switch 
@@ -521,12 +587,16 @@ export const GPSMapa = () => {
                       </div>
                     </div>
 
-                    <Card className="bg-blue-50">
+                    <Card className="bg-purple-50">
                       <CardContent className="p-3 text-sm">
-                        <p><strong>Puntos:</strong> {history.length}</p>
-                        {adjustedRoute.length > 0 && (
+                        <p><strong>Puntos históricos:</strong> {history.length}</p>
+                        {adjustedRoute.length > 0 ? (
                           <p className="text-green-600 mt-1">
-                            ✓ Ruta ajustada a calles exitosamente
+                            ✓ Ruta ajustada: {adjustedRoute.length} puntos
+                          </p>
+                        ) : (
+                          <p className="text-yellow-600 mt-1">
+                            ⚠ No se pudo ajustar la ruta
                           </p>
                         )}
                       </CardContent>
@@ -565,13 +635,13 @@ export const GPSMapa = () => {
                 </div>
                 {showOriginalRoute && (
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-0.5 border-t-2 border-dashed border-red-500" />
-                    <span>Ruta GPS</span>
+                    <div className="w-6 h-0.5 border-t-2 border-dashed border-purple-500" />
+                    <span>Puntos Históricos</span>
                   </div>
                 )}
                 {showAdjustedRoute && adjustedRoute.length > 0 && (
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-1 bg-green-500" />
+                    <div className="w-6 h-1 bg-blue-500" />
                     <span>Ruta Ajustada</span>
                   </div>
                 )}
