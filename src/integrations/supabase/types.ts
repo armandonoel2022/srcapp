@@ -468,6 +468,27 @@ export type Database = {
         }
         Relationships: []
       }
+      street_cache: {
+        Row: {
+          lat: string
+          lng: string
+          street_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          lat: string
+          lng: string
+          street_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          lat?: string
+          lng?: string
+          street_name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       sync_metadata: {
         Row: {
           created_at: string | null
@@ -619,6 +640,7 @@ export type Database = {
           address: string | null
           created_at: string | null
           data: Json | null
+          device_date: string | null
           device_id: number | null
           device_time: string | null
           id: number
@@ -630,6 +652,7 @@ export type Database = {
           address?: string | null
           created_at?: string | null
           data?: Json | null
+          device_date?: string | null
           device_id?: number | null
           device_time?: string | null
           id: number
@@ -641,6 +664,7 @@ export type Database = {
           address?: string | null
           created_at?: string | null
           data?: Json | null
+          device_date?: string | null
           device_id?: number | null
           device_time?: string | null
           id?: number
@@ -978,13 +1002,9 @@ export type Database = {
             Args: {
               p_apellidos: string
               p_cedula?: string
-              p_direccion?: string
-              p_fecha_ingreso?: string
-              p_fecha_nacimiento?: string
               p_funcion: string
               p_nombres: string
               p_password?: string
-              p_telefono?: string
               p_ubicacion?: string
             }
             Returns: string
@@ -993,9 +1013,13 @@ export type Database = {
             Args: {
               p_apellidos: string
               p_cedula?: string
+              p_direccion?: string
+              p_fecha_ingreso?: string
+              p_fecha_nacimiento?: string
               p_funcion: string
               p_nombres: string
               p_password?: string
+              p_telefono?: string
               p_ubicacion?: string
             }
             Returns: string
