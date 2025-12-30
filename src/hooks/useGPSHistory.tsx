@@ -37,7 +37,21 @@ export const useGPSHistory = () => {
 
       console.log(`Fetching history for device ${deviceId} from ${startIso} to ${endIso}`);
 
-      // Fetch history from traccar_positions table (like the PHP code)
+      // Fetch history from traccar_positions table
+      // First, get the count to determine if we need to sample
+      const { count, error: countError } = await supabase
+        .from('traccar_positions')
+        .select('*', { count: 'exact', head: true })
+        .eq('device_id', deviceId)
+        .gte('device_time', startIso)
+        .lte('device_time', endIso);
+
+      if (countError) throw countError;
+
+      const totalPoints = count || 0;
+      console.log(`Total points in range: ${totalPoints}`);
+
+      // Fetch all points but we'll sample them client-side
       const { data: positionsData, error: positionsError } = await supabase
         .from('traccar_positions')
         .select('id, latitude, longitude, speed, address, device_time')
@@ -45,7 +59,7 @@ export const useGPSHistory = () => {
         .gte('device_time', startIso)
         .lte('device_time', endIso)
         .order('device_time', { ascending: true })
-        .limit(500);
+        .limit(2000); // Get more points to ensure we capture the full journey
 
       if (positionsError) {
         console.error('Error fetching positions:', positionsError);
@@ -87,20 +101,36 @@ export const useGPSHistory = () => {
         }
       });
 
-      // Limit to 100 points max (like PHP)
-      const limitedPoints = filteredPoints.slice(0, 100);
-      setHistory(limitedPoints);
+      // Smart sampling: keep first, last, and evenly distributed points
+      // This ensures start and end points are always included
+      let sampledPoints = filteredPoints;
+      const maxPoints = 150; // Increased for better route visualization
+      
+      if (filteredPoints.length > maxPoints) {
+        sampledPoints = [];
+        const step = (filteredPoints.length - 1) / (maxPoints - 1);
+        
+        for (let i = 0; i < maxPoints; i++) {
+          const index = Math.round(i * step);
+          sampledPoints.push(filteredPoints[index]);
+        }
+        
+        // Ensure last point is always the actual last point
+        sampledPoints[sampledPoints.length - 1] = filteredPoints[filteredPoints.length - 1];
+      }
+      
+      setHistory(sampledPoints);
 
-      console.log(`Filtered to ${limitedPoints.length} points`);
+      console.log(`Sampled to ${sampledPoints.length} points (from ${filteredPoints.length} filtered, ${totalPoints} total)`);
 
       toast({
         title: "Historial cargado",
-        description: `${limitedPoints.length} puntos encontrados`,
+        description: `${sampledPoints.length} puntos (de ${totalPoints} totales)`,
       });
 
       // Try to get adjusted route from OpenRouteService
-      if (limitedPoints.length >= 2) {
-        await adjustRouteToStreets(limitedPoints);
+      if (sampledPoints.length >= 2) {
+        await adjustRouteToStreets(sampledPoints);
       }
 
     } catch (err: any) {
