@@ -356,10 +356,13 @@ export const GPSMapa = () => {
         .addTo(map.current);
       markersRef.current.push(endMarker);
 
-      // Fit bounds to route
+      // Fit bounds to route with good padding and max zoom to see streets
       const bounds = new mapboxgl.LngLatBounds();
       history.forEach(p => bounds.extend([p.longitude, p.latitude]));
-      map.current.fitBounds(bounds, { padding: 50 });
+      map.current.fitBounds(bounds, { 
+        padding: { top: 100, bottom: 100, left: 100, right: 300 },
+        maxZoom: 15 // Max zoom to ensure streets are visible
+      });
     }
   }, [history, adjustedRoute, mode, showOriginalRoute, showAdjustedRoute]);
 
@@ -638,35 +641,28 @@ export const GPSMapa = () => {
             />
           )}
           
-          {/* Map legend */}
+          {/* Compact map legend */}
           {mode === 'history' && history.length > 0 && (
-            <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-sm">
-              <h4 className="font-medium mb-2">Leyenda</h4>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">A</div>
+            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg shadow-md px-3 py-2 text-xs">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-[8px] font-bold">A</div>
                   <span>Inicio</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">B</div>
+                <div className="flex items-center gap-1">
+                  <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[8px] font-bold">B</div>
                   <span>Fin</span>
                 </div>
                 {showOriginalRoute && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-0.5 border-t-2 border-dashed border-purple-500" />
-                    <span>Puntos Históricos</span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-4 h-0.5 border-t-2 border-dashed border-purple-500" />
+                    <span>GPS</span>
                   </div>
                 )}
                 {showAdjustedRoute && adjustedRoute.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-1 bg-blue-500" />
-                    <span>Ruta Ajustada</span>
-                  </div>
-                )}
-                {history.length >= 2 && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-[8px] font-bold">SRC</div>
-                    <span>Recorrido</span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-4 h-1 bg-blue-500 rounded" />
+                    <span>Ruta</span>
                   </div>
                 )}
               </div>
