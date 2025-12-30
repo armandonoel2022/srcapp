@@ -49,22 +49,8 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/feature-graphic" element={<FeatureGraphic />} />
               <Route path="/gps-login" element={<GPSLogin />} />
-              <Route
-                path="/gps-panel"
-                element={
-                  <ProtectedRoute>
-                    <GPSPanel />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/gps-mapa"
-                element={
-                  <ProtectedRoute>
-                    <GPSMapa />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/gps-panel" element={<GPSPanel />} />
+              <Route path="/gps-mapa" element={<GPSMapa />} />
               <Route
                 path="/dashboard"
                 element={
