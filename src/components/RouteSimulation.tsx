@@ -53,7 +53,7 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
     ? calculateTimeDiff(startPoint.deviceTime, currentPoint.deviceTime)
     : '--';
 
-  // Create/update vehicle marker
+  // Create/update vehicle marker - car icon with SRC
   const updateVehicleMarker = useCallback((point: HistoryPoint) => {
     if (!map) return;
 
@@ -64,17 +64,36 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
     const el = document.createElement('div');
     el.innerHTML = `
       <div style="
-        width: 36px;
-        height: 36px;
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-        border-radius: 50%;
+        position: relative;
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        box-shadow: 0 3px 10px rgba(59, 130, 246, 0.5);
-        border: 3px solid white;
       ">
-        <span style="color: white; font-weight: bold; font-size: 10px;">SRC</span>
+        <div style="
+          width: 44px;
+          height: 44px;
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 3px 12px rgba(59, 130, 246, 0.5);
+          border: 3px solid white;
+        ">
+          <svg style="width: 26px; height: 26px; fill: white;" viewBox="0 0 24 24">
+            <path d="M5 11l1.5-4.5h11L19 11m-1.5 5a1.5 1.5 0 01-1.5-1.5 1.5 1.5 0 011.5-1.5 1.5 1.5 0 011.5 1.5 1.5 1.5 0 01-1.5 1.5m-11 0a1.5 1.5 0 01-1.5-1.5A1.5 1.5 0 017.5 13a1.5 1.5 0 011.5 1.5A1.5 1.5 0 017.5 16M5 11v5a1 1 0 001 1h1a2 2 0 002-2V11H5zm10 0v4a2 2 0 002 2h1a1 1 0 001-1v-5h-4z"/>
+          </svg>
+        </div>
+        <div style="
+          background: #1d4ed8;
+          color: white;
+          font-size: 9px;
+          font-weight: bold;
+          padding: 2px 6px;
+          border-radius: 4px;
+          margin-top: -4px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        ">SRC</div>
       </div>
     `;
 
@@ -177,7 +196,11 @@ export const RouteSimulation = ({ map, history }: RouteSimulationProps) => {
       {/* Compact header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-[8px] font-bold">SRC</span>
+          <div className="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M5 11l1.5-4.5h11L19 11m-1.5 5a1.5 1.5 0 01-1.5-1.5 1.5 1.5 0 011.5-1.5 1.5 1.5 0 011.5 1.5 1.5 1.5 0 01-1.5 1.5m-11 0a1.5 1.5 0 01-1.5-1.5A1.5 1.5 0 017.5 13a1.5 1.5 0 011.5 1.5A1.5 1.5 0 017.5 16M5 11v5a1 1 0 001 1h1a2 2 0 002-2V11H5zm10 0v4a2 2 0 002 2h1a1 1 0 001-1v-5h-4z"/>
+            </svg>
+          </div>
           <span className="font-medium text-sm text-gray-700">
             {currentIndex + 1}/{history.length}
           </span>
