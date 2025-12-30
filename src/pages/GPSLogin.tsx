@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MapPin, Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
 // Credenciales especiales para GPS (mismas que Traccar)
@@ -16,7 +15,6 @@ const GPS_ADMIN_CREDENTIALS = {
 
 export const GPSLogin = () => {
   const navigate = useNavigate();
-  const { signIn, user, loading } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -30,50 +28,17 @@ export const GPSLogin = () => {
     }
   }, [navigate]);
 
-  // If already logged in with Supabase auth, redirect to GPS panel
-  useEffect(() => {
-    if (!loading && user) {
-      // Set GPS session for Supabase authenticated users
-      localStorage.setItem('gps_session', JSON.stringify({
-        type: 'supabase',
-        user: user.email,
-        timestamp: Date.now()
-      }));
-      navigate('/gps-panel', { replace: true });
-    }
-  }, [user, loading, navigate]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      // Check if it's the special GPS admin credentials (Traccar credentials)
-      if (username === GPS_ADMIN_CREDENTIALS.username && password === GPS_ADMIN_CREDENTIALS.password) {
-        // Store GPS session
-        localStorage.setItem('gps_session', JSON.stringify({
-          type: 'gps_admin',
-          user: 'admin',
-          name: 'Administrador GPS',
-          timestamp: Date.now()
-        }));
-        
-        toast({
-          title: "Bienvenido",
-          description: "Acceso al panel GPS exitoso",
-        });
-        
-        navigate('/gps-panel');
-        return;
-      }
-
-      // Try Supabase authentication for other users
-      await signIn(username, password);
-      
-      // Store GPS session for Supabase users
+    // Check if it's the special GPS admin credentials (Traccar credentials)
+    if (username === GPS_ADMIN_CREDENTIALS.username && password === GPS_ADMIN_CREDENTIALS.password) {
+      // Store GPS session
       localStorage.setItem('gps_session', JSON.stringify({
-        type: 'supabase',
-        user: username,
+        type: 'gps_admin',
+        user: 'admin',
+        name: 'Administrador GPS',
         timestamp: Date.now()
       }));
       
@@ -81,16 +46,19 @@ export const GPSLogin = () => {
         title: "Bienvenido",
         description: "Acceso al panel GPS exitoso",
       });
-      navigate('/gps-panel');
-    } catch (error: any) {
-      toast({
-        title: "Error de acceso",
-        description: error.message || "Credenciales incorrectas",
-        variant: "destructive",
-      });
-    } finally {
+      
       setIsLoading(false);
+      navigate('/gps-panel', { replace: true });
+      return;
     }
+
+    // Invalid credentials
+    toast({
+      title: "Error de acceso",
+      description: "Credenciales incorrectas",
+      variant: "destructive",
+    });
+    setIsLoading(false);
   };
 
   return (
