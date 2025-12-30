@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,6 +21,9 @@ import { useGPSHistory } from '@/hooks/useGPSHistory';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from '@/hooks/use-toast';
 import { RouteSimulation } from '@/components/RouteSimulation';
+import { TripStatistics } from '@/components/TripStatistics';
+import { WaypointsList } from '@/components/WaypointsList';
+import { TimeOfDayFilter, filterByTimeOfDay, type TimeOfDay } from '@/components/TimeOfDayFilter';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -65,14 +68,20 @@ export const GPSMapa = () => {
     new Date().toISOString().split('T')[0]
   );
   const [frequency, setFrequency] = useState('60'); // seconds
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('all');
   
   const { 
-    history, 
+    history: rawHistory, 
     adjustedRoute, 
     loading: historyLoading, 
     error: historyError,
     fetchHistory 
   } = useGPSHistory();
+
+  // Filter history by time of day
+  const history = useMemo(() => {
+    return filterByTimeOfDay(rawHistory, timeOfDay);
+  }, [rawHistory, timeOfDay]);
 
   // Check for GPS session
   useEffect(() => {
@@ -509,28 +518,34 @@ export const GPSMapa = () => {
             {mode === 'history' && (
               <>
                 {/* History mode controls */}
-                <div>
-                  <Label>Fecha Inicio</Label>
-                  <Input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">Fecha Inicio</Label>
+                    <Input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Fecha Fin</Label>
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="text-sm"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <Label>Fecha Fin</Label>
-                  <Input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
+                {/* Time of day filter */}
+                <TimeOfDayFilter value={timeOfDay} onChange={setTimeOfDay} />
 
                 <div>
-                  <Label>Frecuencia de Puntos</Label>
+                  <Label className="text-xs">Frecuencia de Puntos</Label>
                   <Select value={frequency} onValueChange={setFrequency}>
-                    <SelectTrigger>
+                    <SelectTrigger className="text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -543,7 +558,7 @@ export const GPSMapa = () => {
                 </div>
 
                 <Button 
-                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
                   onClick={handleLoadHistory}
                   disabled={historyLoading || !selectedDevice}
                 >
@@ -555,20 +570,37 @@ export const GPSMapa = () => {
                   ) : (
                     <>
                       <Play className="h-4 w-4 mr-2" />
-                      Ver Historial
+                      Consultar Recorrido
                     </>
                   )}
                 </Button>
 
-                {history.length > 0 && (
+                {rawHistory.length > 0 && (
                   <>
-                    <div className="border-t pt-4 space-y-3">
-                      <h4 className="font-medium text-gray-700">Opciones de Visualización</h4>
+                    {/* Trip Statistics */}
+                    <TripStatistics history={history} />
+
+                    {/* Waypoints List */}
+                    <WaypointsList 
+                      history={history}
+                      onWaypointClick={(point) => {
+                        if (map.current) {
+                          map.current.flyTo({
+                            center: [point.longitude, point.latitude],
+                            zoom: 16,
+                          });
+                        }
+                      }}
+                    />
+
+                    {/* Visualization options */}
+                    <div className="border-t pt-3 space-y-2">
+                      <h4 className="font-medium text-gray-700 text-sm">Capas del Mapa</h4>
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-4 h-1 bg-purple-500" style={{ borderStyle: 'dashed' }} />
-                          <span className="text-sm">Ruta Original (GPS)</span>
+                          <div className="w-4 h-0.5 border-t-2 border-dashed border-purple-500" />
+                          <span className="text-xs text-slate-600">Puntos GPS</span>
                         </div>
                         <Switch 
                           checked={showOriginalRoute} 
@@ -578,31 +610,23 @@ export const GPSMapa = () => {
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-4 h-1 bg-blue-500" />
-                          <span className="text-sm">Ruta Ajustada</span>
+                          <div className="w-4 h-1 bg-blue-500 rounded" />
+                          <span className="text-xs text-slate-600">Ruta en Calles</span>
                         </div>
                         <Switch 
                           checked={showAdjustedRoute} 
                           onCheckedChange={setShowAdjustedRoute}
                         />
                       </div>
-
                     </div>
 
-                    <Card className="bg-purple-50">
-                      <CardContent className="p-3 text-sm">
-                        <p><strong>Puntos históricos:</strong> {history.length}</p>
-                        {adjustedRoute.length > 0 ? (
-                          <p className="text-green-600 mt-1">
-                            ✓ Ruta ajustada: {adjustedRoute.length} puntos
-                          </p>
-                        ) : (
-                          <p className="text-yellow-600 mt-1">
-                            ⚠ No se pudo ajustar la ruta
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
+                    {/* Filter info */}
+                    {timeOfDay !== 'all' && (
+                      <div className="text-xs text-center text-slate-500 bg-slate-50 rounded p-2">
+                        Mostrando {history.length} de {rawHistory.length} puntos
+                        ({timeOfDay === 'morning' ? 'mañana' : timeOfDay === 'afternoon' ? 'tarde' : 'noche'})
+                      </div>
+                    )}
                   </>
                 )}
 
