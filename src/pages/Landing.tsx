@@ -152,6 +152,14 @@ export const Landing = () => {
                 Acceso Empleados
               </Button>
               <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => navigate('/gps-login')}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                GPS
+              </Button>
+              <Button
                 variant="secondary" 
                 size="sm"
                 onClick={() => navigate('/auth')}

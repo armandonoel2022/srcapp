@@ -13,6 +13,9 @@ import { Customers } from "./pages/Customers";
 import { EmpleadoApp } from "./pages/EmpleadoApp";
 import NotFound from "./pages/NotFound";
 import { FeatureGraphic } from "./pages/FeatureGraphic";
+import { GPSLogin } from "./pages/GPSLogin";
+import { GPSPanel } from "./pages/GPSPanel";
+import { GPSMapa } from "./pages/GPSMapa";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +48,23 @@ const App = () => (
               <Route path="/customers" element={<Customers />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/feature-graphic" element={<FeatureGraphic />} />
+              <Route path="/gps-login" element={<GPSLogin />} />
+              <Route
+                path="/gps-panel"
+                element={
+                  <ProtectedRoute>
+                    <GPSPanel />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/gps-mapa"
+                element={
+                  <ProtectedRoute>
+                    <GPSMapa />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/dashboard"
                 element={
