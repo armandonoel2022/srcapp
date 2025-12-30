@@ -42,7 +42,8 @@ export const GPSMapa = () => {
   
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const liveMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const historyMarkersRef = useRef<mapboxgl.Marker[]>([]);
   
   // URL params
   const deviceIdParam = searchParams.get('device');
@@ -129,9 +130,9 @@ export const GPSMapa = () => {
   useEffect(() => {
     if (!map.current || mode !== 'live') return;
 
-    // Clear old markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
+    // Clear old live markers
+    liveMarkersRef.current.forEach(marker => marker.remove());
+    liveMarkersRef.current = [];
 
     // Add markers for each device
     devices.forEach((device) => {
@@ -185,7 +186,7 @@ export const GPSMapa = () => {
         )
         .addTo(map.current!);
 
-      markersRef.current.push(marker);
+      liveMarkersRef.current.push(marker);
 
       // Center on selected device
       if (selectedDevice === device.id && autoCenter) {
@@ -231,9 +232,9 @@ export const GPSMapa = () => {
       if (map.current?.getSource(id)) map.current.removeSource(id);
     });
 
-    // Clear markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
+    // Clear history markers
+    historyMarkersRef.current.forEach(marker => marker.remove());
+    historyMarkersRef.current = [];
 
     if (history.length === 0) return;
 
@@ -333,7 +334,7 @@ export const GPSMapa = () => {
           </div>
         `))
         .addTo(map.current);
-      markersRef.current.push(startMarker);
+      historyMarkersRef.current.push(startMarker);
 
       // End marker (red)
       const endEl = document.createElement('div');
@@ -363,7 +364,7 @@ export const GPSMapa = () => {
           </div>
         `))
         .addTo(map.current);
-      markersRef.current.push(endMarker);
+      historyMarkersRef.current.push(endMarker);
 
       // Fit bounds to route
       const bounds = new mapboxgl.LngLatBounds();
@@ -382,23 +383,13 @@ export const GPSMapa = () => {
       if (map.current?.getSource(id)) map.current.removeSource(id);
     });
 
-    // Clear history markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
+    // Clear history markers only
+    historyMarkersRef.current.forEach(marker => marker.remove());
+    historyMarkersRef.current = [];
 
-    // Center on selected device or first available device
-    const targetDevice = selectedDevice 
-      ? devices.find(d => d.id === selectedDevice)
-      : devices.find(d => d.latitude && d.longitude);
-
-    if (targetDevice?.latitude && targetDevice?.longitude) {
-      map.current.flyTo({
-        center: [targetDevice.longitude, targetDevice.latitude],
-        zoom: 15,
-        duration: 1000,
-      });
-    }
-  }, [mode, devices, selectedDevice]);
+    // Force refresh of live markers by refetching devices
+    refetchDevices();
+  }, [mode, refetchDevices]);
 
   // Auto refresh for live mode
   useEffect(() => {
