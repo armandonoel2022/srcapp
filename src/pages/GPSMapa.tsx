@@ -213,156 +213,179 @@ export const GPSMapa = () => {
   };
 
   // Draw history routes on map
+  // Draw history routes on map
   useEffect(() => {
     if (!map.current || mode !== 'history') return;
 
-    // Remove existing route layers
-    ['original-route', 'adjusted-route'].forEach(id => {
-      if (map.current?.getLayer(id)) map.current.removeLayer(id);
-      if (map.current?.getSource(id)) map.current.removeSource(id);
-    });
-
-    // Clear markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
-
-    if (history.length === 0) return;
-
-    // Draw original route (dashed purple line like PHP)
-    if (showOriginalRoute && history.length > 1) {
-      const coordinates = history.map(p => [p.longitude, p.latitude]);
+    // Wait for map to be fully loaded before drawing
+    const drawRoutes = () => {
+      if (!map.current) return;
       
-      map.current.addSource('original-route', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates,
-          },
-        },
+      // Remove existing route layers
+      ['original-route', 'adjusted-route'].forEach(id => {
+        if (map.current?.getLayer(id)) map.current.removeLayer(id);
+        if (map.current?.getSource(id)) map.current.removeSource(id);
       });
 
-      map.current.addLayer({
-        id: 'original-route',
-        type: 'line',
-        source: 'original-route',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': '#8b5cf6', // Purple like PHP
-          'line-width': 4,
-          'line-opacity': 0.6,
-          'line-dasharray': [2, 2],
-        },
-      });
-    }
+      // Clear markers
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
 
-    // Draw adjusted route (solid blue line like PHP)
-    if (showAdjustedRoute && adjustedRoute.length > 1) {
-      map.current.addSource('adjusted-route', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: adjustedRoute,
-          },
-        },
-      });
+      if (history.length === 0) return;
 
-      map.current.addLayer({
-        id: 'adjusted-route',
-        type: 'line',
-        source: 'adjusted-route',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': '#3b82f6', // Blue like PHP
-          'line-width': 6,
-          'line-opacity': 0.8,
-        },
-      });
-    }
+      // Draw original route (dashed purple line) - connects all GPS points
+      if (showOriginalRoute && history.length > 1) {
+        const coordinates = history.map(p => [p.longitude, p.latitude]);
+        
+        try {
+          map.current.addSource('original-route', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates,
+              },
+            },
+          });
 
-    // Add start and end markers (like PHP)
-    if (history.length > 0) {
-      const start = history[0];
-      const end = history[history.length - 1];
+          map.current.addLayer({
+            id: 'original-route',
+            type: 'line',
+            source: 'original-route',
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round',
+            },
+            paint: {
+              'line-color': '#8b5cf6',
+              'line-width': 5,
+              'line-opacity': 0.8,
+              'line-dasharray': [2, 1],
+            },
+          });
+          console.log('Original route drawn with', coordinates.length, 'points');
+        } catch (err) {
+          console.error('Error drawing original route:', err);
+        }
+      }
 
-      // Start marker (green)
-      const startEl = document.createElement('div');
-      startEl.innerHTML = `
-        <div style="
-          width: 32px;
-          height: 32px;
-          background: #10b981;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: bold;
-          font-size: 14px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-          border: 3px solid white;
-        ">A</div>
-      `;
-      const startMarker = new mapboxgl.Marker({ element: startEl })
-        .setLngLat([start.longitude, start.latitude])
-        .setPopup(new mapboxgl.Popup().setHTML(`
-          <div style="padding: 8px;">
-            <p style="font-weight: bold; color: #10b981;">INICIO</p>
-            <p style="font-size: 12px;">Hora: ${new Date(start.deviceTime).toLocaleString()}</p>
-            <p style="font-size: 12px;">Velocidad: ${start.speed} km/h</p>
-          </div>
-        `))
-        .addTo(map.current);
-      markersRef.current.push(startMarker);
+      // Draw adjusted route (solid blue line)
+      if (showAdjustedRoute && adjustedRoute.length > 1) {
+        try {
+          map.current.addSource('adjusted-route', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: adjustedRoute,
+              },
+            },
+          });
 
-      // End marker (red)
-      const endEl = document.createElement('div');
-      endEl.innerHTML = `
-        <div style="
-          width: 32px;
-          height: 32px;
-          background: #ef4444;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: bold;
-          font-size: 14px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-          border: 3px solid white;
-        ">B</div>
-      `;
-      const endMarker = new mapboxgl.Marker({ element: endEl })
-        .setLngLat([end.longitude, end.latitude])
-        .setPopup(new mapboxgl.Popup().setHTML(`
-          <div style="padding: 8px;">
-            <p style="font-weight: bold; color: #ef4444;">FIN</p>
-            <p style="font-size: 12px;">Hora: ${new Date(end.deviceTime).toLocaleString()}</p>
-            <p style="font-size: 12px;">Velocidad: ${end.speed} km/h</p>
-          </div>
-        `))
-        .addTo(map.current);
-      markersRef.current.push(endMarker);
+          map.current.addLayer({
+            id: 'adjusted-route',
+            type: 'line',
+            source: 'adjusted-route',
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round',
+            },
+            paint: {
+              'line-color': '#3b82f6',
+              'line-width': 6,
+              'line-opacity': 0.8,
+            },
+          });
+          console.log('Adjusted route drawn with', adjustedRoute.length, 'points');
+        } catch (err) {
+          console.error('Error drawing adjusted route:', err);
+        }
+      }
 
-      // Fit bounds to route with good padding and max zoom to see streets
-      const bounds = new mapboxgl.LngLatBounds();
-      history.forEach(p => bounds.extend([p.longitude, p.latitude]));
-      map.current.fitBounds(bounds, { 
-        padding: { top: 100, bottom: 100, left: 100, right: 300 },
-        maxZoom: 15 // Max zoom to ensure streets are visible
-      });
+      // Add start and end markers
+      if (history.length > 0) {
+        const start = history[0];
+        const end = history[history.length - 1];
+
+        // Start marker (green)
+        const startEl = document.createElement('div');
+        startEl.innerHTML = `
+          <div style="
+            width: 28px;
+            height: 28px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border: 2px solid white;
+          ">A</div>
+        `;
+        const startMarker = new mapboxgl.Marker({ element: startEl })
+          .setLngLat([start.longitude, start.latitude])
+          .setPopup(new mapboxgl.Popup().setHTML(`
+            <div style="padding: 8px;">
+              <p style="font-weight: bold; color: #10b981;">INICIO</p>
+              <p style="font-size: 12px;">Hora: ${new Date(start.deviceTime).toLocaleString()}</p>
+              <p style="font-size: 12px;">Velocidad: ${start.speed} km/h</p>
+            </div>
+          `))
+          .addTo(map.current);
+        markersRef.current.push(startMarker);
+
+        // End marker (red)
+        const endEl = document.createElement('div');
+        endEl.innerHTML = `
+          <div style="
+            width: 28px;
+            height: 28px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border: 2px solid white;
+          ">B</div>
+        `;
+        const endMarker = new mapboxgl.Marker({ element: endEl })
+          .setLngLat([end.longitude, end.latitude])
+          .setPopup(new mapboxgl.Popup().setHTML(`
+            <div style="padding: 8px;">
+              <p style="font-weight: bold; color: #ef4444;">FIN</p>
+              <p style="font-size: 12px;">Hora: ${new Date(end.deviceTime).toLocaleString()}</p>
+              <p style="font-size: 12px;">Velocidad: ${end.speed} km/h</p>
+            </div>
+          `))
+          .addTo(map.current);
+        markersRef.current.push(endMarker);
+
+        // Fit bounds to route with good padding and max zoom to see streets
+        const bounds = new mapboxgl.LngLatBounds();
+        history.forEach(p => bounds.extend([p.longitude, p.latitude]));
+        map.current.fitBounds(bounds, { 
+          padding: { top: 80, bottom: 80, left: 80, right: 280 },
+          maxZoom: 16
+        });
+      }
+    };
+
+    // Check if map style is loaded
+    if (map.current.isStyleLoaded()) {
+      drawRoutes();
+    } else {
+      map.current.once('load', drawRoutes);
     }
   }, [history, adjustedRoute, mode, showOriginalRoute, showAdjustedRoute]);
 
