@@ -126,13 +126,13 @@ if (isset($_GET['api'])) {
         $freq     = max(0, (int)($_GET['freq'] ?? 60)); // segundos entre puntos
 
         $rows = sb('traccar_positions', [
-            'select'      => 'id,latitude,longitude,speed,address,device_time',
-            'device_id'   => 'eq.' . $deviceId,
-            'device_time' => ['gte.' . $from . 'T00:00:00' . TZ_OFFSET],
-            'order'       => 'device_time.asc',
-            'limit'       => 5000,
-        ] + ['and' => '(device_time.gte.' . $from . 'T00:00:00' . TZ_OFFSET
-                    . ',device_time.lte.' . $to . 'T23:59:59' . TZ_OFFSET . ')']);
+            'select'    => 'id,latitude,longitude,speed,address,device_time',
+            'device_id' => 'eq.' . $deviceId,
+            'and'       => '(device_time.gte.' . $from . 'T00:00:00' . TZ_OFFSET
+                         . ',device_time.lte.' . $to . 'T23:59:59' . TZ_OFFSET . ')',
+            'order'     => 'device_time.asc',
+            'limit'     => 5000,
+        ]);
 
         $points = []; $lastT = 0;
         foreach ($rows as $r) {
