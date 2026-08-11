@@ -29,11 +29,13 @@ export const useGPSHistory = () => {
       setHistory([]);
       setAdjustedRoute([]);
 
-      // Convert dates to ISO format like the PHP code does
-      const startIso = `${startDate}T00:00:00+00:00`;
-      const endDateObj = new Date(endDate);
-      endDateObj.setDate(endDateObj.getDate() + 1);
-      const endIso = `${endDate}T23:59:59+00:00`;
+      // Convertir a ISO usando el desfase horario LOCAL del navegador
+      const offsetMin = new Date().getTimezoneOffset();
+      const sign = offsetMin > 0 ? '-' : '+';
+      const abs = Math.abs(offsetMin);
+      const tz = `${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
+      const startIso = `${startDate}T00:00:00${tz}`;
+      const endIso = `${endDate}T23:59:59${tz}`;
 
       console.log(`Fetching history for device ${deviceId} from ${startIso} to ${endIso}`);
 
