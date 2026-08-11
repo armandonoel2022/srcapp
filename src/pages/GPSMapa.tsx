@@ -61,13 +61,9 @@ export const GPSMapa = () => {
   const [showAdjustedRoute, setShowAdjustedRoute] = useState(true);
   const [autoCenter, setAutoCenter] = useState(true);
   
-  // History filters
-  const [startDate, setStartDate] = useState(
-    new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  );
-  const [endDate, setEndDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+  // History filters (fechas en hora LOCAL, no UTC)
+  const [startDate, setStartDate] = useState(() => toLocalDateString(new Date()));
+  const [endDate, setEndDate] = useState(() => toLocalDateString(new Date()));
   const [frequency, setFrequency] = useState('60'); // seconds
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('all');
   
