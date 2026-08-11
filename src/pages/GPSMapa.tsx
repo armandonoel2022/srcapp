@@ -34,6 +34,12 @@ interface GPSSession {
   timestamp: number;
 }
 
+// Devuelve YYYY-MM-DD en hora local (evita el salto de día por UTC)
+const toLocalDateString = (d: Date) => {
+  const off = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - off).toISOString().split('T')[0];
+};
+
 export const GPSMapa = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
