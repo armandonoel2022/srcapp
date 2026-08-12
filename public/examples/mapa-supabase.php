@@ -2,15 +2,15 @@
 /**
  * ============================================================
  *  MAPA GPS - SRC  |  100% Supabase (sin Traccar)
- *  Archivo único para cPanel / Hostgator.  Requiere PHP 7.4+ con cURL.
+ *  Archivo único para cPanel / Hostgator. Requiere PHP 7.4+ con cURL.
  *
- *  Funciones:
- *   - Mapa en vivo con auto-refresco
- *   - Historial por vehículo y rango de fechas (hora local RD)
- *   - Ruta ajustada a calles reales (OSRM público, sin API key)
- *   - Velocidad por punto, máxima, promedio, distancia y duración
- *   - Alertas por exceso de velocidad
- *   - Animación del recorrido (play / pausa / velocidad)
+ *  EN VIVO:
+ *   - Estela (trail) del recorrido reciente de cada vehículo
+ *   - Flecha de dirección (rumbo) y velocidad
+ *   - Resumen: Total / En movimiento / Ralentí / Detenido / Sin señal
+ *   - Seguimiento automático de un vehículo
+ *  HISTORIAL:
+ *   - Ruta ajustada a calles (OSRM), estadísticas, alertas y animación
  * ============================================================
  */
 
@@ -19,15 +19,18 @@ const TZ_OFFSET = '-04:00';
 
 // ====== CONFIGURACIÓN ======
 $SUPABASE_URL = 'https://tzfuszsoqgyvzxvqeqeb.supabase.co';
-// Usa la ANON key si tus tablas tienen políticas de lectura públicas,
-// o la SERVICE_ROLE key si NO las tienen (este archivo corre en el servidor).
+// ANON key si hay políticas de lectura públicas, o SERVICE_ROLE si no.
 $SUPABASE_KEY = 'PEGA_AQUI_TU_KEY';
 
 $SPEED_LIMIT_DEFAULT = 70;              // km/h
 $SPEED_LIMITS = [ /* 195 => 60, */ ];   // límites por device_id
 
-// La columna speed de Traccar viene en NUDOS -> km/h
-const KNOTS_TO_KMH = 1.852;
+const KNOTS_TO_KMH = 1.852;   // Traccar entrega velocidad en nudos
+const TRAIL_MINUTES = 120;    // minutos de estela en vivo
+const TRAIL_POINTS  = 60;     // máx puntos de estela por vehículo
+const MOVING_KMH    = 5;      // > = en movimiento
+const OFFLINE_SECS  = 600;    // sin reporte => sin señal
+const IDLE_SECS     = 300;    // detenido reciente => ralentí
 
 // ====== CLIENTE SUPABASE ======
 function sb($table, $params = []) {
@@ -65,10 +68,17 @@ function haversine($lat1, $lon1, $lat2, $lon2) {
     return $R * 2 * atan2(sqrt($a), sqrt(1-$a));
 }
 
+// Rumbo (0-360) entre dos puntos
+function bearing($lat1, $lon1, $lat2, $lon2) {
+    $y = sin(deg2rad($lon2-$lon1)) * cos(deg2rad($lat2));
+    $x = cos(deg2rad($lat1))*sin(deg2rad($lat2)) -
+         sin(deg2rad($lat1))*cos(deg2rad($lat2))*cos(deg2rad($lon2-$lon1));
+    return fmod(rad2deg(atan2($y, $x)) + 360, 360);
+}
+
 // ====== RUTA REAL POR CALLES (OSRM público, sin key) ======
 function snapToRoads($points) {
     if (count($points) < 2) return [];
-    // OSRM acepta máx ~100 coordenadas cómodamente
     $key = $points;
     if (count($points) > 90) {
         $key = [];
@@ -93,26 +103,84 @@ if (isset($_GET['api'])) {
 
     if ($_GET['api'] === 'live') {
         $devices = sb('traccar_devices', ['select' => '*', 'order' => 'name.asc']);
+        $desde = date('Y-m-d\TH:i:s', time() - TRAIL_MINUTES * 60) . TZ_OFFSET;
         $out = [];
         foreach ($devices as $d) {
-            $pos = sb('traccar_positions', [
-                'select'    => 'latitude,longitude,speed,address,device_time',
-                'device_id' => 'eq.' . $d['id'],
-                'order'     => 'device_time.desc',
-                'limit'     => 1,
+            // Últimas posiciones para armar la estela
+            $rows = sb('traccar_positions', [
+                'select'      => 'latitude,longitude,speed,address,device_time,data',
+                'device_id'   => 'eq.' . $d['id'],
+                'device_time' => 'gte.' . $desde,
+                'order'       => 'device_time.desc',
+                'limit'       => 300,
             ]);
-            $p = $pos[0] ?? null;
-            $last = $d['last_update'] ?? ($p['device_time'] ?? null);
+            if (!$rows) {
+                $rows = sb('traccar_positions', [
+                    'select'    => 'latitude,longitude,speed,address,device_time,data',
+                    'device_id' => 'eq.' . $d['id'],
+                    'order'     => 'device_time.desc',
+                    'limit'     => 1,
+                ]);
+            }
+            $rows = array_reverse($rows); // cronológico
+            $rows = array_values(array_filter($rows, fn($r) => $r['latitude'] !== null && $r['longitude'] !== null));
+
+            // Reducir a TRAIL_POINTS
+            if (count($rows) > TRAIL_POINTS) {
+                $sel = []; $step = (count($rows) - 1) / (TRAIL_POINTS - 1);
+                for ($i = 0; $i < TRAIL_POINTS; $i++) $sel[] = $rows[(int)round($i * $step)];
+                $rows = $sel;
+            }
+
+            $trail = []; $kmTrail = 0; $maxTrail = 0;
+            foreach ($rows as $i => $r) {
+                $lat = (float)$r['latitude']; $lon = (float)$r['longitude'];
+                $sp  = round((float)$r['speed'] * KNOTS_TO_KMH, 1);
+                if ($i > 0) $kmTrail += haversine($trail[$i-1]['lat'], $trail[$i-1]['lon'], $lat, $lon);
+                if ($sp > $maxTrail) $maxTrail = $sp;
+                $trail[] = ['lat'=>$lat,'lon'=>$lon,'speed'=>$sp,
+                            'time'=>date('Y-m-d H:i:s', strtotime($r['device_time']))];
+            }
+
+            $p    = $rows ? end($rows) : null;
+            $prev = count($rows) > 1 ? $rows[count($rows)-2] : null;
+            $last = $p['device_time'] ?? ($d['last_update'] ?? null);
+            $age  = $last ? (time() - strtotime($last)) : null;
+            $speed = $p ? round((float)$p['speed'] * KNOTS_TO_KMH, 1) : 0;
+
+            // Rumbo: del campo data.course o calculado
+            $course = null;
+            if ($p && !empty($p['data'])) {
+                $dat = is_array($p['data']) ? $p['data'] : json_decode($p['data'], true);
+                if (isset($dat['course'])) $course = (float)$dat['course'];
+            }
+            if ($course === null && $p && $prev) {
+                $course = bearing((float)$prev['latitude'], (float)$prev['longitude'],
+                                  (float)$p['latitude'], (float)$p['longitude']);
+            }
+
+            // Estado
+            if ($age === null || $age > OFFLINE_SECS)      $estado = 'sin_senal';
+            elseif ($speed >= MOVING_KMH)                  $estado = 'movimiento';
+            elseif ($age <= IDLE_SECS)                     $estado = 'ralenti';
+            else                                           $estado = 'detenido';
+
             $out[] = [
                 'id'      => (int)$d['id'],
                 'name'    => $d['name'],
                 'lat'     => $p ? (float)$p['latitude'] : null,
                 'lon'     => $p ? (float)$p['longitude'] : null,
-                'speed'   => $p ? round((float)$p['speed'] * KNOTS_TO_KMH, 1) : 0,
+                'speed'   => $speed,
+                'course'  => $course === null ? 0 : round($course),
                 'address' => $p['address'] ?? '',
                 'time'    => $last,
-                'online'  => $last ? ((time() - strtotime($last)) < 600) : false,
+                'age'     => $age,
+                'estado'  => $estado,
+                'online'  => $estado !== 'sin_senal',
                 'limit'   => limitFor((int)$d['id']),
+                'trail'   => $trail,
+                'trailKm' => round($kmTrail, 2),
+                'trailMax'=> $maxTrail,
             ];
         }
         echo json_encode($out);
@@ -123,7 +191,7 @@ if (isset($_GET['api'])) {
         $deviceId = (int)($_GET['device'] ?? 0);
         $from     = $_GET['from'] ?? date('Y-m-d');
         $to       = $_GET['to']   ?? date('Y-m-d');
-        $freq     = max(0, (int)($_GET['freq'] ?? 60)); // segundos entre puntos
+        $freq     = max(0, (int)($_GET['freq'] ?? 60));
 
         $rows = sb('traccar_positions', [
             'select'    => 'id,latitude,longitude,speed,address,device_time',
@@ -149,14 +217,17 @@ if (isset($_GET['api'])) {
             ];
         }
 
-        // Estadísticas
         $limit = limitFor($deviceId);
-        $dist = 0; $max = 0; $sum = 0; $alerts = [];
+        $dist = 0; $max = 0; $sum = 0; $alerts = []; $paradas = []; $movSecs = 0;
         for ($i = 0; $i < count($points); $i++) {
-            if ($i > 0) $dist += haversine(
-                $points[$i-1]['lat'], $points[$i-1]['lon'],
-                $points[$i]['lat'],  $points[$i]['lon']
-            );
+            if ($i > 0) {
+                $dist += haversine($points[$i-1]['lat'], $points[$i-1]['lon'],
+                                   $points[$i]['lat'],  $points[$i]['lon']);
+                $dt = strtotime($points[$i]['time']) - strtotime($points[$i-1]['time']);
+                if ($points[$i]['speed'] >= MOVING_KMH) $movSecs += $dt;
+                elseif ($dt >= 300) $paradas[] = ['lat'=>$points[$i-1]['lat'],'lon'=>$points[$i-1]['lon'],
+                                                  'desde'=>$points[$i-1]['time'],'minutos'=>round($dt/60)];
+            }
             $s = $points[$i]['speed'];
             $sum += $s;
             if ($s > $max) $max = $s;
@@ -175,10 +246,14 @@ if (isset($_GET['api'])) {
                 'maxSpeed' => $max,
                 'avgSpeed' => round($sum / $n, 1),
                 'minutes'  => round($dur / 60),
+                'movMin'   => round($movSecs / 60),
+                'stopMin'  => round(max(0, $dur - $movSecs) / 60),
                 'limit'    => $limit,
                 'alerts'   => count($alerts),
+                'paradas'  => count($paradas),
             ],
-            'alerts' => array_slice($alerts, 0, 100),
+            'alerts'  => array_slice($alerts, 0, 100),
+            'paradas' => array_slice($paradas, 0, 50),
         ]);
         exit;
     }
@@ -198,13 +273,13 @@ $selected = (int)($_GET['device'] ?? ($devices[0]['id'] ?? 0));
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  :root{--bg:#0f172a;--panel:#111c33;--line:#22304d;--txt:#e6edf7;--muted:#8ea3c4;--acc:#f97316;--ok:#22c55e;--bad:#ef4444}
+  :root{--bg:#0f172a;--panel:#111c33;--line:#22304d;--txt:#e6edf7;--muted:#8ea3c4;--acc:#f97316;--ok:#22c55e;--bad:#ef4444;--warn:#eab308}
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
   header{padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
   header h1{font-size:16px;margin:0;font-weight:700}
   .wrap{display:flex;height:calc(100vh - 57px);flex-wrap:wrap}
-  aside{width:320px;background:var(--panel);border-right:1px solid var(--line);padding:14px;overflow:auto}
+  aside{width:340px;background:var(--panel);border-right:1px solid var(--line);padding:14px;overflow:auto}
   #map{flex:1;min-width:280px;min-height:60vh}
   label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
   select,input,button{width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:#0c1729;color:var(--txt);font-size:14px}
@@ -218,9 +293,18 @@ $selected = (int)($_GET['device'] ?? ($devices[0]['id'] ?? 0));
   .stat{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
   .stat b{color:var(--acc)}
   .alert{font-size:12px;border-left:3px solid var(--bad);padding:4px 8px;margin:6px 0;background:rgba(239,68,68,.1)}
-  .dev{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line);cursor:pointer}
+  .stop{font-size:12px;border-left:3px solid var(--warn);padding:4px 8px;margin:6px 0;background:rgba(234,179,8,.1)}
+  .dev{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer}
+  .dev:hover{background:rgba(249,115,22,.08)}
+  .dev.sel{background:rgba(249,115,22,.15)}
+  .dev small{display:block;color:var(--muted);font-size:11px}
   .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+  .sum{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .sum div{background:#0c1729;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px;color:var(--muted)}
+  .sum b{display:block;font-size:18px;color:var(--txt)}
   .anim{display:flex;gap:6px;margin-top:10px}
+  .chk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:8px}
+  .chk input{width:auto}
   @media(max-width:820px){aside{width:100%;border-right:none}.wrap{height:auto}}
 </style>
 </head>
@@ -238,6 +322,17 @@ $selected = (int)($_GET['device'] ?? ($devices[0]['id'] ?? 0));
   </div>
 
   <div id="paneLive">
+    <div class="sum" id="summary"></div>
+    <label>Filtrar</label>
+    <select id="filtro" onchange="renderLive()">
+      <option value="todos">Todos</option>
+      <option value="movimiento">En movimiento</option>
+      <option value="ralenti">Ralentí</option>
+      <option value="detenido">Detenido</option>
+      <option value="sin_senal">Sin señal</option>
+    </select>
+    <div class="chk"><input type="checkbox" id="verEstela" checked onchange="renderLive()"><label for="verEstela" style="margin:0">Mostrar estela de recorrido (últimas 2 h)</label></div>
+    <div class="chk"><input type="checkbox" id="seguir"><label for="seguir" style="margin:0">Seguir vehículo seleccionado</label></div>
     <div class="card" id="deviceList">Cargando…</div>
   </div>
 
@@ -274,21 +369,26 @@ $selected = (int)($_GET['device'] ?? ($devices[0]['id'] ?? 0));
 
     <div class="card" id="stats" style="display:none"></div>
     <div class="card" id="alerts" style="display:none"></div>
+    <div class="card" id="stops" style="display:none"></div>
   </div>
 </aside>
 <div id="map"></div>
 </div>
 
 <script>
-const map = L.map('map').setView([18.4861, -69.9312], 12);
+const map = L.map('map').setView([18.4861, -69.9312], 9);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   {maxZoom:19, attribution:'© OpenStreetMap'}).addTo(map);
 
-let mode='live', liveTimer=null, layers=[], points=[], anim=null, idx=0, spd=1, carMarker=null, trail=null;
+let mode='live', liveTimer=null, layers=[], liveData=[], selId=null, firstFit=true;
+let points=[], anim=null, idx=0, spd=1, carMarker=null, trail=null;
 
 const clear=()=>{layers.forEach(l=>map.removeLayer(l));layers=[];carMarker=null;trail=null;};
 const add=l=>{layers.push(l.addTo(map));return l;};
 setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleString('es-DO'),1000);
+
+const COLORES={movimiento:'#22c55e',ralenti:'#eab308',detenido:'#ef4444',sin_senal:'#94a3b8'};
+const ETIQ={movimiento:'En movimiento',ralenti:'Ralentí',detenido:'Detenido',sin_senal:'Sin señal'};
 
 function setMode(m){
   mode=m;
@@ -296,9 +396,9 @@ function setMode(m){
   document.getElementById('tabHist').classList.toggle('on',m==='history');
   document.getElementById('paneLive').style.display=m==='live'?'':'none';
   document.getElementById('paneHist').style.display=m==='history'?'':'none';
-  clear(); stopAnim();
+  clear(); stopAnim(); firstFit=true;
   if(liveTimer){clearInterval(liveTimer);liveTimer=null;}
-  if(m==='live'){loadLive();liveTimer=setInterval(loadLive,30000);}
+  if(m==='live'){loadLive();liveTimer=setInterval(loadLive,20000);}
 }
 
 function pin(color,label){
@@ -306,26 +406,90 @@ function pin(color,label){
     box-shadow:0 2px 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700">${label}</div>`,
     className:'',iconSize:[30,30],iconAnchor:[15,15]});
 }
+// Marcador tipo flecha que apunta según el rumbo
+function arrowIcon(color,deg,name){
+  return L.divIcon({html:`<div style="transform:rotate(${deg}deg);width:34px;height:34px;display:flex;align-items:center;justify-content:center">
+      <div style="width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:26px solid ${color};filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))"></div>
+    </div>
+    <div style="position:absolute;top:34px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:700;color:#fff;background:rgba(15,23,42,.85);padding:1px 5px;border-radius:4px">${name}</div>`,
+    className:'',iconSize:[34,34],iconAnchor:[17,17]});
+}
 
 async function loadLive(){
-  const r = await fetch('?api=live'); const d = await r.json();
-  clear();
-  const box=[]; let html='';
-  d.forEach(v=>{
-    const on=v.online, col=on?'#22c55e':'#94a3b8';
-    html+=`<div class="dev" onclick="focusDev(${v.lat},${v.lon})">
-      <span><span class="dot" style="background:${col}"></span>${v.name}</span>
-      <b style="color:${v.speed>v.limit?'#ef4444':'#f97316'}">${v.speed} km/h</b></div>`;
-    if(v.lat&&v.lon){
-      box.push([v.lat,v.lon]);
-      add(L.marker([v.lat,v.lon],{icon:pin(col,'🚗')}).bindPopup(
-        `<b>${v.name}</b><br>Velocidad: ${v.speed} km/h<br>${v.time?new Date(v.time).toLocaleString('es-DO'):''}<br>${v.address||''}`));
-    }
-  });
-  document.getElementById('deviceList').innerHTML = html || 'Sin dispositivos';
-  if(box.length) map.fitBounds(box,{padding:[50,50],maxZoom:15});
+  const r = await fetch('?api=live'); liveData = await r.json();
+  renderLive();
 }
-const focusDev=(la,lo)=>{ if(la) map.setView([la,lo],16); };
+
+function renderLive(){
+  clear();
+  const filtro=document.getElementById('filtro').value;
+  const verEstela=document.getElementById('verEstela').checked;
+  const cont={movimiento:0,ralenti:0,detenido:0,sin_senal:0};
+  liveData.forEach(v=>cont[v.estado]++);
+
+  document.getElementById('summary').innerHTML=`
+    <div>Total<b>${liveData.length}</b></div>
+    <div>En movimiento<b style="color:${COLORES.movimiento}">${cont.movimiento}</b></div>
+    <div>Ralentí<b style="color:${COLORES.ralenti}">${cont.ralenti}</b></div>
+    <div>Detenido<b style="color:${COLORES.detenido}">${cont.detenido}</b></div>
+    <div>Sin señal<b style="color:${COLORES.sin_senal}">${cont.sin_senal}</b></div>
+    <div>Excesos<b style="color:${COLORES.detenido}">${liveData.filter(v=>v.speed>v.limit).length}</b></div>`;
+
+  const lista = liveData.filter(v=>filtro==='todos'||v.estado===filtro);
+  const box=[]; let html='';
+
+  lista.forEach(v=>{
+    const col=COLORES[v.estado];
+    html+=`<div class="dev ${selId===v.id?'sel':''}" onclick="selectDev(${v.id})">
+      <span><span class="dot" style="background:${col}"></span><b>${v.name}</b>
+        <small>${ETIQ[v.estado]} · ${v.trailKm} km (2h) · ${v.address?v.address.substring(0,32):'sin dirección'}</small></span>
+      <b style="color:${v.speed>v.limit?'#ef4444':'#f97316'};white-space:nowrap">${v.speed} km/h</b></div>`;
+
+    if(v.lat==null) return;
+    box.push([v.lat,v.lon]);
+
+    // Estela de recorrido reciente
+    if(verEstela && v.trail && v.trail.length>1){
+      const latlngs=v.trail.map(p=>[p.lat,p.lon]);
+      add(L.polyline(latlngs,{color:col,weight:5,opacity:.35}));
+      add(L.polyline(latlngs.slice(-12),{color:col,weight:5,opacity:.9}));
+      // Punto de origen del tramo
+      add(L.circleMarker(latlngs[0],{radius:5,color:col,fillColor:'#0f172a',fillOpacity:1,weight:2})
+        .bindPopup(`<b>${v.name}</b><br>Inicio del tramo<br>${v.trail[0].time}`));
+      // Flechitas intermedias de dirección
+      for(let i=6;i<latlngs.length-1;i+=10){
+        const a=latlngs[i-1], b=latlngs[i];
+        const ang=Math.atan2(b[1]-a[1], b[0]-a[0])*180/Math.PI;
+        add(L.marker(b,{icon:L.divIcon({className:'',iconSize:[10,10],iconAnchor:[5,5],
+          html:`<div style="transform:rotate(${90-ang}deg);color:${col};font-size:12px;line-height:10px">➤</div>`})}));
+      }
+    }
+
+    add(L.marker([v.lat,v.lon],{icon:arrowIcon(col,v.course||0,v.name)}).bindPopup(
+      `<b>${v.name}</b><br>Estado: ${ETIQ[v.estado]}<br>Velocidad: ${v.speed} km/h (límite ${v.limit})<br>
+       Rumbo: ${v.course}°<br>Recorrido 2 h: ${v.trailKm} km · máx ${v.trailMax} km/h<br>
+       ${v.time?new Date(v.time).toLocaleString('es-DO'):''}<br>${v.address||''}`));
+  });
+
+  document.getElementById('deviceList').innerHTML = html || 'Sin dispositivos';
+
+  const sel = liveData.find(v=>v.id===selId);
+  if(document.getElementById('seguir').checked && sel && sel.lat!=null){
+    map.setView([sel.lat,sel.lon], Math.max(map.getZoom(),15));
+  } else if(firstFit && box.length){
+    map.fitBounds(box,{padding:[50,50],maxZoom:15}); firstFit=false;
+  }
+}
+
+function selectDev(id){
+  selId=id;
+  const v=liveData.find(x=>x.id===id);
+  renderLive();
+  if(v&&v.lat!=null){
+    if(v.trail&&v.trail.length>1) map.fitBounds(v.trail.map(p=>[p.lat,p.lon]),{padding:[60,60],maxZoom:16});
+    else map.setView([v.lat,v.lon],16);
+  }
+}
 
 async function loadHistory(){
   const dev=document.getElementById('device').value;
@@ -341,9 +505,7 @@ async function loadHistory(){
   points=d.points||[];
   if(!points.length){document.getElementById('stats').innerHTML='Sin datos en ese rango.';return;}
 
-  // Ruta real por calles
   if(d.road&&d.road.length) add(L.polyline(d.road.map(c=>[c[1],c[0]]),{color:'#2563eb',weight:6,opacity:.85}));
-  // Trazo GPS crudo
   add(L.polyline(points.map(p=>[p.lat,p.lon]),{color:'#f97316',weight:2,opacity:.5,dashArray:'5,6'}));
 
   const s=points[0], e=points[points.length-1];
@@ -354,6 +516,10 @@ async function loadHistory(){
     {radius:6,color:'#ef4444',fillColor:'#ef4444',fillOpacity:.8})
     .bindPopup(`<b>Exceso de velocidad</b><br>${a.speed} km/h<br>${a.time}`)));
 
+  (d.paradas||[]).forEach(p=>add(L.circleMarker([p.lat,p.lon],
+    {radius:7,color:'#eab308',fillColor:'#eab308',fillOpacity:.7})
+    .bindPopup(`<b>Parada</b><br>${p.minutos} min<br>desde ${p.desde}`)));
+
   map.fitBounds(points.map(p=>[p.lat,p.lon]),{padding:[50,50]});
 
   const st=d.stats;
@@ -361,9 +527,12 @@ async function loadHistory(){
     <div class="stat"><span>Puntos</span><b>${st.total}</b></div>
     <div class="stat"><span>Distancia</span><b>${st.km} km</b></div>
     <div class="stat"><span>Duración</span><b>${st.minutes} min</b></div>
+    <div class="stat"><span>En movimiento</span><b>${st.movMin} min</b></div>
+    <div class="stat"><span>Detenido</span><b>${st.stopMin} min</b></div>
     <div class="stat"><span>Vel. promedio</span><b>${st.avgSpeed} km/h</b></div>
     <div class="stat"><span>Vel. máxima</span><b>${st.maxSpeed} km/h</b></div>
     <div class="stat"><span>Límite</span><b>${st.limit} km/h</b></div>
+    <div class="stat"><span>Paradas</span><b>${st.paradas}</b></div>
     <div class="stat"><span>Excesos</span><b style="color:${st.alerts?'#ef4444':'#22c55e'}">${st.alerts}</b></div>`;
 
   const al=document.getElementById('alerts');
@@ -372,6 +541,13 @@ async function loadHistory(){
     al.innerHTML='<b style="font-size:13px">⚠️ Excesos de velocidad</b>'+
       d.alerts.slice(0,15).map(a=>`<div class="alert">${a.time} — <b>${a.speed} km/h</b></div>`).join('');
   } else al.style.display='none';
+
+  const sp=document.getElementById('stops');
+  if((d.paradas||[]).length){
+    sp.style.display='';
+    sp.innerHTML='<b style="font-size:13px">🅿️ Paradas</b>'+
+      d.paradas.slice(0,15).map(p=>`<div class="stop">${p.desde} — <b>${p.minutos} min</b></div>`).join('');
+  } else sp.style.display='none';
 }
 
 /* ===== Animación del recorrido ===== */
